@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 import { 
   BarChartIcon, PackageIcon, BuildingIcon, ClipboardIcon, 
   CurrencyIcon, GlobeIcon, ScaleIcon, TrendingUpIcon, ZapIcon, DownloadIcon,
-  StarIcon, KeyIcon
+  StarIcon, KeyIcon, ChevronDownIcon
 } from './Icons';
 
 const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -144,6 +144,11 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
   const [activeSection, setActiveSection] = useState('global');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('all');
+  const [collapsedProducts, setCollapsedProducts] = useState({});
+
+  const toggleProduct = (productName) => {
+    setCollapsedProducts(prev => ({ ...prev, [productName]: !prev[productName] }));
+  };
 
   const getDurationLabel = (durationId) => {
     const dur = durations.find((d) => d.id === durationId);
@@ -192,6 +197,19 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
   const avgSavingsPercent = analytics.length > 0
     ? fmtPct(analytics.reduce((s, a) => s + parseFloat(a.savingsPercent), 0) / analytics.length)
     : '0';
+
+  const groupedAnalytics = (() => {
+    const groups = [];
+    let currentGroup = null;
+    analytics.forEach((a) => {
+      if (!currentGroup || currentGroup.productName !== a.productName) {
+        currentGroup = { productName: a.productName, plans: [] };
+        groups.push(currentGroup);
+      }
+      currentGroup.plans.push(a);
+    });
+    return groups;
+  })();
 
   const getBestSupplierPerProduct = (productList) => {
     return productList.map((product) => {
@@ -630,35 +648,53 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
 
               {supplierPlans.length === 0 ? (
                 <p style={{ color: '#999', fontSize: '12px', textAlign: 'center', padding: '16px 0' }}>لا توجد أسعار مسجّلة لهذا المورد.</p>
-              ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: `1px solid ${pdfColors.border}` }}>
-                  <thead>
-                    <tr>
-                      <th style={{ ...thStyle, background: pdfColors.green, color: '#fff', textAlign: 'right' }}>المنتج</th>
-                      <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الخطة</th>
-                      <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>السعر ($)</th>
-                      <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>السعر (﷼)</th>
-                      <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {supplierPlans.map((row, ri) => (
-                      <tr key={ri} style={{ background: ri % 2 === 0 ? '#f0faf5' : '#fff' }}>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '600' }}>{row.productName}</td>
-                        <td style={tdStyle}><Badge color={pdfColors.green}>{row.duration}</Badge></td>
-                        <td style={{ ...tdStyle, fontWeight: '700' }}>${fmt(row.price)}</td>
-                        <td style={tdStyle}>{fmt(row.price * exchangeRate)} ﷼</td>
-                        <td style={tdStyle}>
-                          {row.isBest
-                            ? <Badge color={pdfColors.green} bg="#E8FFF3">★ الأفضل</Badge>
-                            : <Badge color="#999" bg="#f5f5f5">عادي</Badge>
-                          }
-                        </td>
+              ) : (() => {
+                const groupedPlans = [];
+                let curGroup = null;
+                supplierPlans.forEach(row => {
+                  if (!curGroup || curGroup.productName !== row.productName) {
+                    curGroup = { productName: row.productName, rows: [] };
+                    groupedPlans.push(curGroup);
+                  }
+                  curGroup.rows.push(row);
+                });
+                return (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: `1px solid ${pdfColors.border}` }}>
+                    <thead>
+                      <tr>
+                        <th style={{ ...thStyle, background: pdfColors.green, color: '#fff', textAlign: 'right' }}>المنتج</th>
+                        <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الخطة</th>
+                        <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>السعر ($)</th>
+                        <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>السعر (﷼)</th>
+                        <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الحالة</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody>
+                      {groupedPlans.map((g, gIdx) =>
+                        g.rows.map((row, ri) => (
+                          <tr key={`${gIdx}-${ri}`} style={{ background: gIdx % 2 === 0 ? '#f0faf5' : '#fff', borderTop: ri === 0 ? `2px solid ${pdfColors.green}30` : 'none' }}>
+                            {ri === 0 && (
+                              <td rowSpan={g.rows.length} style={{ ...tdStyle, textAlign: 'right', fontWeight: '700', fontSize: '12px', verticalAlign: 'middle', borderRight: `3px solid ${pdfColors.green}`, background: gIdx % 2 === 0 ? '#e8f5ef' : '#f5faf7' }}>
+                                {row.productName}
+                                <div style={{ fontSize: '9px', color: pdfColors.muted, fontWeight: '500', marginTop: '2px' }}>{g.rows.length} خطة</div>
+                              </td>
+                            )}
+                            <td style={tdStyle}><Badge color={pdfColors.green}>{row.duration}</Badge></td>
+                            <td style={{ ...tdStyle, fontWeight: '700' }}>${fmt(row.price)}</td>
+                            <td style={tdStyle}>{fmt(row.price * exchangeRate)} ﷼</td>
+                            <td style={tdStyle}>
+                              {row.isBest
+                                ? <Badge color={pdfColors.green} bg="#E8FFF3">★ الأفضل</Badge>
+                                : <Badge color="#999" bg="#f5f5f5">عادي</Badge>
+                              }
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           );
         })}
@@ -696,21 +732,28 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
             </tr>
           </thead>
           <tbody>
-            {analytics.map((a, i) => (
-              <tr key={i} style={{ background: i % 2 === 0 ? '#f0faf5' : '#fff' }}>
-                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '600' }}>{a.productName}</td>
-                <td style={tdStyle}><Badge color={pdfColors.green}>{a.planDuration}</Badge></td>
-                <td style={{ ...tdStyle, fontWeight: '600', color: pdfColors.green }}>{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span style={{ color: '#bbb' }}>—</span>}</td>
-                <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : '—'}</td>
-                <td style={tdStyle}>{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)}` : '—'}</td>
-                <td style={tdStyle}>{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : '—'}</td>
-                <td style={{ ...tdStyle, color: pdfColors.red }}>{a.expensive.price > 0 ? `$${fmt(a.expensive.price)}` : '—'}</td>
-                <td style={{ ...tdStyle, color: pdfColors.orange, fontWeight: '600' }}>${fmt(a.savings)}</td>
-                <td style={tdStyle}>
-                  <Badge color={parseFloat(a.savingsPercent) > 10 ? pdfColors.red : pdfColors.orange}>{a.savingsPercent}%</Badge>
-                </td>
-              </tr>
-            ))}
+            {groupedAnalytics.map((group, gi) =>
+              group.plans.map((a, pi) => (
+                <tr key={`${gi}-${pi}`} style={{ background: gi % 2 === 0 ? '#f0faf5' : '#fff', borderTop: pi === 0 ? `2px solid ${pdfColors.green}30` : 'none' }}>
+                  {pi === 0 && (
+                    <td rowSpan={group.plans.length} style={{ ...tdStyle, textAlign: 'right', fontWeight: '700', fontSize: '12px', verticalAlign: 'middle', borderRight: `3px solid ${pdfColors.green}`, background: gi % 2 === 0 ? '#e8f5ef' : '#f5faf7' }}>
+                      {a.productName}
+                      <div style={{ fontSize: '9px', color: pdfColors.muted, fontWeight: '500', marginTop: '2px' }}>{group.plans.length} خطة</div>
+                    </td>
+                  )}
+                  <td style={tdStyle}><Badge color={pdfColors.green}>{a.planDuration}</Badge></td>
+                  <td style={{ ...tdStyle, fontWeight: '600', color: pdfColors.green }}>{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span style={{ color: '#bbb' }}>—</span>}</td>
+                  <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : '—'}</td>
+                  <td style={tdStyle}>{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)}` : '—'}</td>
+                  <td style={tdStyle}>{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : '—'}</td>
+                  <td style={{ ...tdStyle, color: pdfColors.red }}>{a.expensive.price > 0 ? `$${fmt(a.expensive.price)}` : '—'}</td>
+                  <td style={{ ...tdStyle, color: pdfColors.orange, fontWeight: '600' }}>${fmt(a.savings)}</td>
+                  <td style={tdStyle}>
+                    <Badge color={parseFloat(a.savingsPercent) > 10 ? pdfColors.red : pdfColors.orange}>{a.savingsPercent}%</Badge>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
 
@@ -870,18 +913,25 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
               </tr>
             </thead>
             <tbody>
-              {analytics.map((a, i) => (
-                <tr key={i} style={{ background: i % 2 === 0 ? '#fff9f5' : '#fff' }}>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '600' }}>{a.productName}</td>
-                  <td style={tdStyle}><Badge color={pdfColors.orange}>{a.planDuration}</Badge></td>
-                  <td style={{ ...tdStyle, fontWeight: '600', color: pdfColors.green }}>{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : '—'}</td>
-                  <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : '—'}</td>
-                  <td style={tdStyle}>{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)}` : '—'}</td>
-                  <td style={tdStyle}>{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : '—'}</td>
-                  <td style={{ ...tdStyle, color: pdfColors.orange, fontWeight: '600' }}>${fmt(a.savings)}</td>
-                  <td style={tdStyle}><Badge color={parseFloat(a.savingsPercent) > 10 ? pdfColors.red : pdfColors.orange}>{a.savingsPercent}%</Badge></td>
-                </tr>
-              ))}
+              {groupedAnalytics.map((group, gi) =>
+                group.plans.map((a, pi) => (
+                  <tr key={`${gi}-${pi}`} style={{ background: gi % 2 === 0 ? '#fff9f5' : '#fff', borderTop: pi === 0 ? `2px solid ${pdfColors.orange}30` : 'none' }}>
+                    {pi === 0 && (
+                      <td rowSpan={group.plans.length} style={{ ...tdStyle, textAlign: 'right', fontWeight: '700', fontSize: '12px', verticalAlign: 'middle', borderRight: `3px solid ${pdfColors.orange}`, background: gi % 2 === 0 ? '#fff3ec' : '#fffaf7' }}>
+                        {a.productName}
+                        <div style={{ fontSize: '9px', color: pdfColors.muted, fontWeight: '500', marginTop: '2px' }}>{group.plans.length} خطة</div>
+                      </td>
+                    )}
+                    <td style={tdStyle}><Badge color={pdfColors.orange}>{a.planDuration}</Badge></td>
+                    <td style={{ ...tdStyle, fontWeight: '600', color: pdfColors.green }}>{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : '—'}</td>
+                    <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : '—'}</td>
+                    <td style={tdStyle}>{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)}` : '—'}</td>
+                    <td style={tdStyle}>{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : '—'}</td>
+                    <td style={{ ...tdStyle, color: pdfColors.orange, fontWeight: '600' }}>${fmt(a.savings)}</td>
+                    <td style={tdStyle}><Badge color={parseFloat(a.savingsPercent) > 10 ? pdfColors.red : pdfColors.orange}>{a.savingsPercent}%</Badge></td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -1126,27 +1176,51 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
       <div className="analytics-preview">
         <h3 className="flex-row align-center gap-2"><BarChartIcon className="icon-sm" /> ملخص التحليلات</h3>
         <div className="table-wrapper">
-          <table className="analytics-table">
+          <table className="analytics-table grouped-table">
             <thead>
               <tr>
-                <th>المنتج</th><th>الخطة</th><th>أفضل مورد</th>
+                <th className="th-product">المنتج</th><th>الخطة</th><th>أفضل مورد</th>
                 <th>أقل سعر ($)</th><th>أقل سعر (﷼)</th>
                 <th>المتوسط</th><th>التوفير</th><th>نسبة التوفير</th>
               </tr>
             </thead>
             <tbody>
-              {analytics.map((a, i) => (
-                <tr key={i}>
-                  <td className="td-product-name">{a.productName}</td>
-                  <td><span className="plan-badge">{a.planDuration}</span></td>
-                  <td className="td-best-supplier">{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span className="price-not-available">لا يوجد</span>}</td>
-                  <td className="td-price">{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                  <td className="td-price">{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)} ﷼` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                  <td className="td-price">{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                  <td className="td-savings">${fmt(a.savings)}</td>
-                  <td className="td-savings-pct">{a.savingsPercent}%</td>
-                </tr>
-              ))}
+              {groupedAnalytics.map((group, gi) => {
+                const isCollapsed = collapsedProducts[group.productName];
+                const bestPlan = group.plans.reduce((best, a) => parseFloat(a.savingsPercent) > parseFloat(best.savingsPercent) ? a : best, group.plans[0]);
+                return (
+                  <React.Fragment key={gi}>
+                    <tr className="product-group-row" onClick={() => toggleProduct(group.productName)}>
+                      <td className="td-product-name td-group-name">
+                        <span className={`group-chevron ${isCollapsed ? 'chevron-collapsed' : ''}`}>
+                          <ChevronDownIcon className="icon-xs" />
+                        </span>
+                        {group.productName}
+                        <span className="group-plan-count">{group.plans.length} خطة</span>
+                      </td>
+                      <td colSpan={7} className="td-group-summary">
+                        {!isCollapsed ? '' : (
+                          <span className="group-summary-text">
+                            أفضل: <strong>{bestPlan.cheapest.supplierName}</strong> — ${fmt(bestPlan.cheapest.price)} — توفير {bestPlan.savingsPercent}%
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                    {!isCollapsed && group.plans.map((a, pi) => (
+                      <tr key={pi} className="plan-sub-row">
+                        <td className="td-plan-indent"></td>
+                        <td><span className="plan-badge">{a.planDuration}</span></td>
+                        <td className="td-best-supplier">{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span className="price-not-available">لا يوجد</span>}</td>
+                        <td className="td-price">{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
+                        <td className="td-price">{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)} ﷼` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
+                        <td className="td-price">{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
+                        <td className="td-savings">${fmt(a.savings)}</td>
+                        <td className="td-savings-pct">{a.savingsPercent}%</td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

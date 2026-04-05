@@ -25,7 +25,7 @@ All state is saved to browser `localStorage` under the key `miftah_store_data`. 
 - `src/App.jsx` — Root component with state management and hash-based tab routing
 - `src/components/Dashboard.jsx` — Dashboard home page with stats, alerts, product health, quick actions
 - `src/components/ProductTable.jsx` — Card-based product grid with supplier manager panel
-- `src/components/ReportsExport.jsx` — Reports page with PDF export, analytics tables, product/supplier reports
+- `src/components/ReportsExport.jsx` — Reports page with PDF export, grouped analytics tables (expand/collapse), product/supplier reports
 - `src/components/SettingsPage.jsx` — Settings with card grid layout, theme toggle, data management, duration chips
 - `src/components/pricing/` — PricingDashboard, PricingOverview, CostManager, PricingMechanisms, CouponsManager
 - `src/components/bundles/` — BundleManager, BundleOverview, BundleBuilder, BundlePricing
