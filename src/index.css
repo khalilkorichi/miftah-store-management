@@ -2454,10 +2454,46 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .analytics-preview h3 {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 0;
+}
+.analytics-actions {
+  display: flex;
+  gap: 6px;
+}
+.analytics-toggle-btn {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.analytics-toggle-btn:hover {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--accent-blue);
+}
+.toggle-icon {
+  font-size: 9px;
+  line-height: 1;
 }
 
 .table-wrapper {
@@ -2568,10 +2604,49 @@ body {
 .group-summary-text {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
-.group-summary-text strong {
+.group-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.group-summary-chip.green {
+  background: rgba(14, 168, 92, 0.12);
   color: var(--accent-green);
+}
+.group-summary-chip.blue {
+  background: rgba(26, 81, 244, 0.12);
+  color: var(--accent-blue);
+}
+.group-summary-chip.orange {
+  background: rgba(247, 120, 74, 0.12);
+  color: var(--accent-orange);
+}
+.group-summary-chip.purple {
+  background: rgba(94, 79, 222, 0.12);
+  color: var(--accent-purple);
+}
+.grouped-table .group-expanded td {
+  background: var(--accent-blue);
+  color: #fff;
+}
+.grouped-table .group-expanded .td-group-name {
+  background: var(--accent-blue);
+  color: #fff;
+}
+.grouped-table .group-expanded .group-chevron {
+  background: rgba(255,255,255,0.25);
+}
+.grouped-table .group-expanded .group-plan-count {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
 }
 .plan-sub-row td {
   padding: 8px 12px;

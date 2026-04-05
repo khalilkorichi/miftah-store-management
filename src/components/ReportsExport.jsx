@@ -144,10 +144,20 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
   const [activeSection, setActiveSection] = useState('global');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('all');
-  const [collapsedProducts, setCollapsedProducts] = useState({});
+  const [expandedProducts, setExpandedProducts] = useState({});
 
   const toggleProduct = (productName) => {
-    setCollapsedProducts(prev => ({ ...prev, [productName]: !prev[productName] }));
+    setExpandedProducts(prev => ({ ...prev, [productName]: !prev[productName] }));
+  };
+
+  const expandAll = () => {
+    const all = {};
+    products.forEach(p => { all[formatProductName(p)] = true; });
+    setExpandedProducts(all);
+  };
+
+  const collapseAll = () => {
+    setExpandedProducts({});
   };
 
   const getDurationLabel = (durationId) => {
@@ -1174,7 +1184,17 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
       )}
 
       <div className="analytics-preview">
-        <h3 className="flex-row align-center gap-2"><BarChartIcon className="icon-sm" /> ملخص التحليلات</h3>
+        <div className="analytics-header">
+          <h3 className="flex-row align-center gap-2"><BarChartIcon className="icon-sm" /> ملخص التحليلات</h3>
+          <div className="analytics-actions">
+            <button className="analytics-toggle-btn" onClick={expandAll} title="توسيع الكل">
+              <span className="toggle-icon">▼</span> توسيع الكل
+            </button>
+            <button className="analytics-toggle-btn" onClick={collapseAll} title="طي الكل">
+              <span className="toggle-icon">▲</span> طي الكل
+            </button>
+          </div>
+        </div>
         <div className="table-wrapper">
           <table className="analytics-table grouped-table">
             <thead>
@@ -1186,27 +1206,39 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
             </thead>
             <tbody>
               {groupedAnalytics.map((group, gi) => {
-                const isCollapsed = collapsedProducts[group.productName];
+                const isExpanded = expandedProducts[group.productName];
                 const bestPlan = group.plans.reduce((best, a) => parseFloat(a.savingsPercent) > parseFloat(best.savingsPercent) ? a : best, group.plans[0]);
+                const totalGroupSavings = group.plans.reduce((s, a) => s + a.savings, 0);
                 return (
                   <React.Fragment key={gi}>
-                    <tr className="product-group-row" onClick={() => toggleProduct(group.productName)}>
+                    <tr className={`product-group-row ${isExpanded ? 'group-expanded' : ''}`} onClick={() => toggleProduct(group.productName)}>
                       <td className="td-product-name td-group-name">
-                        <span className={`group-chevron ${isCollapsed ? 'chevron-collapsed' : ''}`}>
+                        <span className={`group-chevron ${!isExpanded ? 'chevron-collapsed' : ''}`}>
                           <ChevronDownIcon className="icon-xs" />
                         </span>
                         {group.productName}
                         <span className="group-plan-count">{group.plans.length} خطة</span>
                       </td>
-                      <td colSpan={7} className="td-group-summary">
-                        {!isCollapsed ? '' : (
+                      <td colSpan={3} className="td-group-summary">
+                        {!isExpanded && (
                           <span className="group-summary-text">
-                            أفضل: <strong>{bestPlan.cheapest.supplierName}</strong> — ${fmt(bestPlan.cheapest.price)} — توفير {bestPlan.savingsPercent}%
+                            <span className="group-summary-chip green">أفضل: {bestPlan.cheapest.supplierName}</span>
+                            <span className="group-summary-chip blue">${fmt(bestPlan.cheapest.price)}</span>
                           </span>
                         )}
                       </td>
+                      <td colSpan={2} className="td-group-summary">
+                        {!isExpanded && (
+                          <span className="group-summary-chip orange">${fmt(totalGroupSavings)} توفير</span>
+                        )}
+                      </td>
+                      <td colSpan={2} className="td-group-summary">
+                        {!isExpanded && (
+                          <span className="group-summary-chip purple">{bestPlan.savingsPercent}%</span>
+                        )}
+                      </td>
                     </tr>
-                    {!isCollapsed && group.plans.map((a, pi) => (
+                    {isExpanded && group.plans.map((a, pi) => (
                       <tr key={pi} className="plan-sub-row">
                         <td className="td-plan-indent"></td>
                         <td><span className="plan-badge">{a.planDuration}</span></td>
