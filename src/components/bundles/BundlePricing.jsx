@@ -1,0 +1,152 @@
+import React, { useState } from 'react';
+import { PackageIcon, ZapIcon, TargetIcon } from '../Icons';
+
+function BundlePricing({ bundles, setBundles, products, getSupplierPrice, costs }) {
+  const [selectedBundleId, setSelectedBundleId] = useState(bundles.length > 0 ? bundles[0].id : null);
+  const [discountPercent, setDiscountPercent] = useState(10);
+  
+  const calculateBundleCosts = (b, hypotheticalPrice = null) => {
+    let fixed = 0;
+    let percents = 0;
+    costs.filter(c => c.active).forEach(c => {
+      if (c.type === 'fixed') fixed += c.value;
+      else if (c.type === 'percentage') percents += c.value / 100;
+    });
+    const sumProductsBase = b.productIds.reduce((sum, pId) => {
+      const p = products.find(prod => prod.id === pId);
+      return sum + getSupplierPrice(p);
+    }, 0);
+    const price = hypotheticalPrice !== null ? hypotheticalPrice : (b.sellingPrice || 0);
+    const totalCost = sumProductsBase + fixed + (price * percents);
+    const profit = price - totalCost;
+    const margin = price > 0 ? (profit / price) * 100 : 0;
+    return { sumProductsBase, profit, margin, totalCost };
+  };
+
+  if (bundles.length === 0) {
+    return (
+      <div className="cm-empty" style={{padding: '60px 20px'}}>
+        <span className="cm-empty-icon flex-row align-center justify-center"><PackageIcon className="icon-xl" /></span>
+        <p>لا يوجد حزم حالياً</p>
+        <span>يرجى التوجه لـ "تكوين الحزم" لإضافة حزمة جديدة قبل تسعيرها</span>
+      </div>
+    );
+  }
+
+  const selectedBundle = bundles.find(b => b.id === selectedBundleId) || bundles[0];
+  const bundleStats = calculateBundleCosts(selectedBundle);
+
+  const handlePriceChange = (val) => {
+    const newPrice = parseFloat(val) || 0;
+    setBundles(bundles.map(b => b.id === selectedBundle.id ? {...b, sellingPrice: newPrice} : b));
+  };
+
+  const applyMarkupOnBase = () => {
+    const sumBase = bundleStats.totalCost;
+    const proposed = sumBase * (1 + (discountPercent/100));
+    handlePriceChange(proposed.toFixed(2));
+  };
+
+  return (
+    <div className="bp-container">
+      {/* Bundle Sidebar */}
+      <div className="bp-sidebar">
+        <div className="bp-sidebar-header">
+          <span className="flex-row align-center justify-center"><PackageIcon className="icon-sm" /></span>
+          <h4>الحزم المتاحة</h4>
+        </div>
+        <div className="bp-sidebar-list">
+          {bundles.map(b => {
+            const stats = calculateBundleCosts(b);
+            return (
+              <div 
+                key={b.id} 
+                className={`bp-sidebar-item ${b.id === selectedBundleId ? 'bp-sidebar-active' : ''}`}
+                onClick={() => setSelectedBundleId(b.id)}
+              >
+                <div className="bp-sidebar-name">{b.name}</div>
+                <div className="bp-sidebar-meta">
+                  <span>{b.productIds.length} منتجات</span>
+                  <span className={stats.profit > 0 ? 'text-success' : 'text-danger'}>
+                    {b.sellingPrice ? `${stats.profit.toFixed(0)} ر.س` : 'غير مسعر'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Pricing Details */}
+      <div className="bp-details">
+        {/* Bundle Header */}
+        <div className="bp-details-header">
+          <div className="bp-bundle-title">
+            <h3>{selectedBundle.name}</h3>
+            <span>{selectedBundle.productIds.length} منتجات في الحزمة</span>
+          </div>
+        </div>
+
+        {/* Cost Boxes */}
+        <div className="bp-cost-grid">
+          <div className="bp-cost-box">
+            <span className="bp-cost-label">تكلفة الموردين الأصلية</span>
+            <span className="bp-cost-value">{bundleStats.sumProductsBase.toFixed(2)} <small>ر.س</small></span>
+          </div>
+          <div className="bp-cost-box bp-cost-total">
+            <span className="bp-cost-label">إجمالي التكاليف (شامل العمولة)</span>
+            <span className="bp-cost-value bp-cost-red">{bundleStats.totalCost.toFixed(2)} <small>ر.س</small></span>
+          </div>
+        </div>
+
+        {/* Price Input */}
+        <div className="bp-price-input-section">
+          <label>سعر بيع الحزمة النهائي للعميل (ر.س)</label>
+          <input 
+            type="number" 
+            className="bp-price-input"
+            value={selectedBundle.sellingPrice || ''}
+            onChange={(e) => handlePriceChange(e.target.value)}
+            placeholder="أدخل السعر هنا..."
+          />
+        </div>
+
+        {/* Result KPIs */}
+        <div className="bp-result-grid">
+          <div className="bp-result-card">
+            <span className="bp-result-label">الربح الصافي</span>
+            <span className={`bp-result-value ${bundleStats.profit > 0 ? 'text-success' : 'text-danger'}`}>
+              {bundleStats.profit > 0 ? '+' : ''}{bundleStats.profit.toFixed(2)} ر.س
+            </span>
+          </div>
+          <div className="bp-result-card">
+            <span className="bp-result-label">هامش الربح</span>
+            <span className="bp-result-value">{bundleStats.margin.toFixed(1)}%</span>
+          </div>
+        </div>
+
+        {/* Quick Markup */}
+        <div className="bp-markup-section">
+          <div className="bp-markup-header">
+            <span className="flex-row align-center justify-center"><ZapIcon className="icon-sm" /></span>
+            <div>
+              <h4>تسعير سريع بالحزمة المجمعة</h4>
+              <p>حدد نسبة الربح المرغوبة فوق إجمالي التكاليف</p>
+            </div>
+          </div>
+          <div className="bp-markup-row">
+            <div className="cpn-field" style={{flex: 1}}>
+              <label>نسبة ربح مرغوبة (%)</label>
+              <input type="number" value={discountPercent} onChange={e=>setDiscountPercent(e.target.value)} />
+            </div>
+            <button className="pm-add-comp-btn flex-row align-center gap-2" onClick={applyMarkupOnBase} style={{alignSelf: 'flex-end'}}>
+              <TargetIcon className="icon-sm" /> تطبيق السعر المقترح
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default BundlePricing;
