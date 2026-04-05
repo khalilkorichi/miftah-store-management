@@ -1,0 +1,97 @@
+I want to convert this React + Vite web app into a full Windows desktop application using Electron. The goal is to create a proper installable .exe file that works without any server or terminal.
+
+## Tasks to complete:
+
+### 1. Install dependencies
+Add to package.json devDependencies:
+- electron
+- electron-builder  
+- concurrently
+- wait-on
+
+### 2. Create file: electron/main.js
+```js
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+
+let mainWindow;
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    minWidth: 900,
+    minHeight: 600,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+    title: 'مفتاح - إدارة المتجر'
+  });
+
+  if (app.isPackaged) {
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+  } else {
+    mainWindow.loadURL('http://localhost:5173');
+  }
+
+  mainWindow.on('closed', () => { mainWindow = null; });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+  if (mainWindow === null) createWindow();
+});
+```
+
+### 3. Update package.json
+- Add "main": "electron/main.js" at the root level
+- Replace "name" value with: miftah-store-management
+- Add these scripts (keep existing ones):
+  - "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
+  - "electron:build": "vite build && electron-builder"
+- Add this "build" config at root level of package.json:
+```json
+"build": {
+  "appId": "com.miftah.store",
+  "productName": "مفتاح - إدارة المتجر",
+  "directories": {
+    "output": "release"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "electron/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+}
+```
+
+### 4. Update vite.config.js
+Add `base: './'` inside defineConfig to ensure assets load correctly when running from file:// protocol in Electron.
+
+### 5. Create file: electron/icon.ico
+Create a placeholder 256x256 icon file (or copy any existing image from public/ folder and rename it).
+
+### 6. Push all changes to a NEW GitHub repository
+- Create a new GitHub repository named: miftah-store-management-desktop
+- Push all project files including the new Electron files to this new repo
+- The repo should be under the GitHub account: khalilkorichi
+
+### 7. Create a README.md in the new repo explaining:
+- How to run in dev mode: npm run electron:dev
+- How to build the .exe: npm run electron:build
+- The output .exe will be in the /release folder
+
+## Important notes:
+- Do NOT break any existing functionality
+- The app currently uses localStorage for data storage — this will work fine in Electron
+- Keep the existing .bat file as-is
+- The existing GitHub repo to copy from is: https://github.com/khalilkorichi/miftah-store-management
