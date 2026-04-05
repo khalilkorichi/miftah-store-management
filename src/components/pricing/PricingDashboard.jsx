@@ -31,7 +31,7 @@ function PricingDashboard({
       {/* Page Header */}
       <div className="pd-page-header">
         <div className="pd-header-content">
-          <div className="pd-header-icon-wrap flex-row align-center justify-center">
+          <div className="pd-header-icon-wrap pd-header-icon-pricing flex-row align-center justify-center">
             <DollarSignIcon className="icon-xl" />
           </div>
           <div>

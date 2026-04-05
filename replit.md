@@ -25,10 +25,21 @@ All state is saved to browser `localStorage` under the key `miftah_store_data`. 
 - `src/App.jsx` — Root component with state management and hash-based tab routing
 - `src/components/Dashboard.jsx` — Dashboard home page with stats, alerts, product health, quick actions
 - `src/components/ProductTable.jsx` — Card-based product grid with supplier manager panel
-- `src/components/` — UI components (pricing, bundles, modals, icons)
+- `src/components/ReportsExport.jsx` — Reports page with PDF export, analytics tables, product/supplier reports
+- `src/components/SettingsPage.jsx` — Settings with card grid layout, theme toggle, data management, duration chips
+- `src/components/pricing/` — PricingDashboard, PricingOverview, CostManager, PricingMechanisms, CouponsManager
+- `src/components/bundles/` — BundleManager, BundleOverview, BundleBuilder, BundlePricing
+- `src/components/Icons.jsx` — SVG icon components
 - `src/data/initialData.js` — Default configuration values
 - `src/index.css` — Global styles (card layout, responsive grid, numeral settings)
 - `public/` — Static assets
+
+## Number Formatting Convention
+All components use `toLocaleString('en-US')` helpers to ensure Western Arabic numerals:
+- `fmt(v)` — formats to 2 decimal places (prices/costs)
+- `fmtPct(v)` — formats to 1 decimal place (percentages)
+- `fmtInt(v)` — formats with no decimals (integers)
+- Dates use `ar-SA-u-nu-latn` locale to force Western numerals
 
 ## Tab Navigation
 Hash-based routing: `#dashboard` (default), `#products`, `#pricing`, `#bundles`, `#reports`, `#settings`

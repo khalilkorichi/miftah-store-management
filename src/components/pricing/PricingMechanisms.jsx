@@ -5,6 +5,9 @@ import {
   BarChart, Bar
 } from 'recharts';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 function PricingMechanisms({ products, suppliers, costs, pricingData, setPricingData, exchangeRate }) {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [competitors, setCompetitors] = useState([]);
@@ -151,7 +154,7 @@ function PricingMechanisms({ products, suppliers, costs, pricingData, setPricing
               <div className="pm-info-box">
                 <div className="pm-info-row">
                   <span>سعر التكلفة الأساسي (المورد)</span>
-                  <strong>{baseCost.toFixed(2)} ر.س</strong>
+                  <strong>{fmt(baseCost)} ر.س</strong>
                 </div>
               </div>
               <div className="pm-field">
@@ -164,7 +167,7 @@ function PricingMechanisms({ products, suppliers, costs, pricingData, setPricing
               </div>
               <div className="pm-result">
                 <span>السعر المقترح</span>
-                <strong>{suggestedCpPrice.toFixed(2)} ر.س</strong>
+                <strong>{fmt(suggestedCpPrice)} ر.س</strong>
               </div>
             </div>
           </div>
@@ -193,7 +196,7 @@ function PricingMechanisms({ products, suppliers, costs, pricingData, setPricing
               </div>
               <div className="pm-result">
                 <span>السعر المقترح</span>
-                <strong>{suggestedVbPrice.toFixed(2)} ر.س</strong>
+                <strong>{fmt(suggestedVbPrice)} ر.س</strong>
               </div>
               {suggestedVbPrice < getSuggestedCostPlusPrice(0) && (
                 <div className="pm-warning">
@@ -267,7 +270,7 @@ function PricingMechanisms({ products, suppliers, costs, pricingData, setPricing
               {psyRule !== 'none' && (
                 <div className="pm-result">
                   <span>Cost-Plus بعد التعديل</span>
-                  <strong>{applyPsychological(suggestedCpPrice, psyRule).toFixed(2)} ر.س</strong>
+                  <strong>{fmt(applyPsychological(suggestedCpPrice, psyRule))} ر.س</strong>
                 </div>
               )}
             </div>
@@ -318,7 +321,7 @@ function PricingMechanisms({ products, suppliers, costs, pricingData, setPricing
                       <XAxis dataKey="price" stroke="var(--text-muted)" fontSize={12} label={{ value: 'السعر', position: 'insideBottomRight', offset: -5 }} />
                       <YAxis stroke="var(--text-muted)" fontSize={12} label={{ value: 'النسبة تراكمية %', angle: -90, position: 'insideLeft' }} />
                       <Tooltip 
-                        formatter={(val) => val.toFixed(1) + '%'} 
+                        formatter={(val) => fmtPct(val) + '%'} 
                         contentStyle={{ 
                           background: 'var(--bg-card)', 
                           border: '1px solid var(--border-color)', 

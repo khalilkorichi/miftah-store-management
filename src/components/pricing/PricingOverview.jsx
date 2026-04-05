@@ -1,6 +1,9 @@
 import React from 'react';
 import { TrendingDownIcon, AlertTriangleIcon, TrendingUpIcon, CheckCircleIcon, SendIcon, PackageIcon, BarChartIcon, ClipboardIcon } from '../Icons';
 
+const fmt = (val) => Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (val) => Number(val).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 function PricingOverview({ products, suppliers, costs, exchangeRate, pricingData }) {
   
   const getSupplierPrice = (prod) => {
@@ -38,7 +41,7 @@ function PricingOverview({ products, suppliers, costs, exchangeRate, pricingData
   };
 
   const handleApplySingle = (productId, price) => {
-    alert(`سيتم إرسال السعر ${price.toFixed(2)} للمنتج ${productId} عبر API مسقبلاً...`);
+    alert(`سيتم إرسال السعر ${fmt(price)} للمنتج ${productId} عبر API مسقبلاً...`);
   };
 
   const handleApplyAll = () => {
@@ -100,7 +103,7 @@ function PricingOverview({ products, suppliers, costs, exchangeRate, pricingData
         <div className="po-kpi-card po-kpi-green">
           <div className="po-kpi-icon flex-row align-center justify-center"><BarChartIcon className="icon-lg" /></div>
           <div className="po-kpi-data">
-            <span className="po-kpi-value">{avgMargin.toFixed(1)}%</span>
+            <span className="po-kpi-value">{fmtPct(avgMargin)}%</span>
             <span className="po-kpi-label">متوسط هامش الربح</span>
           </div>
           <div className="po-kpi-glow" />
@@ -146,13 +149,13 @@ function PricingOverview({ products, suppliers, costs, exchangeRate, pricingData
                         <span className="po-product-name">{p.name}</span>
                       </div>
                     </td>
-                    <td className="po-td-num">{baseC.toFixed(2)}</td>
-                    <td className="po-td-num">{totalCost.toFixed(2)}</td>
-                    <td className="po-td-num">{currP.toFixed(2)}</td>
-                    <td className="po-td-num po-td-suggested">{suggestedPrice.toFixed(2)}</td>
+                    <td className="po-td-num">{fmt(baseC)}</td>
+                    <td className="po-td-num">{fmt(totalCost)}</td>
+                    <td className="po-td-num">{fmt(currP)}</td>
+                    <td className="po-td-num po-td-suggested">{fmt(suggestedPrice)}</td>
                     <td className="po-td-num">
                       <span className={`po-margin-badge ${profitMargin > 0 ? 'positive' : 'negative'}`}>
-                        {profitMargin.toFixed(1)}%
+                        {fmtPct(profitMargin)}%
                       </span>
                     </td>
                     <td>

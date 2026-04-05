@@ -640,6 +640,9 @@ function App() {
             durations={durations}
             onAddDuration={handleAddDuration}
             onDeleteDuration={handleDeleteDuration}
+            products={products}
+            suppliers={suppliers}
+            bundles={bundles}
           />
           </div>
         )}

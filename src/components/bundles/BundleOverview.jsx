@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { BarChartIcon, TrendingUpIcon, TrendingDownIcon, CheckCircleIcon, PackageIcon, EditIcon, ClipboardIcon, TrashIcon } from '../Icons';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 function BundleOverview({ bundles, setBundles, products, getSupplierPrice, costs, setBundleToEdit, setActiveSubTab }) {
   const [expandedBundleId, setExpandedBundleId] = useState(null);
   
@@ -76,7 +79,7 @@ function BundleOverview({ bundles, setBundles, products, getSupplierPrice, costs
         <div className="po-kpi-card po-kpi-green">
           <div className="po-kpi-icon flex-row align-center justify-center"><TrendingUpIcon className="icon-lg" /></div>
           <div className="po-kpi-data">
-            <span className="po-kpi-value">{avgMargin.toFixed(1)}%</span>
+            <span className="po-kpi-value">{fmtPct(avgMargin)}%</span>
             <span className="po-kpi-label">متوسط هامش الربح</span>
           </div>
           <div className="po-kpi-glow" />
@@ -142,7 +145,7 @@ function BundleOverview({ bundles, setBundles, products, getSupplierPrice, costs
                       </td>
                       <td className="po-td-num">
                         {b.sellingPrice ? (
-                          <span className="cm-value-display">{b.sellingPrice.toFixed(2)} ر.س</span>
+                          <span className="cm-value-display">{fmt(b.sellingPrice)} ر.س</span>
                         ) : (
                           <span className="bo-unpriced">غير مسعرة</span>
                         )}
@@ -150,7 +153,7 @@ function BundleOverview({ bundles, setBundles, products, getSupplierPrice, costs
                       <td className="po-td-num">
                         {b.sellingPrice ? (
                           <span className={`po-status-badge ${profit > 0 ? 'po-status-success' : 'po-status-danger'}`}>
-                            {profit > 0 ? '+' : ''}{profit.toFixed(2)} ر.س
+                            {profit > 0 ? '+' : ''}{fmt(profit)} ر.س
                           </span>
                         ) : '-'}
                       </td>

@@ -7,6 +7,10 @@ import {
   StarIcon, KeyIcon, UserIcon, UsersIcon
 } from './Icons';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtInt = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
 // ── Shared inline styles ────────────────────────────────────
 const thStyle = {
   padding: '10px 12px',
@@ -122,7 +126,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
         });
         const avg = count > 0 ? total / count : 0;
         const savings = cheapest.price < Infinity ? expensive.price - cheapest.price : 0;
-        const savingsPercent = expensive.price > 0 ? ((savings / expensive.price) * 100).toFixed(1) : '0';
+        const savingsPercent = expensive.price > 0 ? fmtPct((savings / expensive.price) * 100) : '0';
         rows.push({
           productName: formatProductName(product),
           planDuration: getDurationLabel(plan.durationId),
@@ -138,7 +142,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
   const totalSavings  = analytics.reduce((s, a) => s + a.savings, 0);
   const totalPlans    = products.reduce((s, p) => s + p.plans.length, 0);
   const avgSavingsPercent = analytics.length > 0
-    ? (analytics.reduce((s, a) => s + parseFloat(a.savingsPercent), 0) / analytics.length).toFixed(1)
+    ? fmtPct(analytics.reduce((s, a) => s + parseFloat(a.savingsPercent), 0) / analytics.length)
     : '0';
 
   const getBestSupplierPerProduct = (productList) => {
@@ -232,14 +236,14 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                   </td>
                   {suppliers.map((s) => {
                     const usd = plan.prices[s.id] || 0;
-                    const sar = (usd * exchangeRate).toFixed(2);
+                    const sar = fmt(usd * exchangeRate);
                     let minP = Infinity;
                     Object.values(plan.prices).forEach((p) => { if (p > 0 && p < minP) minP = p; });
                     const isBest = usd > 0 && usd === minP;
                     return (
                       <React.Fragment key={s.id}>
                         <td style={{ ...tdStyle, fontWeight: '600', color: isBest ? '#11BA65' : '#333', background: isBest ? '#E8FFF3' : undefined }}>
-                          {usd > 0 ? `$${usd.toFixed(2)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>غير متوفر</span>}
+                          {usd > 0 ? `$${fmt(usd)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>غير متوفر</span>}
                         </td>
                         <td style={{ ...tdStyle, color: isBest ? '#11BA65' : '#666', background: isBest ? '#E8FFF3' : undefined }}>
                           {usd > 0 ? `${sar} ﷼` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500', opacity: 0.5 }}>-</span>}
@@ -276,7 +280,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           {bestSupplier && <MetricCard label="أفضل مورد" value={bestSupplier.supplierName} color="#11BA65" />}
           {productAnalytics.length > 0 && (
             <MetricCard label="متوسط التوفير"
-              value={`${(productAnalytics.reduce((s,a) => s+parseFloat(a.savingsPercent),0)/productAnalytics.length).toFixed(1)}%`}
+              value={`${fmtPct(productAnalytics.reduce((s,a) => s+parseFloat(a.savingsPercent),0)/productAnalytics.length)}%`}
               color="#F7784A" />
           )}
         </div>
@@ -349,16 +353,16 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                       return (
                         <React.Fragment key={s.id}>
                           <td style={{ ...tdStyle, fontWeight: isBest ? '800' : '500', color: isBest ? '#11BA65' : '#333', background: isBest ? '#E8FFF3' : undefined }}>
-                            {usd > 0 ? `$${usd.toFixed(2)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>غير متوفر</span>}
+                            {usd > 0 ? `$${fmt(usd)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>غير متوفر</span>}
                           </td>
                           <td style={{ ...tdStyle, color: isBest ? '#11BA65' : '#666', background: isBest ? '#E8FFF3' : undefined }}>
-                            {usd > 0 ? `${(usd * exchangeRate).toFixed(2)} ﷼` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500', opacity: 0.5 }}>-</span>}
+                            {usd > 0 ? `${fmt(usd * exchangeRate)} ﷼` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500', opacity: 0.5 }}>-</span>}
                           </td>
                         </React.Fragment>
                       );
                     })}
                     <td style={{ ...tdStyle, fontWeight: '700', color: '#11BA65' }}>
-                      {minP < Infinity ? `${bestName} — $${minP.toFixed(2)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>غير متوفر</span>}
+                      {minP < Infinity ? `${bestName} — $${fmt(minP)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>غير متوفر</span>}
                     </td>
                   </tr>
                 );
@@ -417,7 +421,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 <div style={{ marginRight: 'auto', display: 'flex', gap: '10px' }}>
                   <MetricCard label="الخطط" value={planCount} color="#11BA65" />
                   <MetricCard label="الأفضل سعراً" value={bestCount} color="#5E4FDE" />
-                  <MetricCard label="إجمالي الأسعار $" value={`$${totalSpend.toFixed(0)}`} color="#1A51F4" />
+                  <MetricCard label="إجمالي الأسعار $" value={`$${fmtInt(totalSpend)}`} color="#1A51F4" />
                 </div>
               </div>
 
@@ -443,8 +447,8 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                             {row.duration}
                           </span>
                         </td>
-                        <td style={{ ...tdStyle, fontWeight: '700' }}>${row.price.toFixed(2)}</td>
-                        <td style={tdStyle}>{(row.price * exchangeRate).toFixed(2)} ﷼</td>
+                        <td style={{ ...tdStyle, fontWeight: '700' }}>${fmt(row.price)}</td>
+                        <td style={tdStyle}>{fmt(row.price * exchangeRate)} ﷼</td>
                         <td style={tdStyle}>
                           {row.isBest ? (
                             <span style={{ background: '#E8FFF3', color: '#11BA65', padding: '3px 12px', borderRadius: '12px', fontWeight: '700', fontSize: '12px' }}>
@@ -487,10 +491,10 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '600' }}>{a.productName}</td>
                 <td style={tdStyle}><span style={{ background: '#E8FFF3', color: '#11BA65', padding: '3px 10px', borderRadius: '12px', fontSize: '11px' }}>{a.planDuration}</span></td>
                 <td style={{ ...tdStyle, fontWeight: '600', color: '#11BA65' }}>{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>لا يوجد</span>}</td>
-                <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${a.cheapest.price.toFixed(2)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>-</span>}</td>
-                <td style={tdStyle}>{a.cheapest.price > 0 ? `${(a.cheapest.price * exchangeRate).toFixed(2)} ﷼` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>-</span>}</td>
-                <td style={tdStyle}>{a.avgPrice > 0 ? `$${a.avgPrice.toFixed(2)}` : '-'}</td>
-                <td style={{ ...tdStyle, color: '#F7784A', fontWeight: '600' }}>${a.savings.toFixed(2)}</td>
+                <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>-</span>}</td>
+                <td style={tdStyle}>{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)} ﷼` : <span style={{ color: '#aaa', fontSize: '11px', fontWeight: '500' }}>-</span>}</td>
+                <td style={tdStyle}>{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : '-'}</td>
+                <td style={{ ...tdStyle, color: '#F7784A', fontWeight: '600' }}>${fmt(a.savings)}</td>
                 <td style={tdStyle}>
                   <span style={{ background: parseFloat(a.savingsPercent) > 10 ? '#FFE8E0' : '#FFF8E0', color: parseFloat(a.savingsPercent) > 10 ? '#F94B60' : '#F7784A', padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
                     {a.savingsPercent}%
@@ -519,8 +523,8 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
             <MetricCard label="عدد المنتجات"         value={products.length}                           color="#5E4FDE" />
             <MetricCard label="عدد الموردين"         value={suppliers.length}                          color="#11BA65" />
             <MetricCard label="إجمالي الخطط"         value={totalPlans}                                color="#1A51F4" />
-            <MetricCard label="إجمالي التوفير ($)"   value={`$${totalSavings.toFixed(2)}`}            color="#F7784A" />
-            <MetricCard label="إجمالي التوفير (﷼)"  value={`${(totalSavings * exchangeRate).toFixed(2)} ﷼`} color="#FFC530" />
+            <MetricCard label="إجمالي التوفير ($)"   value={`$${fmt(totalSavings)}`}            color="#F7784A" />
+            <MetricCard label="إجمالي التوفير (﷼)"  value={`${fmt(totalSavings * exchangeRate)} ﷼`} color="#FFC530" />
             <MetricCard label="متوسط نسبة التوفير"  value={`${avgSavingsPercent}%`}                   color="#F94B60" />
           </div>
           {bestPerProduct.length > 0 && (
@@ -566,11 +570,16 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
 
   return (
     <div className="reports-page" dir="rtl">
-      <h2 className="reports-title">
-        <BarChartIcon className="icon-md" /> التقارير وتصدير PDF
-      </h2>
+      <div className="reports-page-header">
+        <div className="reports-page-header-icon">
+          <BarChartIcon className="icon-xl" />
+        </div>
+        <div>
+          <h2 className="reports-title">التقارير وتصدير PDF</h2>
+          <p className="reports-subtitle">إنشاء تقارير احترافية وتحليل بيانات المنتجات والموردين</p>
+        </div>
+      </div>
 
-      {/* ── Quick stats ── */}
       <div className="stats-grid">
         <div className="stat-card stat-blue">
           <div className="stat-icon"><PackageIcon /></div>
@@ -694,7 +703,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                     <div key={plan.id} className="ppc-plan-row">
                       <span className="ppc-duration">{getDurationLabel(plan.durationId)}</span>
                       {minP < Infinity ? (
-                        <span className="ppc-best">أفضل: {bestName} — ${minP.toFixed(2)}</span>
+                        <span className="ppc-best">أفضل: {bestName} — ${fmt(minP)}</span>
                       ) : (
                         <span className="ppc-empty">لا توجد أسعار</span>
                       )}
@@ -794,10 +803,10 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                   <td className="td-product-name">{a.productName}</td>
                   <td><span className="plan-badge">{a.planDuration}</span></td>
                   <td className="td-best-supplier">{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span className="price-not-available">لا يوجد</span>}</td>
-                  <td className="td-price">{a.cheapest.price > 0 ? `$${a.cheapest.price.toFixed(2)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                  <td className="td-price">{a.cheapest.price > 0 ? `${(a.cheapest.price * exchangeRate).toFixed(2)} ﷼` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                  <td className="td-price">{a.avgPrice > 0 ? `$${a.avgPrice.toFixed(2)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                  <td className="td-savings">${a.savings.toFixed(2)}</td>
+                  <td className="td-price">{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
+                  <td className="td-price">{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)} ﷼` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
+                  <td className="td-price">{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
+                  <td className="td-savings">${fmt(a.savings)}</td>
                   <td className="td-savings-pct">{a.savingsPercent}%</td>
                 </tr>
               ))}

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { BarChartIcon, PinIcon, TrendingUpIcon, PlusIcon, SaveIcon, ClipboardIcon, LightbulbIcon, TrashIcon, LockIcon } from '../Icons';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 function CostManager({ costs, setCosts }) {
   const [newCostName, setNewCostName] = useState('');
   const [newCostType, setNewCostType] = useState('percentage');
@@ -51,14 +54,14 @@ function CostManager({ costs, setCosts }) {
         <div className="cm-summary-card cm-summary-fixed">
           <div className="cm-summary-icon flex-row align-center justify-center"><PinIcon className="icon-lg" /></div>
           <div className="cm-summary-data">
-            <span className="cm-summary-value">{totalFixed.toFixed(2)} <small>ر.س</small></span>
+            <span className="cm-summary-value">{fmt(totalFixed)} <small>ر.س</small></span>
             <span className="cm-summary-label">تكاليف ثابتة</span>
           </div>
         </div>
         <div className="cm-summary-card cm-summary-percent">
           <div className="cm-summary-icon flex-row align-center justify-center"><TrendingUpIcon className="icon-lg" /></div>
           <div className="cm-summary-data">
-            <span className="cm-summary-value">{totalPercent.toFixed(1)}%</span>
+            <span className="cm-summary-value">{fmtPct(totalPercent)}%</span>
             <span className="cm-summary-label">تكاليف نسبية</span>
           </div>
         </div>

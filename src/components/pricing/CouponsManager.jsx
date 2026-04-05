@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { TagIcon, StarIcon, ClipboardIcon, TrashIcon, DatabaseIcon, DollarSignIcon, ScaleIcon, AlertTriangleIcon, LightbulbIcon } from '../Icons';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function CouponsManager({ coupons, setCoupons, products, suppliers, costs, exchangeRate, pricingData }) {
   const [code, setCode] = useState('');
   const [type, setType] = useState('percentage');
@@ -233,15 +235,15 @@ function CouponsManager({ coupons, setCoupons, products, suppliers, costs, excha
                 <div className="cpn-sim-rows">
                   <div className="cpn-sim-row">
                     <span>سعر البيع</span>
-                    <strong>{simSellingPrice.toFixed(2)} ر.س</strong>
+                    <strong>{fmt(simSellingPrice)} ر.س</strong>
                   </div>
                   <div className="cpn-sim-row">
                     <span>التكاليف</span>
-                    <strong>{totalCost.toFixed(2)} ر.س</strong>
+                    <strong>{fmt(totalCost)} ر.س</strong>
                   </div>
                   <div className="cpn-sim-row cpn-sim-highlight">
                     <span>الربح الصافي</span>
-                    <strong className={normalProfit > 0 ? 'text-success' : 'text-danger'}>{normalProfit.toFixed(2)} ر.س</strong>
+                    <strong className={normalProfit > 0 ? 'text-success' : 'text-danger'}>{fmt(normalProfit)} ر.س</strong>
                   </div>
                 </div>
               </div>
@@ -255,15 +257,15 @@ function CouponsManager({ coupons, setCoupons, products, suppliers, costs, excha
                   <div className="cpn-sim-rows">
                     <div className="cpn-sim-row">
                       <span>مقدار الخصم</span>
-                      <strong>{discountAmount.toFixed(2)} ر.س</strong>
+                      <strong>{fmt(discountAmount)} ر.س</strong>
                     </div>
                     <div className="cpn-sim-row">
                       <span>سعر البيع الجديد</span>
-                      <strong>{finalPrice.toFixed(2)} ر.س</strong>
+                      <strong>{fmt(finalPrice)} ر.س</strong>
                     </div>
                     <div className="cpn-sim-row cpn-sim-highlight">
                       <span>الربح بالمقدار</span>
-                      <strong className={discountedProfit > 0 ? 'text-success' : 'text-danger'}>{discountedProfit.toFixed(2)} ر.س</strong>
+                      <strong className={discountedProfit > 0 ? 'text-success' : 'text-danger'}>{fmt(discountedProfit)} ر.س</strong>
                     </div>
                   </div>
                 </div>

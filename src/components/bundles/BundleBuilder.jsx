@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PackageIcon, EditIcon, DollarSignIcon, SaveIcon, StarIcon, CheckIcon } from '../Icons';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function BundleBuilder({ bundles, setBundles, products, getSupplierPrice, setActiveSubTab, bundleToEdit, setBundleToEdit }) {
   const [bundleName, setBundleName] = useState('');
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -119,7 +121,7 @@ function BundleBuilder({ bundles, setBundles, products, getSupplierPrice, setAct
                     </div>
                     <div className="bb-product-info">
                       <h4>{p.name}</h4>
-                      <span>{getSupplierPrice(p).toFixed(2)} ر.س</span>
+                      <span>{fmt(getSupplierPrice(p))} ر.س</span>
                     </div>
                   </div>
                 );
@@ -132,7 +134,7 @@ function BundleBuilder({ bundles, setBundles, products, getSupplierPrice, setAct
             {selectedProducts.length >= 2 && (
               <div className="bb-cost-summary">
                 <span className="flex-row align-center justify-center"><DollarSignIcon className="icon-sm" /></span>
-                <span>إجمالي تكلفة المورد للحزمة: <strong>{totalCost.toFixed(2)} ر.س</strong></span>
+                <span>إجمالي تكلفة المورد للحزمة: <strong>{fmt(totalCost)} ر.س</strong></span>
               </div>
             )}
             <div style={{ marginRight: 'auto', display: 'flex', gap: '10px' }}>

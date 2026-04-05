@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { PackageIcon, ZapIcon, TargetIcon } from '../Icons';
 
+const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 function BundlePricing({ bundles, setBundles, products, getSupplierPrice, costs }) {
   const [selectedBundleId, setSelectedBundleId] = useState(bundles.length > 0 ? bundles[0].id : null);
   const [discountPercent, setDiscountPercent] = useState(10);
@@ -44,7 +47,7 @@ function BundlePricing({ bundles, setBundles, products, getSupplierPrice, costs 
   const applyMarkupOnBase = () => {
     const sumBase = bundleStats.totalCost;
     const proposed = sumBase * (1 + (discountPercent/100));
-    handlePriceChange(proposed.toFixed(2));
+    handlePriceChange(fmt(proposed));
   };
 
   return (
@@ -68,7 +71,7 @@ function BundlePricing({ bundles, setBundles, products, getSupplierPrice, costs 
                 <div className="bp-sidebar-meta">
                   <span>{b.productIds.length} منتجات</span>
                   <span className={stats.profit > 0 ? 'text-success' : 'text-danger'}>
-                    {b.sellingPrice ? `${stats.profit.toFixed(0)} ر.س` : 'غير مسعر'}
+                    {b.sellingPrice ? `${fmt(stats.profit)} ر.س` : 'غير مسعر'}
                   </span>
                 </div>
               </div>
@@ -91,11 +94,11 @@ function BundlePricing({ bundles, setBundles, products, getSupplierPrice, costs 
         <div className="bp-cost-grid">
           <div className="bp-cost-box">
             <span className="bp-cost-label">تكلفة الموردين الأصلية</span>
-            <span className="bp-cost-value">{bundleStats.sumProductsBase.toFixed(2)} <small>ر.س</small></span>
+            <span className="bp-cost-value">{fmt(bundleStats.sumProductsBase)} <small>ر.س</small></span>
           </div>
           <div className="bp-cost-box bp-cost-total">
             <span className="bp-cost-label">إجمالي التكاليف (شامل العمولة)</span>
-            <span className="bp-cost-value bp-cost-red">{bundleStats.totalCost.toFixed(2)} <small>ر.س</small></span>
+            <span className="bp-cost-value bp-cost-red">{fmt(bundleStats.totalCost)} <small>ر.س</small></span>
           </div>
         </div>
 
@@ -116,12 +119,12 @@ function BundlePricing({ bundles, setBundles, products, getSupplierPrice, costs 
           <div className="bp-result-card">
             <span className="bp-result-label">الربح الصافي</span>
             <span className={`bp-result-value ${bundleStats.profit > 0 ? 'text-success' : 'text-danger'}`}>
-              {bundleStats.profit > 0 ? '+' : ''}{bundleStats.profit.toFixed(2)} ر.س
+              {bundleStats.profit > 0 ? '+' : ''}{fmt(bundleStats.profit)} ر.س
             </span>
           </div>
           <div className="bp-result-card">
             <span className="bp-result-label">هامش الربح</span>
-            <span className="bp-result-value">{bundleStats.margin.toFixed(1)}%</span>
+            <span className="bp-result-value">{fmtPct(bundleStats.margin)}%</span>
           </div>
         </div>
 
