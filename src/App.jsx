@@ -18,13 +18,15 @@ import ReportsExport from './components/ReportsExport';
 import PricingDashboard from './components/pricing/PricingDashboard';
 import BundleManager from './components/bundles/BundleManager';
 import { useToast } from './components/Toast';
+import Dashboard from './components/Dashboard';
 import {
   PackageIcon, DollarSignIcon, GiftIcon, BarChartIcon, SettingsIcon,
-  SunIcon, MoonIcon, CheckCircleIcon
+  SunIcon, MoonIcon, CheckCircleIcon, HomeIcon
 } from './components/Icons';
 
 const STORAGE_KEY = 'miftah_store_data';
 const TAB_LIST = [
+  { id: 'dashboard', label: 'لوحة التحكم', icon: HomeIcon },
   { id: 'products', label: 'المنتجات والأسعار', icon: PackageIcon },
   { id: 'pricing', label: 'إدارة التسعير', icon: DollarSignIcon },
   { id: 'bundles', label: 'الحزم والمجموعات', icon: GiftIcon },
@@ -100,8 +102,8 @@ function App() {
   // Custom hook logic for hash-based routing
   const getInitialTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['products', 'pricing', 'bundles', 'reports', 'settings'];
-    return validTabs.includes(hash) ? hash : 'products';
+    const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'reports', 'settings'];
+    return validTabs.includes(hash) ? hash : 'dashboard';
   };
   
   const [activeTab, setActiveTab] = useState(getInitialTab());
@@ -127,11 +129,11 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ['products', 'pricing', 'bundles', 'reports', 'settings'];
+      const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'reports', 'settings'];
       if (validTabs.includes(hash)) {
         setActiveTab(hash);
       } else if (!window.location.hash) {
-        setActiveTab('products');
+        setActiveTab('dashboard');
       }
     };
 
@@ -139,7 +141,7 @@ function App() {
     
     // Set initial hash if not present to maintain consistency
     if (!window.location.hash && window.history.replaceState) {
-      window.history.replaceState(null, '', '#products');
+      window.history.replaceState(null, '', '#dashboard');
     }
 
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -538,6 +540,22 @@ function App() {
 
       {/* Main Content */}
       <main className="main-content" id="main-content">
+        {activeTab === 'dashboard' && (
+          <div role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard">
+          <Dashboard
+            products={products}
+            suppliers={suppliers}
+            durations={durations}
+            exchangeRate={exchangeRate}
+            bundles={bundles}
+            costs={costs}
+            pricingData={pricingData}
+            coupons={coupons}
+            activationMethods={activationMethods}
+            onNavigate={handleTabChange}
+          />
+          </div>
+        )}
         {activeTab === 'products' && (
           <div role="tabpanel" id="panel-products" aria-labelledby="tab-products">
           <ProductTable

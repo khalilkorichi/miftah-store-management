@@ -64,7 +64,7 @@ const ReportHeader = ({ title, color, subtitle }) => (
         متجر مفتاح <KeyIcon className="icon-sm" style={{ color: '#fff' }} />
       </div>
       <div style={{ fontSize: '11px', opacity: 0.82 }}>
-        {new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })}
+        {new Date().toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' })}
       </div>
     </div>
   </div>
@@ -79,7 +79,7 @@ const ReportFooter = () => (
     color: '#999',
     borderTop: '1px solid #eee',
   }}>
-    متجر مفتاح — تم إنشاء هذا التقرير تلقائياً بتاريخ {new Date().toLocaleDateString('ar-SA', {
+    متجر مفتاح — تم إنشاء هذا التقرير تلقائياً بتاريخ {new Date().toLocaleDateString('ar-SA-u-nu-latn', {
       year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
     })}
   </div>

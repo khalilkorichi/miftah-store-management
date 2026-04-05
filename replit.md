@@ -2,6 +2,7 @@
 
 ## Overview
 A web-based admin dashboard for managing a digital products store. Features include:
+- **Dashboard home page** with key stats, alerts, quick actions, and product health overview
 - Product and supplier management with card-based UI
 - Pricing strategies and bundle management
 - Exchange rate tracking (USD/SAR)
@@ -21,14 +22,26 @@ A web-based admin dashboard for managing a digital products store. Features incl
 All state is saved to browser `localStorage` under the key `miftah_store_data`. No backend or database required.
 
 ## Project Structure
-- `src/App.jsx` — Root component with state management and tab routing
+- `src/App.jsx` — Root component with state management and hash-based tab routing
+- `src/components/Dashboard.jsx` — Dashboard home page with stats, alerts, product health, quick actions
 - `src/components/ProductTable.jsx` — Card-based product grid with supplier manager panel
 - `src/components/` — UI components (pricing, bundles, modals, icons)
 - `src/data/initialData.js` — Default configuration values
 - `src/index.css` — Global styles (card layout, responsive grid, numeral settings)
 - `public/` — Static assets
 
+## Tab Navigation
+Hash-based routing: `#dashboard` (default), `#products`, `#pricing`, `#bundles`, `#reports`, `#settings`
+
 ## UI Architecture
+### Dashboard (Home)
+- **Stats Cards:** Total products, suppliers, bundles, average margin
+- **Alerts:** Products needing attention (unpriced, low margin, etc.)
+- **Product Health Bar:** Visual status bar with good/warning/danger segments
+- **Products Table:** Top products with margin indicators
+- **Quick Actions:** Direct links to add product, create bundle, export report, etc.
+- **Sidebar Widgets:** Pricing summary, best supplier
+
 ### Products & Prices Page
 - **Card Grid Layout:** Products displayed as responsive cards (1 col mobile, 2 tablet, 3+ desktop)
 - **Product Cards:** Show product name, account type, activation methods, plan summaries with best prices
