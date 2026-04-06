@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   XIcon, TagIcon, StarIcon, ShieldCheckIcon, UserIcon, UsersIcon,
   EditIcon, PlusIcon, TrashIcon, ChevronDownIcon
@@ -29,13 +29,13 @@ function ProductDetailModal({
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setClosing(true);
     setTimeout(() => {
       setClosing(false);
       onClose();
     }, 250);
-  };
+  }, [onClose]);
 
   const handleOverlayClick = (e) => {
     if (e.target === overlayRef.current) handleClose();
@@ -45,7 +45,7 @@ function ProductDetailModal({
     const handleKey = (e) => { if (e.key === 'Escape' && isOpen) handleClose(); };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen || !product) return null;
 
