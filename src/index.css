@@ -828,44 +828,63 @@ body {
   flex: 1;
 }
 
+.supplier-contact-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-inline-start: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+.supplier-contact-link:hover .supplier-contact-actions {
+  opacity: 1;
+}
 .supplier-contact-link .chip-edit-btn,
 .supplier-contact-link .chip-copy-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  width: 20px;
-  height: 20px;
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, background 0.2s, color 0.2s;
-  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  color: inherit;
   padding: 0;
+  backdrop-filter: blur(4px);
 }
-.supplier-contact-link .chip-edit-btn { left: 4px; }
-.supplier-contact-link .chip-copy-btn { left: 28px; }
-.supplier-contact-link:hover .chip-edit-btn,
-.supplier-contact-link:hover .chip-copy-btn { opacity: 1; }
+.supplier-contact-link:not(:hover) .chip-edit-btn,
+.supplier-contact-link:not(:hover) .chip-copy-btn {
+  color: var(--text-muted);
+}
 .supplier-contact-link .chip-edit-btn:hover {
   background: var(--accent-blue);
   color: white;
-  border-color: var(--accent-blue);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(26, 81, 244, 0.35);
 }
 .supplier-contact-link .chip-copy-btn:hover {
   background: var(--accent-green);
   color: white;
-  border-color: var(--accent-green);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(14, 168, 92, 0.35);
 }
 .supplier-contact-link .chip-copy-btn.copied {
-  opacity: 1;
   background: var(--accent-green);
   color: white;
-  border-color: var(--accent-green);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(14, 168, 92, 0.35);
+}
+.supplier-contact-link .chip-edit-btn:active,
+.supplier-contact-link .chip-copy-btn:active {
+  transform: scale(0.92);
 }
 
 .chip-icon { font-size: 14px; }

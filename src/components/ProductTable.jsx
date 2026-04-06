@@ -50,12 +50,14 @@ function SupplierManagerPanel({ suppliers, editingSupplierField, editSupplierVal
             <span className="chip-icon">{icon}</span>
             <span>{label}</span>
           </a>
-          <button className="chip-copy-btn" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(safeUrl); const btn = e.currentTarget; btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1200); }} title="نسخ الرابط">
-            <CopyIcon className="icon-sm" />
-          </button>
-          <button className="chip-edit-btn" onClick={(e) => { e.stopPropagation(); handleStartEditSupplier(supplier.id, type, value); }}>
-            <EditIcon className="icon-sm" />
-          </button>
+          <div className="supplier-contact-actions">
+            <button className="chip-copy-btn" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(safeUrl); const btn = e.currentTarget; btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1200); }} title="نسخ الرابط">
+              <CopyIcon className="icon-sm" />
+            </button>
+            <button className="chip-edit-btn" onClick={(e) => { e.stopPropagation(); handleStartEditSupplier(supplier.id, type, value); }} title="تعديل">
+              <EditIcon className="icon-sm" />
+            </button>
+          </div>
         </div>
       );
     }
