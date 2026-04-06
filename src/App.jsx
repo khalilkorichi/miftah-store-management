@@ -25,6 +25,8 @@ import {
 } from './components/Icons';
 
 const STORAGE_KEY = 'miftah_store_data';
+const DATA_VERSION = 2;
+const SAVE_DEBOUNCE_MS = 500;
 const TAB_LIST = [
   { id: 'dashboard', label: 'لوحة التحكم', icon: HomeIcon },
   { id: 'products', label: 'المنتجات والأسعار', icon: PackageIcon },
@@ -75,16 +77,42 @@ function loadData() {
     }
   } catch (e) {
     console.error('Error loading data:', e);
+    const backup = localStorage.getItem(STORAGE_KEY + '_last_good');
+    if (backup) {
+      try { return JSON.parse(backup); } catch (_) {}
+    }
   }
   return null;
 }
 
+let _saveTimer = null;
 function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error saving data:', e);
-  }
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    try {
+      const payload = { ...data, _version: DATA_VERSION, _savedAt: Date.now() };
+      const serialized = JSON.stringify(payload);
+      const sizeKB = (serialized.length * 2) / 1024;
+      if (sizeKB > 4096) {
+        console.warn('Storage approaching limit:', Math.round(sizeKB) + 'KB');
+      }
+      localStorage.setItem(STORAGE_KEY, serialized);
+      localStorage.setItem(STORAGE_KEY + '_last_good', serialized);
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith(STORAGE_KEY + '_backup')) localStorage.removeItem(k);
+        });
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, _version: DATA_VERSION, _savedAt: Date.now() }));
+        } catch (_) {
+          console.error('Cannot save — storage full');
+        }
+      } else {
+        console.error('Error saving data:', e);
+      }
+    }
+  }, SAVE_DEBOUNCE_MS);
 }
 
 function App() {
@@ -538,35 +566,37 @@ function App() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="tab-nav" ref={tabNavRef} role="tablist" aria-label="التنقل الرئيسي">
-        {TAB_LIST.map((tab) => {
-          let alertCount = 0;
-          if (tab.id === 'dashboard') {
-            products.forEach(p => {
-              const hasPrice = p.plans.some(plan => Object.values(plan.prices).some(v => v > 0));
-              const hasOfficialPrice = p.plans.some(plan => plan.officialPriceUsd > 0);
-              if (!hasPrice || !hasOfficialPrice) alertCount++;
-            });
-          }
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              id={`tab-${tab.id}`}
-              aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
-              tabIndex={activeTab === tab.id ? 0 : -1}
-              className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => handleTabChange(tab.id)}
-              onKeyDown={handleTabKeyDown}
-            >
-              <span className="tab-icon"><tab.icon /></span>
-              {tab.label}
-              {alertCount > 0 && <span className="tab-badge">{alertCount}</span>}
-            </button>
-          );
-        })}
-      </nav>
+      <div className="tab-nav-wrapper">
+        <nav className="tab-nav" ref={tabNavRef} role="tablist" aria-label="التنقل الرئيسي">
+          {TAB_LIST.map((tab) => {
+            let alertCount = 0;
+            if (tab.id === 'dashboard') {
+              products.forEach(p => {
+                const hasPrice = p.plans.some(plan => Object.values(plan.prices).some(v => v > 0));
+                const hasOfficialPrice = p.plans.some(plan => plan.officialPriceUsd > 0);
+                if (!hasPrice || !hasOfficialPrice) alertCount++;
+              });
+            }
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                id={`tab-${tab.id}`}
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                tabIndex={activeTab === tab.id ? 0 : -1}
+                className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => handleTabChange(tab.id)}
+                onKeyDown={handleTabKeyDown}
+              >
+                <span className="tab-icon"><tab.icon /></span>
+                {tab.label}
+                {alertCount > 0 && <span className="tab-badge">{alertCount}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Exchange Rate Bar - always visible */}
       <ExchangeRateBar

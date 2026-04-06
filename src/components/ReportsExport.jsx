@@ -1219,24 +1219,38 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                         {group.productName}
                         <span className="group-plan-count">{group.plans.length} خطة</span>
                       </td>
-                      <td colSpan={3} className="td-group-summary">
-                        {!isExpanded && (
-                          <span className="group-summary-text">
-                            <span className="group-summary-chip green">أفضل: {bestPlan.cheapest.supplierName}</span>
-                            <span className="group-summary-chip blue">${fmt(bestPlan.cheapest.price)}</span>
-                          </span>
-                        )}
-                      </td>
-                      <td colSpan={2} className="td-group-summary">
-                        {!isExpanded && (
-                          <span className="group-summary-chip orange">${fmt(totalGroupSavings)} توفير</span>
-                        )}
-                      </td>
-                      <td colSpan={2} className="td-group-summary">
-                        {!isExpanded && (
-                          <span className="group-summary-chip purple">{bestPlan.savingsPercent}%</span>
-                        )}
-                      </td>
+                      {!isExpanded ? (
+                        <td colSpan={7} className="td-group-summary">
+                          <div className="collapsed-summary-row">
+                            <div className="collapsed-summary-cell">
+                              <span className="collapsed-label">أفضل مورد</span>
+                              <span className="collapsed-value green">{bestPlan.cheapest.supplierName}</span>
+                            </div>
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
+                              <span className="collapsed-label">أقل سعر</span>
+                              <span className="collapsed-value blue">${fmt(bestPlan.cheapest.price)}</span>
+                            </div>
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
+                              <span className="collapsed-label">بالريال</span>
+                              <span className="collapsed-value">{fmt(bestPlan.cheapest.price * exchangeRate)} ﷼</span>
+                            </div>
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
+                              <span className="collapsed-label">إجمالي التوفير</span>
+                              <span className="collapsed-value orange">${fmt(totalGroupSavings)}</span>
+                            </div>
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
+                              <span className="collapsed-label">نسبة التوفير</span>
+                              <span className="collapsed-value purple">{bestPlan.savingsPercent}%</span>
+                            </div>
+                          </div>
+                        </td>
+                      ) : (
+                        <td colSpan={7} className="td-group-summary"></td>
+                      )}
                     </tr>
                     {isExpanded && group.plans.map((a, pi) => (
                       <tr key={pi} className="plan-sub-row">
