@@ -1,0 +1,349 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  XIcon, TagIcon, StarIcon, ShieldCheckIcon, UserIcon, UsersIcon,
+  EditIcon, PlusIcon, TrashIcon, ChevronDownIcon
+} from './Icons';
+
+const fmtNum = (val) => {
+  if (val === null || val === undefined) return '0';
+  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+function ProductDetailModal({
+  isOpen, product, suppliers, durations, exchangeRate, activationMethods = [],
+  onClose, onUpdatePrice, onUpdateOfficialPrice, onUpdateWarranty,
+  onAddPlan, onDeletePlan, getDurationLabel, getAvailableDurations,
+  requestConfirm
+}) {
+  const [editingCell, setEditingCell] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const [addingPlan, setAddingPlan] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setClosing(false);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(() => {
+      setClosing(false);
+      onClose();
+    }, 250);
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target === overlayRef.current) handleClose();
+  };
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape' && isOpen) handleClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen]);
+
+  if (!isOpen || !product) return null;
+
+  const assignedMethods = (product.activationMethods || [])
+    .map((mId) => activationMethods.find((x) => x.id === mId))
+    .filter(Boolean);
+
+  const findBestPriceForPlan = (plan) => {
+    let min = Infinity;
+    let bestSupplierId = null;
+    for (const [sid, price] of Object.entries(plan.prices)) {
+      if (price > 0 && price < min) {
+        min = price;
+        bestSupplierId = parseInt(sid);
+      }
+    }
+    return bestSupplierId;
+  };
+
+  const availableDurations = getAvailableDurations(product);
+  const plans = product.plans || [];
+  const accountTypeLabel = product.accountType === 'individual' ? 'فردي' : product.accountType === 'team' ? 'فريق' : null;
+
+  const findBestSupplierForPlan = (plan) => {
+    const bestId = findBestPriceForPlan(plan);
+    return bestId;
+  };
+
+  const getLowestPrice = () => {
+    let min = Infinity;
+    for (const plan of plans) {
+      for (const price of Object.values(plan.prices)) {
+        if (price > 0 && price < min) min = price;
+      }
+    }
+    return min === Infinity ? null : min;
+  };
+
+  const getHighestPrice = () => {
+    let max = 0;
+    for (const plan of plans) {
+      for (const price of Object.values(plan.prices)) {
+        if (price > max) max = price;
+      }
+    }
+    return max === 0 ? null : max;
+  };
+
+  const getTotalSupplierPrices = (supplierId) => {
+    let total = 0;
+    let count = 0;
+    for (const plan of plans) {
+      const p = plan.prices[supplierId];
+      if (p > 0) { total += p; count++; }
+    }
+    return { total, count };
+  };
+
+  const lowestPrice = getLowestPrice();
+  const highestPrice = getHighestPrice();
+
+  return (
+    <div className={`pdm-overlay ${closing ? 'pdm-closing' : ''}`} ref={overlayRef} onClick={handleOverlayClick}>
+      <div className={`pdm-container ${closing ? 'pdm-slide-out' : 'pdm-slide-in'}`}>
+        <div className="pdm-header">
+          <div className="pdm-header-content">
+            <div className="pdm-title-area">
+              <h2 className="pdm-product-name">{product.name}</h2>
+              <div className="pdm-badges">
+                {accountTypeLabel && (
+                  <span className={`pdm-badge type-${product.accountType}`}>
+                    {product.accountType === 'individual' ? <UserIcon className="icon-xs" /> : <UsersIcon className="icon-xs" />}
+                    {accountTypeLabel}
+                  </span>
+                )}
+                <span className="pdm-badge plans-count">
+                  <TagIcon className="icon-xs" />
+                  {plans.length} {plans.length === 1 ? 'خطة' : 'خطط'}
+                </span>
+              </div>
+            </div>
+            <button className="pdm-close-btn" onClick={handleClose} title="إغلاق">
+              <XIcon className="icon-md" />
+            </button>
+          </div>
+
+          {assignedMethods.length > 0 && (
+            <div className="pdm-methods-row">
+              {assignedMethods.map((m) => (
+                <span key={m.id} className="pdm-method-chip" style={{ '--act-color': m.color }}>
+                  {m.icon} {m.label}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="pdm-stats-bar">
+            {lowestPrice && (
+              <div className="pdm-stat">
+                <span className="pdm-stat-label">أقل سعر</span>
+                <span className="pdm-stat-value best" dir="ltr">${fmtNum(lowestPrice)}</span>
+              </div>
+            )}
+            {highestPrice && (
+              <div className="pdm-stat">
+                <span className="pdm-stat-label">أعلى سعر</span>
+                <span className="pdm-stat-value" dir="ltr">${fmtNum(highestPrice)}</span>
+              </div>
+            )}
+            <div className="pdm-stat">
+              <span className="pdm-stat-label">الموردين</span>
+              <span className="pdm-stat-value">{suppliers.length}</span>
+            </div>
+            {lowestPrice && (
+              <div className="pdm-stat">
+                <span className="pdm-stat-label">أقل سعر بالريال</span>
+                <span className="pdm-stat-value" dir="ltr">{fmtNum(lowestPrice * exchangeRate)} ﷼</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="pdm-body">
+          <div className="pdm-comparison-wrapper">
+            <table className="pdm-comparison-table">
+              <thead>
+                <tr>
+                  <th className="pdm-th-supplier">المورد</th>
+                  {plans.map((plan) => {
+                    const bestId = findBestSupplierForPlan(plan);
+                    return (
+                      <th key={plan.id} className="pdm-th-plan">
+                        <div className="pdm-plan-header-cell">
+                          <span className="pdm-plan-duration">{getDurationLabel(plan.durationId)}</span>
+                          {plan.warrantyDays > 0 && (
+                            <span className="pdm-plan-warranty">
+                              <ShieldCheckIcon className="icon-xs" /> {plan.warrantyDays} يوم
+                            </span>
+                          )}
+                          {plan.officialPriceUsd > 0 && (
+                            <span className="pdm-plan-official" dir="ltr">
+                              الرسمي: ${fmtNum(plan.officialPriceUsd)}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {suppliers.map((supplier) => {
+                  const { total, count } = getTotalSupplierPrices(supplier.id);
+                  return (
+                    <tr key={supplier.id} className="pdm-supplier-row">
+                      <td className="pdm-td-supplier">
+                        <div className="pdm-supplier-info">
+                          <span className="pdm-supplier-name">{supplier.name}</span>
+                          {count > 0 && (
+                            <span className="pdm-supplier-avg" dir="ltr">
+                              متوسط: ${fmtNum(total / count)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      {plans.map((plan) => {
+                        const priceUsd = plan.prices[supplier.id] || 0;
+                        const bestId = findBestPriceForPlan(plan);
+                        const isBest = supplier.id === bestId;
+                        const cellKey = `${plan.id}-${supplier.id}`;
+                        const officialPrice = plan.officialPriceUsd || 0;
+                        const savings = officialPrice > 0 && priceUsd > 0 ? officialPrice - priceUsd : 0;
+                        const savingsPct = officialPrice > 0 && priceUsd > 0 ? ((savings / officialPrice) * 100) : 0;
+
+                        return (
+                          <td key={plan.id} className={`pdm-td-price ${isBest ? 'pdm-best' : ''} ${priceUsd === 0 ? 'pdm-empty' : ''}`}>
+                            {editingCell === cellKey ? (
+                              <input
+                                type="number"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => { onUpdatePrice(product.id, plan.id, supplier.id, editValue); setEditingCell(null); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { onUpdatePrice(product.id, plan.id, supplier.id, editValue); setEditingCell(null); } }}
+                                step="0.01" min="0" autoFocus
+                                className="pdm-price-input"
+                                dir="ltr"
+                              />
+                            ) : (
+                              <button className="pdm-price-btn" onClick={() => { setEditingCell(cellKey); setEditValue((priceUsd || 0).toString()); }}>
+                                {priceUsd > 0 ? (
+                                  <div className="pdm-price-content">
+                                    <span className="pdm-price-usd" dir="ltr">${fmtNum(priceUsd)}</span>
+                                    <span className="pdm-price-sar" dir="ltr">{fmtNum(priceUsd * exchangeRate)} ﷼</span>
+                                    {isBest && <span className="pdm-best-badge"><StarIcon className="icon-xs" /> الأفضل</span>}
+                                    {savingsPct > 0 && (
+                                      <span className="pdm-savings" dir="ltr">وفّر {savingsPct.toLocaleString('en-US', { maximumFractionDigits: 0 })}%</span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="pdm-no-price">—</span>
+                                )}
+                              </button>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="pdm-plans-details">
+            <h3 className="pdm-section-title">
+              <TagIcon className="icon-sm" /> تفاصيل الخطط
+            </h3>
+            <div className="pdm-plans-grid">
+              {plans.map((plan) => {
+                const bestId = findBestPriceForPlan(plan);
+                const bestSupplier = bestId ? suppliers.find(s => s.id === bestId) : null;
+                const bestPrice = bestId ? plan.prices[bestId] : null;
+                return (
+                  <div key={plan.id} className="pdm-plan-card">
+                    <div className="pdm-plan-card-header">
+                      <span className="pdm-plan-card-duration">{getDurationLabel(plan.durationId)}</span>
+                      {plans.length > 1 && (
+                        <button className="pdm-plan-delete" onClick={() => requestConfirm('حذف الخطة', `هل أنت متأكد من رغبتك في حذف خطة "${getDurationLabel(plan.durationId)}"؟`, () => onDeletePlan(product.id, plan.id))}>
+                          <TrashIcon className="icon-xs" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="pdm-plan-card-body">
+                      <div className="pdm-plan-card-row">
+                        <span className="pdm-plan-card-label"><ShieldCheckIcon className="icon-xs" /> الضمان</span>
+                        {editingCell === `warranty-${plan.id}` ? (
+                          <div className="pdm-warranty-edit">
+                            <input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={() => { onUpdateWarranty(product.id, plan.id, editValue); setEditingCell(null); }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') { onUpdateWarranty(product.id, plan.id, editValue); setEditingCell(null); } }}
+                              min="0" max="365" autoFocus className="pdm-warranty-input" dir="ltr" />
+                            <span>يوم</span>
+                          </div>
+                        ) : (
+                          <button className="pdm-plan-card-value clickable" onClick={() => { setEditingCell(`warranty-${plan.id}`); setEditValue((plan.warrantyDays || 0).toString()); }}>
+                            {plan.warrantyDays > 0 ? `${plan.warrantyDays} يوم` : 'تحديد'}
+                            <EditIcon className="icon-xs" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="pdm-plan-card-row">
+                        <span className="pdm-plan-card-label">السعر الرسمي</span>
+                        {editingCell === `official-${plan.id}` ? (
+                          <input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => { onUpdateOfficialPrice(product.id, plan.id, editValue); setEditingCell(null); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { onUpdateOfficialPrice(product.id, plan.id, editValue); setEditingCell(null); } }}
+                            step="0.01" min="0" autoFocus className="pdm-price-input small" dir="ltr" />
+                        ) : (
+                          <button className="pdm-plan-card-value clickable" onClick={() => { setEditingCell(`official-${plan.id}`); setEditValue((plan.officialPriceUsd || 0).toString()); }} dir="ltr">
+                            {plan.officialPriceUsd > 0 ? `$${fmtNum(plan.officialPriceUsd)}` : 'تحديد'}
+                            <EditIcon className="icon-xs" />
+                          </button>
+                        )}
+                      </div>
+                      {bestSupplier && bestPrice && (
+                        <div className="pdm-plan-card-row best-row">
+                          <span className="pdm-plan-card-label"><StarIcon className="icon-xs" /> أفضل سعر</span>
+                          <span className="pdm-plan-card-value best-value" dir="ltr">
+                            ${fmtNum(bestPrice)} — {bestSupplier.name}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {availableDurations.length > 0 && (
+                <div className="pdm-add-plan-card">
+                  {addingPlan ? (
+                    <select className="pdm-plan-select" onChange={(e) => { if (e.target.value) { onAddPlan(product.id, e.target.value); setAddingPlan(false); } }} autoFocus onBlur={() => setAddingPlan(false)} dir="rtl">
+                      <option value="">اختر المدة...</option>
+                      {availableDurations.map((d) => (<option key={d.id} value={d.id}>{d.label}</option>))}
+                    </select>
+                  ) : (
+                    <button className="pdm-add-plan-btn" onClick={() => setAddingPlan(true)}>
+                      <PlusIcon className="icon-md" />
+                      <span>إضافة خطة</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ProductDetailModal;

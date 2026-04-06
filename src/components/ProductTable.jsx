@@ -5,6 +5,7 @@ import ActivationMethodsModal from './ActivationMethodsModal';
 import ImportSallaModal from './ImportSallaModal';
 import ConfirmModal from './ConfirmModal';
 import CompetitorsModal from './CompetitorsModal';
+import ProductDetailModal from './ProductDetailModal';
 import {
   MessageCircleIcon, SendIcon, ShoppingCartIcon, EditIcon, XIcon,
   TagIcon, ChevronDownIcon, ChevronLeftIcon, TrashIcon, PlusCircleIcon,
@@ -119,10 +120,9 @@ function ProductCard({
   onUpdatePrice, onDeleteProduct, onDuplicateProduct, onUpdateProductName,
   onUpdateProductAccountType, onAddPlan, onDeletePlan, onUpdatePlanDuration,
   onToggleProductMethod, onUpdateOfficialPrice, onUpdateWarranty, requestConfirm,
-  setActivationModalProduct, setCompetitorsModalProduct,
+  setActivationModalProduct, setCompetitorsModalProduct, setDetailModalProduct,
   getDurationLabel, getAvailableDurations
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [addingPlan, setAddingPlan] = useState(false);
 
   const assignedMethods = (product.activationMethods || [])
@@ -226,9 +226,9 @@ function ProductCard({
           <span className="plans-label">
             <TagIcon className="icon-sm" /> الخطط ({product.plans.length})
           </span>
-          <button className="btn-toggle-plans" onClick={() => setIsExpanded(!isExpanded)}>
-            {isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
-            {isExpanded ? <ChevronDownIcon className="icon-sm" /> : <ChevronLeftIcon className="icon-sm" />}
+          <button className="btn-toggle-plans" onClick={() => setDetailModalProduct(product)}>
+            عرض التفاصيل
+            <ChevronLeftIcon className="icon-sm" />
           </button>
         </div>
 
@@ -254,98 +254,6 @@ function ProductCard({
           })}
         </div>
 
-        {isExpanded && (
-          <div className="plans-detail-section">
-            {product.plans.map((plan) => {
-              const bestSupplierId = findBestPriceForPlan(plan);
-              return (
-                <div key={plan.id} className="plan-detail-card">
-                  <div className="plan-detail-header">
-                    <span className="plan-duration-tag">{getDurationLabel(plan.durationId)}</span>
-                    {product.plans.length > 1 && (
-                      <button className="btn-delete-plan" onClick={() => requestConfirm('حذف الخطة', `هل أنت متأكد من رغبتك في حذف خطة "${getDurationLabel(plan.durationId)}"؟`, () => onDeletePlan(product.id, plan.id))}>حذف</button>
-                    )}
-                  </div>
-
-                  <div className="plan-warranty-row">
-                    <span className="plan-warranty-label"><ShieldCheckIcon className="icon-xs" /> الضمان:</span>
-                    {editingCell === `${product.id}-${plan.id}-warranty` ? (
-                      <div className="warranty-edit-wrap">
-                        <input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={() => { onUpdateWarranty(product.id, plan.id, editValue); setEditingCell(null); }} onKeyDown={(e) => { if (e.key === 'Enter') { onUpdateWarranty(product.id, plan.id, editValue); setEditingCell(null); } }} min="0" max="365" autoFocus className="warranty-edit-input" dir="ltr" />
-                        <span className="warranty-unit">يوم</span>
-                      </div>
-                    ) : (
-                      <button className="warranty-display" onClick={() => { setEditingCell(`${product.id}-${plan.id}-warranty`); setEditValue((plan.warrantyDays || 0).toString()); }}>
-                        {plan.warrantyDays > 0 ? (
-                          <span className="warranty-value active">{plan.warrantyDays} يوم</span>
-                        ) : (
-                          <span className="warranty-value empty">تحديد الضمان</span>
-                        )}
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="plan-official-price">
-                    <span className="plan-price-label">السعر الرسمي:</span>
-                    <div className="plan-price-values">
-                      {editingCell === `${product.id}-${plan.id}-official-usd` ? (
-                        <input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={() => { onUpdateOfficialPrice(product.id, plan.id, editValue); setEditingCell(null); }} onKeyDown={(e) => { if (e.key === 'Enter') { onUpdateOfficialPrice(product.id, plan.id, editValue); setEditingCell(null); } }} step="0.01" min="0" autoFocus className="price-edit-input" dir="ltr" />
-                      ) : (
-                        <button className="price-display official" onClick={() => { setEditingCell(`${product.id}-${plan.id}-official-usd`); setEditValue((plan.officialPriceUsd || 0).toString()); }} dir="ltr">
-                          {plan.officialPriceUsd ? `$${fmtNum(plan.officialPriceUsd)}` : <span className="price-not-set">تحديد السعر</span>}
-                        </button>
-                      )}
-                      {plan.officialPriceUsd > 0 && (
-                        <span className="official-sar">{fmtNum(plan.officialPriceUsd * exchangeRate)} ﷼</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="plan-suppliers-grid">
-                    {suppliers.map((supplier) => {
-                      const priceUsd = plan.prices[supplier.id] || 0;
-                      const isBest = supplier.id === bestSupplierId;
-                      const cellKey = `${product.id}-${plan.id}-${supplier.id}`;
-                      return (
-                        <div key={supplier.id} className={`supplier-price-row ${isBest ? 'best' : ''}`}>
-                          <span className="supplier-price-name">{supplier.name}</span>
-                          <div className="supplier-price-values">
-                            {editingCell === cellKey ? (
-                              <input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={() => { onUpdatePrice(product.id, plan.id, supplier.id, editValue); setEditingCell(null); }} onKeyDown={(e) => { if (e.key === 'Enter') { onUpdatePrice(product.id, plan.id, supplier.id, editValue); setEditingCell(null); } }} step="0.01" min="0" autoFocus className="price-edit-input" dir="ltr" />
-                            ) : (
-                              <button className="price-display" onClick={() => { setEditingCell(cellKey); setEditValue(priceUsd.toString()); }} dir="ltr">
-                                {priceUsd > 0 ? `$${fmtNum(priceUsd)}` : <span className="price-not-set">--</span>}
-                                {isBest && <StarIcon className="icon-xs best-star" />}
-                              </button>
-                            )}
-                            {priceUsd > 0 && (
-                              <span className="supplier-sar">{fmtNum(priceUsd * exchangeRate)} ﷼</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-
-            {availableDurations.length > 0 && (
-              <div className="add-plan-area">
-                {addingPlan ? (
-                  <select className="plan-duration-select" onChange={(e) => { if (e.target.value) { onAddPlan(product.id, e.target.value); setAddingPlan(false); } }} autoFocus onBlur={() => setAddingPlan(false)} dir="rtl">
-                    <option value="">اختر المدة...</option>
-                    {availableDurations.map((d) => (<option key={d.id} value={d.id}>{d.label}</option>))}
-                  </select>
-                ) : (
-                  <button className="btn-add-plan" onClick={() => setAddingPlan(true)}>
-                    <PlusIcon className="icon-sm" /> إضافة خطة
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -372,6 +280,9 @@ function ProductTable({
   const [competitorsModalProduct, setCompetitorsModalProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showImport, setShowImport] = useState(false);
+  const [detailModalProductId, setDetailModalProductId] = useState(null);
+
+  const detailModalProduct = detailModalProductId ? products.find(p => p.id === detailModalProductId) || null : null;
 
   const filteredProducts = searchQuery.trim()
     ? products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -471,6 +382,7 @@ function ProductTable({
               requestConfirm={requestConfirm}
               setActivationModalProduct={setActivationModalProduct}
               setCompetitorsModalProduct={setCompetitorsModalProduct}
+              setDetailModalProduct={(p) => setDetailModalProductId(p ? p.id : null)}
               getDurationLabel={getDurationLabel}
               getAvailableDurations={getAvailableDurations}
             />
@@ -489,6 +401,23 @@ function ProductTable({
       <CompetitorsModal isOpen={!!competitorsModalProduct} product={competitorsModalProduct} onClose={() => setCompetitorsModalProduct(null)} onAddCompetitor={onAddCompetitor} onUpdateCompetitor={onUpdateCompetitor} onDeleteCompetitor={onDeleteCompetitor} />
       <ConfirmModal isOpen={confirmDialog.isOpen} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={closeConfirm} />
       <ImportSallaModal isOpen={showImport} onClose={() => setShowImport(false)} onImport={(importedProducts) => { onImportProducts(importedProducts); setShowImport(false); }} existingProducts={products} durations={durations} suppliers={suppliers} />
+      <ProductDetailModal
+        isOpen={!!detailModalProduct}
+        product={detailModalProduct}
+        suppliers={suppliers}
+        durations={durations}
+        exchangeRate={exchangeRate}
+        activationMethods={activationMethods}
+        onClose={() => setDetailModalProductId(null)}
+        onUpdatePrice={onUpdatePrice}
+        onUpdateOfficialPrice={onUpdateOfficialPrice}
+        onUpdateWarranty={onUpdateWarranty}
+        onAddPlan={onAddPlan}
+        onDeletePlan={onDeletePlan}
+        getDurationLabel={getDurationLabel}
+        getAvailableDurations={getAvailableDurations}
+        requestConfirm={requestConfirm}
+      />
     </div>
   );
 }
