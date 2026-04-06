@@ -195,6 +195,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           cheapest: cheapest.price < Infinity ? cheapest : { price: 0, supplierName: '-' },
           expensive, avgPrice: avg, savings, savingsPercent,
           supplierCount: count,
+          warrantyDays: plan.warrantyDays || 0,
         });
       });
     });
@@ -335,6 +336,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 <th style={{ ...thStyle, textAlign: 'right', minWidth: '100px' }}>المنتج</th>
                 <th style={{ ...thStyle, minWidth: '50px' }}>النوع</th>
                 <th style={thStyle}>الخطة</th>
+                <th style={thStyle}>الضمان</th>
                 {suppliers.map((s) => (
                   <th key={s.id} style={{ ...thStyle, background: pdfColors.accent, color: '#fff' }} colSpan={2}>{s.name}</th>
                 ))}
@@ -371,6 +373,13 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                       )}
                       <td style={tdStyle}>
                         <Badge color={pdfColors.accent}>{getDurationLabel(plan.durationId)}</Badge>
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        {plan.warrantyDays > 0 ? (
+                          <span style={{ color: pdfColors.green, fontWeight: '600', fontSize: '11px' }}>{plan.warrantyDays} يوم</span>
+                        ) : (
+                          <span style={{ color: '#bbb', fontSize: '10px' }}>—</span>
+                        )}
                       </td>
                       {suppliers.map((s) => {
                         const usd = plan.prices[s.id] || 0;
@@ -505,6 +514,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
             <thead>
               <tr>
                 <th style={thStyle}>الخطة</th>
+                <th style={thStyle}>الضمان</th>
                 {suppliers.map((s) => (
                   <th key={s.id} style={{ ...thStyle, background: pdfColors.blue, color: '#fff' }} colSpan={2}>{s.name}</th>
                 ))}
@@ -532,6 +542,13 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                   <tr key={plan.id} style={{ background: pi % 2 === 0 ? '#f0f2ff' : '#fff' }}>
                     <td style={tdStyle}>
                       <Badge color={pdfColors.blue}>{getDurationLabel(plan.durationId)}</Badge>
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: 'center' }}>
+                      {plan.warrantyDays > 0 ? (
+                        <span style={{ color: pdfColors.green, fontWeight: '600', fontSize: '11px' }}>{plan.warrantyDays} يوم</span>
+                      ) : (
+                        <span style={{ color: '#bbb', fontSize: '10px' }}>—</span>
+                      )}
                     </td>
                     {suppliers.map((s) => {
                       const usd = plan.prices[s.id] || 0;
@@ -565,6 +582,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 <thead>
                   <tr>
                     <th style={{ ...thStyle, textAlign: 'right' }}>الخطة</th>
+                    <th style={thStyle}>الضمان</th>
                     <th style={thStyle}>أفضل مورد</th>
                     <th style={thStyle}>أقل سعر ($)</th>
                     <th style={thStyle}>المتوسط ($)</th>
@@ -576,6 +594,13 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                   {productAnalytics.map((a, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? '#fafbff' : '#fff' }}>
                       <td style={{ ...tdStyle, textAlign: 'right' }}><Badge color={pdfColors.blue}>{a.planDuration}</Badge></td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        {a.warrantyDays > 0 ? (
+                          <span style={{ color: pdfColors.green, fontWeight: '600', fontSize: '11px' }}>{a.warrantyDays} يوم</span>
+                        ) : (
+                          <span style={{ color: '#bbb', fontSize: '10px' }}>—</span>
+                        )}
+                      </td>
                       <td style={{ ...tdStyle, fontWeight: '600', color: pdfColors.green }}>{a.cheapest.supplierName}</td>
                       <td style={{ ...tdStyle, fontWeight: '700' }}>{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : '—'}</td>
                       <td style={tdStyle}>{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : '—'}</td>
@@ -622,7 +647,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 let minP = Infinity;
                 suppliers.forEach((s) => { const p = plan.prices[s.id] || 0; if (p > 0 && p < minP) minP = p; });
                 const isBest = price === minP;
-                supplierPlans.push({ productName: formatProductName(product), duration: getDurationLabel(plan.durationId), price, isBest });
+                supplierPlans.push({ productName: formatProductName(product), duration: getDurationLabel(plan.durationId), price, isBest, warrantyDays: plan.warrantyDays || 0 });
                 totalSpend += price;
                 planCount++;
                 if (isBest) bestCount++;
@@ -674,6 +699,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                       <tr>
                         <th style={{ ...thStyle, background: pdfColors.green, color: '#fff', textAlign: 'right' }}>المنتج</th>
                         <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الخطة</th>
+                        <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الضمان</th>
                         <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>السعر ($)</th>
                         <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>السعر (﷼)</th>
                         <th style={{ ...thStyle, background: pdfColors.green, color: '#fff' }}>الحالة</th>
@@ -690,6 +716,13 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                               </td>
                             )}
                             <td style={tdStyle}><Badge color={pdfColors.green}>{row.duration}</Badge></td>
+                            <td style={{ ...tdStyle, textAlign: 'center' }}>
+                              {row.warrantyDays > 0 ? (
+                                <span style={{ color: pdfColors.green, fontWeight: '600', fontSize: '11px' }}>{row.warrantyDays} يوم</span>
+                              ) : (
+                                <span style={{ color: '#bbb', fontSize: '10px' }}>—</span>
+                              )}
+                            </td>
                             <td style={{ ...tdStyle, fontWeight: '700' }}>${fmt(row.price)}</td>
                             <td style={tdStyle}>{fmt(row.price * exchangeRate)} ﷼</td>
                             <td style={tdStyle}>
@@ -1199,7 +1232,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           <table className="analytics-table grouped-table">
             <thead>
               <tr>
-                <th className="th-product">المنتج</th><th>الخطة</th><th>أفضل مورد</th>
+                <th className="th-product">المنتج</th><th>الخطة</th><th>الضمان</th><th>أفضل مورد</th>
                 <th>أقل سعر ($)</th><th>أقل سعر (﷼)</th>
                 <th>المتوسط</th><th>التوفير</th><th>نسبة التوفير</th>
               </tr>
@@ -1220,7 +1253,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                         <span className="group-plan-count">{group.plans.length} خطة</span>
                       </td>
                       {!isExpanded ? (
-                        <td colSpan={7} className="td-group-summary">
+                        <td colSpan={8} className="td-group-summary">
                           <div className="collapsed-summary-row">
                             <div className="collapsed-summary-cell">
                               <span className="collapsed-label">أفضل مورد</span>
@@ -1249,13 +1282,14 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                           </div>
                         </td>
                       ) : (
-                        <td colSpan={7} className="td-group-summary"></td>
+                        <td colSpan={8} className="td-group-summary"></td>
                       )}
                     </tr>
                     {isExpanded && group.plans.map((a, pi) => (
                       <tr key={pi} className="plan-sub-row">
                         <td className="td-plan-indent"></td>
                         <td><span className="plan-badge">{a.planDuration}</span></td>
+                        <td className="td-warranty">{a.warrantyDays > 0 ? <span className="warranty-badge-sm">{a.warrantyDays} يوم</span> : <span className="price-not-available" style={{opacity: 0.5}}>—</span>}</td>
                         <td className="td-best-supplier">{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span className="price-not-available">لا يوجد</span>}</td>
                         <td className="td-price">{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
                         <td className="td-price">{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)} ﷼` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
