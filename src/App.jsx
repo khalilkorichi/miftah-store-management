@@ -453,6 +453,22 @@ function App() {
     );
   }, []);
 
+  const handleUpdateWarranty = useCallback((productId, planId, days) => {
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        return {
+          ...p,
+          plans: p.plans.map((plan) =>
+            plan.id === planId
+              ? { ...plan, warrantyDays: Math.max(0, parseInt(days) || 0) }
+              : plan
+          ),
+        };
+      })
+    );
+  }, []);
+
   // === Competitors Management ===
   const handleAddCompetitor = useCallback((productId, name, url) => {
     setProducts((prev) =>
@@ -650,6 +666,7 @@ function App() {
             onAddActivationMethodType={handleAddActivationMethodType}
             onDeleteActivationMethodType={handleDeleteActivationMethodType}
             onUpdateOfficialPrice={handleUpdateOfficialPrice}
+            onUpdateWarranty={handleUpdateWarranty}
             onAddCompetitor={handleAddCompetitor}
             onUpdateCompetitor={handleUpdateCompetitor}
             onDeleteCompetitor={handleDeleteCompetitor}

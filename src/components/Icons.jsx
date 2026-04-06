@@ -144,3 +144,5 @@ export const LayersIcon = (p) => I(<><polygon points="12 2 2 7 12 12 22 7 12 2"/
 export const ActivityIcon = (p) => I(<><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>, p);
 
 export const PercentIcon = (p) => I(<><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></>, p);
+
+export const ShieldCheckIcon = (p) => I(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></>, p);

@@ -9,7 +9,7 @@ import {
   MessageCircleIcon, SendIcon, ShoppingCartIcon, EditIcon, XIcon,
   TagIcon, ChevronDownIcon, ChevronLeftIcon, TrashIcon, PlusCircleIcon,
   EyeIcon, StarIcon, PackageIcon, SearchIcon, PlusIcon, SettingsIcon,
-  UserIcon, UsersIcon, CopyIcon, UploadIcon
+  UserIcon, UsersIcon, CopyIcon, UploadIcon, ShieldCheckIcon
 } from './Icons';
 
 const fmtNum = (val) => {
@@ -118,7 +118,7 @@ function ProductCard({
   editingName, setEditingName, editNameValue, setEditNameValue,
   onUpdatePrice, onDeleteProduct, onDuplicateProduct, onUpdateProductName,
   onUpdateProductAccountType, onAddPlan, onDeletePlan, onUpdatePlanDuration,
-  onToggleProductMethod, onUpdateOfficialPrice, requestConfirm,
+  onToggleProductMethod, onUpdateOfficialPrice, onUpdateWarranty, requestConfirm,
   setActivationModalProduct, setCompetitorsModalProduct,
   getDurationLabel, getAvailableDurations
 }) {
@@ -244,6 +244,11 @@ function ProductCard({
                 ) : (
                   <span className="plan-chip-price empty">غير مسعّر</span>
                 )}
+                {(plan.warrantyDays > 0) && (
+                  <span className="plan-chip-warranty" title={`ضمان ${plan.warrantyDays} يوم`}>
+                    <ShieldCheckIcon className="icon-xs" /> {plan.warrantyDays}
+                  </span>
+                )}
               </div>
             );
           })}
@@ -259,6 +264,24 @@ function ProductCard({
                     <span className="plan-duration-tag">{getDurationLabel(plan.durationId)}</span>
                     {product.plans.length > 1 && (
                       <button className="btn-delete-plan" onClick={() => requestConfirm('حذف الخطة', `هل أنت متأكد من رغبتك في حذف خطة "${getDurationLabel(plan.durationId)}"؟`, () => onDeletePlan(product.id, plan.id))}>حذف</button>
+                    )}
+                  </div>
+
+                  <div className="plan-warranty-row">
+                    <span className="plan-warranty-label"><ShieldCheckIcon className="icon-xs" /> الضمان:</span>
+                    {editingCell === `${product.id}-${plan.id}-warranty` ? (
+                      <div className="warranty-edit-wrap">
+                        <input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={() => { onUpdateWarranty(product.id, plan.id, editValue); setEditingCell(null); }} onKeyDown={(e) => { if (e.key === 'Enter') { onUpdateWarranty(product.id, plan.id, editValue); setEditingCell(null); } }} min="0" max="365" autoFocus className="warranty-edit-input" dir="ltr" />
+                        <span className="warranty-unit">يوم</span>
+                      </div>
+                    ) : (
+                      <button className="warranty-display" onClick={() => { setEditingCell(`${product.id}-${plan.id}-warranty`); setEditValue((plan.warrantyDays || 0).toString()); }}>
+                        {plan.warrantyDays > 0 ? (
+                          <span className="warranty-value active">{plan.warrantyDays} يوم</span>
+                        ) : (
+                          <span className="warranty-value empty">تحديد الضمان</span>
+                        )}
+                      </button>
                     )}
                   </div>
 
@@ -334,7 +357,7 @@ function ProductTable({
   onUpdateProductName, onUpdateProductAccountType, onAddPlan, onDeletePlan,
   onUpdatePlanDuration, onUpdateSupplier, onDeleteSupplier, onAddSupplier,
   onToggleProductMethod, onAddActivationMethodType, onDeleteActivationMethodType,
-  onUpdateOfficialPrice, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
+  onUpdateOfficialPrice, onUpdateWarranty, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
   onImportProducts,
 }) {
   const [editingCell, setEditingCell] = useState(null);
@@ -444,6 +467,7 @@ function ProductTable({
               onUpdatePlanDuration={onUpdatePlanDuration}
               onToggleProductMethod={onToggleProductMethod}
               onUpdateOfficialPrice={onUpdateOfficialPrice}
+              onUpdateWarranty={onUpdateWarranty}
               requestConfirm={requestConfirm}
               setActivationModalProduct={setActivationModalProduct}
               setCompetitorsModalProduct={setCompetitorsModalProduct}
@@ -459,7 +483,7 @@ function ProductTable({
         </div>
       )}
 
-      <AddProductModal isOpen={showAddProduct} onClose={() => setShowAddProduct(false)} onConfirm={(productData) => onAddProduct(productData.name, productData.plans, productData.activationMethods)} durations={durations} suppliers={suppliers} allMethods={activationMethods} />
+      <AddProductModal isOpen={showAddProduct} onClose={() => setShowAddProduct(false)} onConfirm={(productData) => onAddProduct(productData.name, productData.plans, productData.activationMethods, productData.accountType || 'none')} durations={durations} suppliers={suppliers} allMethods={activationMethods} />
       <AddSupplierModal isOpen={showAddSupplier} onClose={() => setShowAddSupplier(false)} onConfirm={(supplierData) => onAddSupplier(supplierData)} />
       <ActivationMethodsModal isOpen={!!activationModalProduct} product={activationModalProduct} onClose={() => setActivationModalProduct(null)} allMethods={activationMethods} onToggleMethod={onToggleProductMethod} onAddMethodType={onAddActivationMethodType} onDeleteMethodType={onDeleteActivationMethodType} />
       <CompetitorsModal isOpen={!!competitorsModalProduct} product={competitorsModalProduct} onClose={() => setCompetitorsModalProduct(null)} onAddCompetitor={onAddCompetitor} onUpdateCompetitor={onUpdateCompetitor} onDeleteCompetitor={onDeleteCompetitor} />

@@ -1208,6 +1208,18 @@ body {
   color: var(--text-muted);
   font-size: 10px;
 }
+.plan-chip-warranty {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-green);
+  background: rgba(14, 168, 92, 0.1);
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-inline-start: 4px;
+}
 
 /* ===== PLAN DETAIL SECTION ===== */
 .plans-detail-section {
@@ -1258,6 +1270,71 @@ body {
 .btn-delete-plan:hover {
   background: var(--accent-red);
   color: white;
+}
+
+.plan-warranty-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(14, 168, 92, 0.04);
+  border: 1px dashed rgba(14, 168, 92, 0.15);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.plan-warranty-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-green);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.warranty-display {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--font-family);
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.warranty-display:hover {
+  background: rgba(14, 168, 92, 0.1);
+}
+.warranty-value.active {
+  color: var(--accent-green);
+  font-weight: 700;
+}
+.warranty-value.empty {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.warranty-edit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.warranty-edit-input {
+  width: 60px;
+  padding: 3px 6px;
+  border: 1px solid var(--accent-green);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-family);
+  text-align: center;
+}
+.warranty-edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(14, 168, 92, 0.25);
+}
+.warranty-unit {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .plan-official-price {
@@ -3568,6 +3645,38 @@ body {
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.plan-warranty-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-green);
+  font-size: 12px;
+}
+.modal-warranty-input {
+  width: 50px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-family);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.modal-warranty-input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 2px rgba(14, 168, 92, 0.15);
+}
+.warranty-input-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 .plan-prices-grid {
   padding: 8px 0;

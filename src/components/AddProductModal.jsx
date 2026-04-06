@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PackageIcon, XIcon, CheckIcon, CheckCircleIcon, TagIcon, CalendarIcon, InfoIcon, ZapIcon, UserIcon, UsersIcon } from './Icons';
+import { PackageIcon, XIcon, CheckIcon, CheckCircleIcon, TagIcon, CalendarIcon, InfoIcon, ZapIcon, UserIcon, UsersIcon, ShieldCheckIcon } from './Icons';
 
 function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, allMethods = [] }) {
   const [name, setName] = useState('');
@@ -7,7 +7,8 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
   const [selectedMethods, setSelectedMethods] = useState([]);
   const [accountType, setAccountType] = useState('none');
   const [prices, setPrices] = useState({});
-  const [step, setStep] = useState(1); // 1: اسم المنتج, 2: الخطط والأسعار
+  const [warranties, setWarranties] = useState({});
+  const [step, setStep] = useState(1);
   const [nameError, setNameError] = useState('');
   const nameInputRef = useRef(null);
   const overlayRef = useRef(null);
@@ -20,6 +21,7 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
       setSelectedMethods([]);
       setAccountType('none');
       setPrices({});
+      setWarranties({});
       setStep(1);
       setNameError('');
       setTimeout(() => nameInputRef.current?.focus(), 80);
@@ -92,7 +94,8 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
         const val = parseFloat(prices[durId]?.[s.id]);
         planPrices[s.id] = isNaN(val) ? 0 : val;
       });
-      return { id: idx + 1, durationId: durId, prices: planPrices };
+      const warrantyDays = Math.max(0, parseInt(warranties[durId]) || 0);
+      return { id: idx + 1, durationId: durId, prices: planPrices, warrantyDays };
     });
 
     onConfirm({ name: trimmed, plans, activationMethods: selectedMethods, accountType });
@@ -277,6 +280,20 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
                 <div key={durId} className="modal-plan-section">
                   <div className="plan-section-header">
                     <span className="plan-duration-tag">{getDurationLabel(durId)}</span>
+                    <div className="plan-warranty-input-wrap">
+                      <ShieldCheckIcon className="icon-xs" />
+                      <input
+                        type="number"
+                        className="modal-warranty-input"
+                        placeholder="0"
+                        value={warranties[durId] ?? ''}
+                        onChange={(e) => setWarranties((prev) => ({ ...prev, [durId]: e.target.value }))}
+                        min="0"
+                        max="365"
+                        dir="ltr"
+                      />
+                      <span className="warranty-input-label">يوم ضمان</span>
+                    </div>
                   </div>
                   <div className="plan-prices-grid">
                     {suppliers.map((supplier) => (
