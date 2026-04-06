@@ -101,8 +101,12 @@ function saveData(data) {
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
         Object.keys(localStorage).forEach(k => {
-          if (k.startsWith(STORAGE_KEY + '_backup')) localStorage.removeItem(k);
+          if (k !== STORAGE_KEY && k.startsWith(STORAGE_KEY)) localStorage.removeItem(k);
         });
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && !k.startsWith(STORAGE_KEY)) { localStorage.removeItem(k); break; }
+        }
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, _version: DATA_VERSION, _savedAt: Date.now() }));
         } catch (_) {

@@ -21,6 +21,10 @@ A web-based admin dashboard for managing a digital products store. Features incl
 
 ## Data Persistence
 All state is saved to browser `localStorage` under the key `miftah_store_data`. No backend or database required.
+- **Debounced saves** (500ms) to prevent excessive writes during rapid edits
+- **Data versioning** (`_version` field) for future migration support
+- **Backup recovery**: `_last_good` backup key; corrupted primary auto-falls back to backup
+- **Quota handling**: On `QuotaExceededError`, clears auxiliary keys and retries save
 
 ## Project Structure
 - `src/App.jsx` — Root component with state management and hash-based tab routing
@@ -44,6 +48,10 @@ All components use `toLocaleString('en-US')` helpers to ensure Western Arabic nu
 
 ## Tab Navigation
 Hash-based routing: `#dashboard` (default), `#products`, `#pricing`, `#bundles`, `#reports`, `#settings`
+- Sticky nav bar (stays visible while scrolling, below header)
+- Active tab: subtle purple gradient bg, border highlight, bottom indicator line
+- Hover: border reveal + partial indicator line preview
+- Smooth page transitions on tab switch (fade in/out)
 
 ## UI Architecture
 ### Dashboard (Home)
