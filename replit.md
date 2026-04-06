@@ -17,6 +17,7 @@ A web-based admin dashboard for managing a digital products store. Features incl
 - **Charts:** Recharts
 - **Excel:** SheetJS (xlsx)
 - **PDF:** jsPDF + jspdf-autotable
+- **Desktop:** Electron + electron-builder (optional .exe build)
 
 ## Data Persistence
 All state is saved to browser `localStorage` under the key `miftah_store_data`. No backend or database required.
@@ -60,13 +61,32 @@ Hash-based routing: `#dashboard` (default), `#products`, `#pricing`, `#bundles`,
 - **Supplier Manager Panel:** Collapsible panel at top for managing suppliers and their contact info
 - **All numbers use Western Arabic numerals (0-9)** via CSS font-feature-settings and `toLocaleString('en-US')`
 
+## UX Features
+- **Page transitions:** Smooth fade in/out animation when switching between tabs
+- **Scroll to top:** Automatically scrolls to top on tab change (both click and browser back/forward)
+- **Nav badge:** Dashboard tab shows alert count badge for products needing attention
+- **Show more/less:** Dashboard alerts and products table have expand/collapse toggles
+- **Back to top:** Floating button appears when scrolling down for quick navigation
+- **Grouped tables:** Reports analytics table groups products with collapse/expand and summary chips
+- **Footer:** Branded footer with product/supplier/bundle counts
+
 ## Development
 ```bash
 npm install
 npm run dev   # Runs on http://localhost:5000
 ```
 
+## Electron Desktop Build
+```bash
+npm run electron:dev    # Dev mode with hot reload
+npm run electron:build  # Build .exe installer (output in /release)
+```
+
 ## Deployment
 Configured as a static site:
 - Build: `npm run build`
 - Output directory: `dist`
+
+## GitHub Repositories
+- Web: `khalilkorichi/miftah-store-management`
+- Desktop: `khalilkorichi/miftah-store-management-desktop`

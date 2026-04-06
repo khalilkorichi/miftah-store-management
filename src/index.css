@@ -359,6 +359,30 @@ body {
   40% { transform: scale(1.25); }
   100% { transform: scale(1); }
 }
+.tab-badge {
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0 5px;
+  margin-inline-start: 2px;
+  line-height: 1;
+  animation: badge-pop 0.3s ease;
+}
+.tab-btn.active .tab-badge {
+  background: rgba(255,255,255,0.3);
+}
+@keyframes badge-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
 
 .tab-icon {
   font-size: 16px;
@@ -1571,6 +1595,27 @@ body {
 .dash-alert-more:hover {
   background: rgba(94, 79, 222, 0.06);
 }
+.dash-show-more-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--accent-purple);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: transparent;
+  margin-top: 8px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.dash-show-more-btn:hover {
+  background: rgba(94, 79, 222, 0.08);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+}
 
 .dash-products-summary {
   margin-bottom: 16px;
@@ -2683,12 +2728,91 @@ body {
 }
 
 /* ===== FOOTER ===== */
+.main-content.page-enter {
+  animation: pageIn 0.3s ease forwards;
+}
+.main-content.page-exit {
+  animation: pageOut 0.15s ease forwards;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pageOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
 .app-footer {
   text-align: center;
-  padding: 20px;
+  padding: 32px 20px;
   color: var(--text-muted);
   font-size: var(--text-sm);
   border-top: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.footer-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  opacity: 0.8;
+}
+.footer-copy {
+  margin: 0;
+  color: var(--text-muted);
+}
+.footer-stats {
+  display: flex;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.footer-dot {
+  color: var(--text-muted);
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(94, 79, 222, 0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  animation: fadeUp 0.3s ease;
+}
+.back-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(94, 79, 222, 0.5);
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== TOAST NOTIFICATIONS ===== */

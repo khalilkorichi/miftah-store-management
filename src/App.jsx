@@ -131,7 +131,12 @@ function App() {
       const hash = window.location.hash.replace('#', '');
       const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'reports', 'settings'];
       if (validTabs.includes(hash)) {
-        setActiveTab(hash);
+        setPageTransition(true);
+        setTimeout(() => {
+          setActiveTab(hash);
+          window.scrollTo(0, 0);
+          setTimeout(() => setPageTransition(false), 30);
+        }, 150);
       } else if (!window.location.hash) {
         setActiveTab('dashboard');
       }
@@ -147,9 +152,29 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const [pageTransition, setPageTransition] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const handleTabChange = useCallback((tab) => {
-    window.location.hash = tab;
-    setActiveTab(tab);
+    setPageTransition(true);
+    setTimeout(() => {
+      window.location.hash = tab;
+      setActiveTab(tab);
+      window.scrollTo(0, 0);
+      setTimeout(() => setPageTransition(false), 30);
+    }, 150);
   }, []);
 
   // Keyboard navigation for tabs (RTL-aware: ArrowRight = prev, ArrowLeft = next)
@@ -514,22 +539,33 @@ function App() {
 
       {/* Navigation Tabs */}
       <nav className="tab-nav" ref={tabNavRef} role="tablist" aria-label="التنقل الرئيسي">
-        {TAB_LIST.map((tab) => (
-          <button
-            key={tab.id}
-            role="tab"
-            id={`tab-${tab.id}`}
-            aria-selected={activeTab === tab.id}
-            aria-controls={`panel-${tab.id}`}
-            tabIndex={activeTab === tab.id ? 0 : -1}
-            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => handleTabChange(tab.id)}
-            onKeyDown={handleTabKeyDown}
-          >
-            <span className="tab-icon"><tab.icon /></span>
-            {tab.label}
-          </button>
-        ))}
+        {TAB_LIST.map((tab) => {
+          let alertCount = 0;
+          if (tab.id === 'dashboard') {
+            products.forEach(p => {
+              const hasPrice = p.plans.some(plan => Object.values(plan.prices).some(v => v > 0));
+              const hasOfficialPrice = p.plans.some(plan => plan.officialPriceUsd > 0);
+              if (!hasPrice || !hasOfficialPrice) alertCount++;
+            });
+          }
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              id={`tab-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`panel-${tab.id}`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => handleTabChange(tab.id)}
+              onKeyDown={handleTabKeyDown}
+            >
+              <span className="tab-icon"><tab.icon /></span>
+              {tab.label}
+              {alertCount > 0 && <span className="tab-badge">{alertCount}</span>}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Exchange Rate Bar - always visible */}
@@ -539,7 +575,7 @@ function App() {
       />
 
       {/* Main Content */}
-      <main className="main-content" id="main-content">
+      <main className={`main-content ${pageTransition ? 'page-exit' : 'page-enter'}`} id="main-content">
         {activeTab === 'dashboard' && (
           <div role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard">
           <Dashboard
@@ -650,8 +686,27 @@ function App() {
 
       {/* Footer */}
       <footer className="app-footer">
-        <p>متجر مفتاح © {new Date().getFullYear()} - إدارة المنتجات والأسعار</p>
+        <div className="footer-content">
+          <div className="footer-brand">
+            <img src="/logo.png" alt="" className="footer-logo" />
+            <span>متجر مفتاح</span>
+          </div>
+          <p className="footer-copy">© {new Date().getFullYear()} متجر مفتاح — إدارة المنتجات والأسعار الرقمية</p>
+          <div className="footer-stats">
+            <span>{products.length} منتج</span>
+            <span className="footer-dot">·</span>
+            <span>{suppliers.length} مورد</span>
+            <span className="footer-dot">·</span>
+            <span>{bundles.length} حزمة</span>
+          </div>
+        </div>
       </footer>
+
+      {showBackToTop && (
+        <button className="back-to-top" onClick={scrollToTop} title="العودة للأعلى" aria-label="العودة للأعلى">
+          ↑
+        </button>
+      )}
     </div>
   );
 }

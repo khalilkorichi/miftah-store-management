@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   PackageIcon, UsersIcon, GiftIcon, DollarSignIcon, BarChartIcon,
   TrendingUpIcon, TrendingDownIcon, AlertTriangleIcon, CheckCircleIcon,
@@ -112,6 +112,11 @@ function Dashboard({
     ...unpricedProducts.map(p => ({ type: 'info', icon: <TagIcon className="icon-sm" />, text: `${p.name} - لم يتم تسعيره بعد`, action: 'products' })),
   ];
 
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const visibleAlerts = showAllAlerts ? alertItems : alertItems.slice(0, 5);
+  const visibleProducts = showAllProducts ? productsWithPricing : productsWithPricing.slice(0, 6);
+
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
@@ -172,17 +177,17 @@ function Dashboard({
                 <span className="dash-section-badge">{alertItems.length}</span>
               </h2>
               <div className="dash-alerts-list">
-                {alertItems.slice(0, 6).map((alert, idx) => (
+                {visibleAlerts.map((alert, idx) => (
                   <div key={idx} className={`dash-alert-item alert-${alert.type}`} onClick={() => onNavigate(alert.action)}>
                     <span className="dash-alert-icon">{alert.icon}</span>
                     <span className="dash-alert-text">{alert.text}</span>
                     <ArrowLeftIcon className="icon-xs dash-alert-arrow" />
                   </div>
                 ))}
-                {alertItems.length > 6 && (
-                  <div className="dash-alert-more" onClick={() => onNavigate('pricing')}>
-                    +{alertItems.length - 6} تنبيهات أخرى
-                  </div>
+                {alertItems.length > 5 && (
+                  <button className="dash-show-more-btn" onClick={() => setShowAllAlerts(!showAllAlerts)}>
+                    {showAllAlerts ? 'عرض أقل' : `عرض الكل (${alertItems.length})`}
+                  </button>
                 )}
               </div>
             </div>
@@ -223,7 +228,7 @@ function Dashboard({
                 <span>السعر الرسمي</span>
                 <span>الهامش</span>
               </div>
-              {productsWithPricing.slice(0, 8).map(p => (
+              {visibleProducts.map(p => (
                 <div key={p.id} className={`dash-table-row status-${p.status}`} onClick={() => onNavigate('products')}>
                   <span className="dash-table-name">{p.name}</span>
                   <span className="dash-table-cell" dir="ltr">{p.supplierPrice > 0 ? `$${fmt(p.supplierPrice)}` : '—'}</span>
@@ -234,10 +239,10 @@ function Dashboard({
                   </span>
                 </div>
               ))}
-              {products.length > 8 && (
-                <div className="dash-table-more" onClick={() => onNavigate('products')}>
-                  عرض كل المنتجات ({products.length})
-                </div>
+              {productsWithPricing.length > 6 && (
+                <button className="dash-show-more-btn" onClick={() => setShowAllProducts(!showAllProducts)}>
+                  {showAllProducts ? 'عرض أقل' : `عرض كل المنتجات (${productsWithPricing.length})`}
+                </button>
               )}
             </div>
           </div>
