@@ -130,6 +130,13 @@ function App() {
   const [bundles, setBundles] = useState(savedData?.bundles || DEFAULT_BUNDLES);
   const [coupons, setCoupons] = useState(savedData?.coupons || DEFAULT_COUPONS);
   const [pricingData, setPricingData] = useState(savedData?.pricingData || DEFAULT_PRICING_DATA);
+  const [customLogo, setCustomLogo] = useState(savedData?.customLogo || null);
+  const [appSettings, setAppSettings] = useState(savedData?.appSettings || {
+    accentColor: 'purple',
+    fontSize: 'medium',
+    compactMode: false,
+    borderRadius: 'rounded',
+  });
   
   // Custom hook logic for hash-based routing
   const getInitialTab = () => {
@@ -146,16 +153,37 @@ function App() {
 
   // Save data whenever it changes
   useEffect(() => {
-    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData });
+    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings });
     setSaveIndicator(true);
     const timer = setTimeout(() => setSaveIndicator(false), 1500);
     return () => clearTimeout(timer);
-  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData]);
+  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings]);
 
   // Apply dark mode class
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
+
+  // Apply appearance settings
+  useEffect(() => {
+    const root = document.documentElement;
+    const fontSizes = { small: '13px', medium: '14px', large: '16px' };
+    const radii = { sharp: '4px', rounded: '14px', pill: '24px' };
+    root.style.setProperty('--base-font-size', fontSizes[appSettings.fontSize] || '14px');
+    root.style.setProperty('--radius-lg', radii[appSettings.borderRadius] || '14px');
+    root.setAttribute('data-compact', appSettings.compactMode ? 'true' : 'false');
+    const accentColors = {
+      purple: { main: '#5E4FDE', hover: '#4a3cc7' },
+      blue: { main: '#3B82F6', hover: '#2563eb' },
+      green: { main: '#10B981', hover: '#059669' },
+      red: { main: '#EF4444', hover: '#dc2626' },
+      orange: { main: '#F97316', hover: '#ea580c' },
+      pink: { main: '#EC4899', hover: '#db2777' },
+    };
+    const accent = accentColors[appSettings.accentColor] || accentColors.purple;
+    root.style.setProperty('--accent-blue', accent.main);
+    root.style.setProperty('--accent-blue-hover', accent.hover);
+  }, [appSettings]);
 
   // Sync active tab with URL hash for browser navigation support
   useEffect(() => {
@@ -564,7 +592,13 @@ function App() {
         <div className="header-content">
           <div className="header-right">
             <div className="logo">
-              <img src="/logo.png" alt="متجر مفتاح" className="logo-img" />
+              {customLogo ? (
+                <img src={customLogo} alt="متجر مفتاح" className="logo-img custom-logo-img" />
+              ) : (
+                <>
+                  <img src="/logo.png" alt="متجر مفتاح" className="logo-img" />
+                </>
+              )}
             </div>
           </div>
           <div className="header-left">
@@ -730,6 +764,10 @@ function App() {
             products={products}
             suppliers={suppliers}
             bundles={bundles}
+            customLogo={customLogo}
+            onLogoChange={setCustomLogo}
+            appSettings={appSettings}
+            onAppSettingsChange={setAppSettings}
           />
           </div>
         )}
@@ -739,7 +777,11 @@ function App() {
       <footer className="app-footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <img src="/logo.png" alt="" className="footer-logo" />
+            {customLogo ? (
+              <img src={customLogo} alt="" className="footer-logo custom-logo-img" />
+            ) : (
+              <img src="/logo.png" alt="" className="footer-logo" />
+            )}
             <span>متجر مفتاح</span>
           </div>
           <p className="footer-copy">© {new Date().getFullYear()} متجر مفتاح — إدارة المنتجات والأسعار الرقمية</p>

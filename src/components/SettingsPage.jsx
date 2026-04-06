@@ -3,7 +3,7 @@ import {
   SettingsIcon, GlobeIcon, ClockIcon, PaletteIcon, 
   MoonIcon, SunIcon, DatabaseIcon, UploadIcon, 
   DownloadIcon, RefreshIcon, InfoIcon, XIcon, PlusIcon,
-  AlertTriangleIcon, CheckCircleIcon, PackageIcon
+  AlertTriangleIcon, CheckCircleIcon, PackageIcon, ImageIcon
 } from './Icons';
 
 function SettingsPage({
@@ -20,12 +20,17 @@ function SettingsPage({
   products,
   suppliers,
   bundles,
+  customLogo,
+  onLogoChange,
+  appSettings,
+  onAppSettingsChange,
 }) {
   const [tempRate, setTempRate] = useState(exchangeRate);
   const [newDurationLabel, setNewDurationLabel] = useState('');
   const [newDurationMonths, setNewDurationMonths] = useState('');
   const [rateSaved, setRateSaved] = useState(false);
   const fileInputRef = useRef(null);
+  const logoInputRef = useRef(null);
 
   const handleSaveRate = () => {
     const rate = parseFloat(tempRate);
@@ -69,7 +74,51 @@ function SettingsPage({
     setNewDurationMonths('');
   };
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('الرجاء اختيار ملف صورة (PNG, SVG, JPG)');
+      return;
+    }
+    if (file.size > 500 * 1024) {
+      alert('حجم الصورة كبير جداً. الحد الأقصى 500 كيلوبايت');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      onLogoChange(event.target.result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const updateSetting = (key, value) => {
+    onAppSettingsChange({ ...appSettings, [key]: value });
+  };
+
   const totalPlans = (products || []).reduce((s, p) => s + (p.plans?.length || 0), 0);
+
+  const accentOptions = [
+    { id: 'purple', label: 'بنفسجي', color: '#5E4FDE' },
+    { id: 'blue', label: 'أزرق', color: '#3B82F6' },
+    { id: 'green', label: 'أخضر', color: '#10B981' },
+    { id: 'red', label: 'أحمر', color: '#EF4444' },
+    { id: 'orange', label: 'برتقالي', color: '#F97316' },
+    { id: 'pink', label: 'وردي', color: '#EC4899' },
+  ];
+
+  const fontSizeOptions = [
+    { id: 'small', label: 'صغير' },
+    { id: 'medium', label: 'متوسط' },
+    { id: 'large', label: 'كبير' },
+  ];
+
+  const borderOptions = [
+    { id: 'sharp', label: 'حاد' },
+    { id: 'rounded', label: 'مستدير' },
+    { id: 'pill', label: 'كبسولة' },
+  ];
 
   return (
     <div className="settings-page">
@@ -141,6 +190,103 @@ function SettingsPage({
             <div className={`settings-theme-option ${!darkMode ? 'active' : ''}`}>
               <SunIcon className="icon-sm" /> الفاتح
             </div>
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <div className="settings-card-icon-wrap settings-card-indigo">
+            <ImageIcon className="icon-md" />
+          </div>
+          <h3>شعار البرنامج</h3>
+          <p className="settings-desc">ارفع شعاراً مخصصاً يظهر في رأس الصفحة (PNG أو SVG)</p>
+          <div className="settings-logo-area">
+            <div className="settings-logo-preview">
+              {customLogo ? (
+                <img src={customLogo} alt="الشعار" className="settings-logo-img" />
+              ) : (
+                <div className="settings-logo-placeholder">
+                  <ImageIcon className="icon-md" />
+                  <span>لا يوجد شعار</span>
+                </div>
+              )}
+            </div>
+            <div className="settings-logo-actions">
+              <button className="settings-logo-btn upload" onClick={() => logoInputRef.current?.click()}>
+                <UploadIcon className="icon-sm" /> رفع شعار
+              </button>
+              {customLogo && (
+                <button className="settings-logo-btn remove" onClick={() => onLogoChange(null)}>
+                  <XIcon className="icon-sm" /> إزالة
+                </button>
+              )}
+            </div>
+            <input
+              type="file"
+              ref={logoInputRef}
+              onChange={handleLogoUpload}
+              accept="image/png,image/svg+xml,image/jpeg,image/webp"
+              style={{ display: 'none' }}
+            />
+            <p className="settings-logo-hint">الحد الأقصى: 500 كيلوبايت — يتكيف لونه تلقائياً مع الوضع الداكن/الفاتح</p>
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <div className="settings-card-icon-wrap settings-card-accent">
+            <PaletteIcon className="icon-md" />
+          </div>
+          <h3>اللون الرئيسي</h3>
+          <p className="settings-desc">اختر اللون الرئيسي للبرنامج</p>
+          <div className="settings-accent-grid">
+            {accentOptions.map(opt => (
+              <button
+                key={opt.id}
+                className={`settings-accent-btn ${appSettings.accentColor === opt.id ? 'active' : ''}`}
+                onClick={() => updateSetting('accentColor', opt.id)}
+                title={opt.label}
+              >
+                <span className="accent-swatch" style={{ background: opt.color }}></span>
+                <span className="accent-label">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <div className="settings-card-icon-wrap settings-card-green">
+            <SettingsIcon className="icon-md" />
+          </div>
+          <h3>حجم الخط</h3>
+          <p className="settings-desc">تحكم في حجم نصوص البرنامج</p>
+          <div className="settings-option-row">
+            {fontSizeOptions.map(opt => (
+              <button
+                key={opt.id}
+                className={`settings-option-btn ${appSettings.fontSize === opt.id ? 'active' : ''}`}
+                onClick={() => updateSetting('fontSize', opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-card">
+          <div className="settings-card-icon-wrap settings-card-orange">
+            <SettingsIcon className="icon-md" />
+          </div>
+          <h3>شكل الحواف</h3>
+          <p className="settings-desc">تحكم في درجة استدارة زوايا العناصر</p>
+          <div className="settings-option-row">
+            {borderOptions.map(opt => (
+              <button
+                key={opt.id}
+                className={`settings-option-btn ${appSettings.borderRadius === opt.id ? 'active' : ''}`}
+                onClick={() => updateSetting('borderRadius', opt.id)}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
