@@ -20,13 +20,17 @@ function ProductDetailModal({
   const [addingPlan, setAddingPlan] = useState(false);
   const [closing, setClosing] = useState(false);
   const overlayRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       setClosing(false);
-      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
     }
-    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
@@ -109,7 +113,7 @@ function ProductDetailModal({
 
   return (
     <div className={`pdm-overlay ${closing ? 'pdm-closing' : ''}`} ref={overlayRef} onClick={handleOverlayClick}>
-      <div className={`pdm-container ${closing ? 'pdm-slide-out' : 'pdm-slide-in'}`}>
+      <div ref={containerRef} className={`pdm-container ${closing ? 'pdm-slide-out' : 'pdm-slide-in'}`}>
         <div className="pdm-header">
           <div className="pdm-header-content">
             <div className="pdm-title-area">
