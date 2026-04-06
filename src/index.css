@@ -828,9 +828,9 @@ body {
   flex: 1;
 }
 
-.supplier-contact-link .chip-edit-btn {
+.supplier-contact-link .chip-edit-btn,
+.supplier-contact-link .chip-copy-btn {
   position: absolute;
-  left: 4px;
   top: 50%;
   transform: translateY(-50%);
   background: var(--bg-card);
@@ -843,13 +843,29 @@ body {
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+  color: var(--text-secondary);
+  padding: 0;
 }
-.supplier-contact-link:hover .chip-edit-btn { opacity: 1; }
+.supplier-contact-link .chip-edit-btn { left: 4px; }
+.supplier-contact-link .chip-copy-btn { left: 28px; }
+.supplier-contact-link:hover .chip-edit-btn,
+.supplier-contact-link:hover .chip-copy-btn { opacity: 1; }
 .supplier-contact-link .chip-edit-btn:hover {
   background: var(--accent-blue);
   color: white;
   border-color: var(--accent-blue);
+}
+.supplier-contact-link .chip-copy-btn:hover {
+  background: var(--accent-green);
+  color: white;
+  border-color: var(--accent-green);
+}
+.supplier-contact-link .chip-copy-btn.copied {
+  opacity: 1;
+  background: var(--accent-green);
+  color: white;
+  border-color: var(--accent-green);
 }
 
 .chip-icon { font-size: 14px; }
