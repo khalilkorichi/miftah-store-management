@@ -188,12 +188,10 @@ function Dashboard({
               <div className="dash-alerts-list">
                 {visibleAlerts.map((alert, idx) => (
                   <div key={idx} className={`dash-alert-item alert-${alert.type}`} onClick={() => onNavigate(alert.action)}>
-                    <div className={`dash-alert-avatar avatar-${alert.type}`}>{alert.name.charAt(0)}</div>
                     <div className="dash-alert-body">
                       <span className="dash-alert-name">{alert.name}</span>
                       <span className="dash-alert-desc">{alert.desc}</span>
                     </div>
-                    <span className={`dash-alert-badge badge-${alert.type}`}>{alert.badge}</span>
                     <ArrowLeftIcon className="icon-xs dash-alert-arrow" />
                   </div>
                 ))}
@@ -243,14 +241,11 @@ function Dashboard({
               </div>
               {visibleProducts.map(p => (
                 <div key={p.id} className={`dash-table-row status-${p.status}`} onClick={() => onNavigate('products')}>
-                  <div className="dash-table-name-cell">
-                    <div className={`dash-prod-avatar dash-prod-${p.status}`}>{p.name.charAt(0)}</div>
-                    <span className="dash-table-name">{p.name}</span>
-                  </div>
+                  <span className="dash-table-name">{p.name}</span>
                   <span className="dash-table-cell" dir="ltr">{p.supplierPrice > 0 ? `$${fmt(p.supplierPrice)}` : '—'}</span>
                   <span className="dash-table-cell" dir="ltr">{p.totalCost > 0 ? `${fmt(p.totalCost)} ﷼` : '—'}</span>
                   <span className="dash-table-cell" dir="ltr">{p.officialPrice > 0 ? `${fmt(p.officialPrice)} ﷼` : '—'}</span>
-                  <span className={`dash-table-margin-pill margin-${p.status}`}>
+                  <span className={`dash-table-cell margin-${p.status}`}>
                     {p.officialPrice > 0 ? `${fmtPct(p.margin)}%` : '—'}
                   </span>
                 </div>
