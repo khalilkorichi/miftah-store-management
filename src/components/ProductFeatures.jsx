@@ -5,11 +5,11 @@ import {
   CheckCircleIcon, AlertTriangleIcon, CopyIcon,
   ArrowUpIcon, ArrowDownIcon, DownloadIcon, ListIcon,
   BoldIcon, ItalicIcon, MinusIcon,
-  ChevronDownIcon, TagIcon, XIcon
+  ChevronDownIcon, TagIcon, XIcon,
+  UnderlineIcon, AlignRightIcon, AlignCenterIcon, AlignLeftIcon, AlignJustifyIcon, EraserIcon
 } from './Icons';
 import { FEATURE_ICONS, FEATURE_BADGES, PRODUCT_TEMPLATES } from '../data/productTemplates';
 
-const MAX_DESC_CHARS = 500;
 
 function useClickOutside(ref, handler, excludeRef) {
   useEffect(() => {
@@ -184,10 +184,19 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     }));
   }, [setProducts]);
 
+  const descTextareaRef = useRef(null);
+
   const handleDescriptionChange = useCallback((text) => {
     if (!product) return;
-    updateProduct(product.id, { description: text.slice(0, MAX_DESC_CHARS) });
+    updateProduct(product.id, { description: text });
   }, [product, updateProduct]);
+
+  useEffect(() => {
+    const el = descTextareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(120, el.scrollHeight)}px`;
+  }, [product?.description]);
 
   const handleDescStyleChange = useCallback((key, value) => {
     if (!product) return;
@@ -470,59 +479,145 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               <span className="pf-desc-icon"><FileTextIcon className="icon-sm" /></span>
               <div>
                 <h3>وصف المنتج</h3>
-                <p>أضف وصفاً تعريفياً شاملاً عن المنتج</p>
+                <p>أضف وصفاً تعريفياً شاملاً — بدون حد أقصى للنص</p>
               </div>
             </div>
-            <div className="pf-toolbar">
+
+            <div className="pf-toolbar pf-toolbar-rich">
+              <div className="pf-toolbar-group pf-heading-group">
+                {[
+                  { label: 'عادي', value: 'normal', title: 'نص عادي' },
+                  { label: 'H1', value: 'h1', title: 'عنوان رئيسي (H1)' },
+                  { label: 'H2', value: 'h2', title: 'عنوان ثانوي (H2)' },
+                  { label: 'H3', value: 'h3', title: 'عنوان ثالثي (H3)' },
+                  { label: 'H4', value: 'h4', title: 'عنوان رابع (H4)' },
+                ].map(h => (
+                  <button
+                    key={h.value}
+                    className={`pf-heading-btn ${(descStyles.elementType || 'normal') === h.value ? 'active' : ''}`}
+                    onClick={() => handleDescStyleChange('elementType', h.value)}
+                    title={h.title}
+                  >
+                    {h.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="pf-toolbar-divider" />
+
               <div className="pf-toolbar-group">
-                <label className="pf-toolbar-label">الحجم</label>
+                <button className={`pf-toolbar-btn ${descStyles.bold ? 'active' : ''}`} onClick={() => handleDescStyleChange('bold', !descStyles.bold)} title="تغميق (Ctrl+B)">
+                  <BoldIcon className="icon-sm" />
+                </button>
+                <button className={`pf-toolbar-btn ${descStyles.italic ? 'active' : ''}`} onClick={() => handleDescStyleChange('italic', !descStyles.italic)} title="مائل (Ctrl+I)">
+                  <ItalicIcon className="icon-sm" />
+                </button>
+                <button className={`pf-toolbar-btn ${descStyles.underline ? 'active' : ''}`} onClick={() => handleDescStyleChange('underline', !descStyles.underline)} title="تسطير (Ctrl+U)">
+                  <UnderlineIcon className="icon-sm" />
+                </button>
+              </div>
+
+              <div className="pf-toolbar-divider" />
+
+              <div className="pf-toolbar-group">
+                <button className={`pf-toolbar-btn ${(descStyles.align || 'right') === 'right' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'right')} title="محاذاة يميناً">
+                  <AlignRightIcon className="icon-sm" />
+                </button>
+                <button className={`pf-toolbar-btn ${descStyles.align === 'center' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'center')} title="توسيط">
+                  <AlignCenterIcon className="icon-sm" />
+                </button>
+                <button className={`pf-toolbar-btn ${descStyles.align === 'left' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'left')} title="محاذاة يساراً">
+                  <AlignLeftIcon className="icon-sm" />
+                </button>
+                <button className={`pf-toolbar-btn ${descStyles.align === 'justify' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'justify')} title="ضبط الأطراف">
+                  <AlignJustifyIcon className="icon-sm" />
+                </button>
+              </div>
+
+              <div className="pf-toolbar-divider" />
+
+              <div className="pf-toolbar-group pf-toolbar-size-group">
+                <label className="pf-toolbar-label">حجم</label>
                 <select value={descStyles.fontSize || '14'} onChange={(e) => handleDescStyleChange('fontSize', e.target.value)} className="pf-toolbar-select">
+                  <option value="11">11</option>
                   <option value="12">12</option>
+                  <option value="13">13</option>
                   <option value="14">14</option>
+                  <option value="15">15</option>
                   <option value="16">16</option>
                   <option value="18">18</option>
                   <option value="20">20</option>
+                  <option value="22">22</option>
+                  <option value="24">24</option>
+                  <option value="28">28</option>
+                  <option value="32">32</option>
                 </select>
               </div>
+
               <div className="pf-toolbar-group">
-                <label className="pf-toolbar-label">النوع</label>
-                <select value={descStyles.elementType || 'paragraph'} onChange={(e) => handleDescStyleChange('elementType', e.target.value)} className="pf-toolbar-select">
-                  <option value="paragraph">فقرة</option>
-                  <option value="heading">عنوان</option>
-                  <option value="subheading">عنوان فرعي</option>
-                  <option value="caption">تعليق</option>
-                </select>
+                <label className="pf-toolbar-label">لون</label>
+                <input type="color" value={descStyles.color || '#e2e8f0'} onChange={(e) => handleDescStyleChange('color', e.target.value)} className="pf-color-picker" title="لون النص" />
               </div>
+
+              <div className="pf-toolbar-divider" />
+
               <div className="pf-toolbar-group">
-                <button className={`pf-toolbar-btn ${descStyles.bold ? 'active' : ''}`} onClick={() => handleDescStyleChange('bold', !descStyles.bold)} title="تغميق">
-                  <BoldIcon className="icon-sm" />
+                <button
+                  className="pf-toolbar-btn pf-clear-btn"
+                  onClick={() => updateProduct(product.id, { descriptionStyles: {} })}
+                  title="مسح كل التنسيقات"
+                >
+                  <EraserIcon className="icon-sm" />
                 </button>
-                <button className={`pf-toolbar-btn ${descStyles.italic ? 'active' : ''}`} onClick={() => handleDescStyleChange('italic', !descStyles.italic)} title="مائل">
-                  <ItalicIcon className="icon-sm" />
-                </button>
-              </div>
-              <div className="pf-toolbar-group">
-                <label className="pf-toolbar-label">اللون</label>
-                <input type="color" value={descStyles.color || '#ffffff'} onChange={(e) => handleDescStyleChange('color', e.target.value)} className="pf-color-picker" />
               </div>
             </div>
+
             <textarea
+              ref={descTextareaRef}
               className="pf-desc-textarea"
               value={product.description || ''}
               onChange={(e) => handleDescriptionChange(e.target.value)}
-              placeholder="اكتب وصفاً تفصيلياً للمنتج... مثال: اشتراك ChatGPT Plus يمنحك وصولاً إلى نموذج GPT-4o المتقدم..."
-              rows={4}
+              onKeyDown={(e) => {
+                if (e.ctrlKey || e.metaKey) {
+                  if (e.key === 'b') { e.preventDefault(); handleDescStyleChange('bold', !descStyles.bold); }
+                  if (e.key === 'i') { e.preventDefault(); handleDescStyleChange('italic', !descStyles.italic); }
+                  if (e.key === 'u') { e.preventDefault(); handleDescStyleChange('underline', !descStyles.underline); }
+                }
+              }}
+              placeholder="اكتب وصفاً تفصيلياً للمنتج... بدون حد للنص. مثال: اشتراك ChatGPT Plus يمنحك وصولاً إلى نموذج GPT-4o المتقدم مع ميزات إضافية متميزة..."
               style={{
-                fontSize: `${descStyles.elementType === 'heading' ? Math.max(Number(descStyles.fontSize || 14), 18) : descStyles.elementType === 'subheading' ? Math.max(Number(descStyles.fontSize || 14), 16) : descStyles.elementType === 'caption' ? Math.min(Number(descStyles.fontSize || 14), 13) : (descStyles.fontSize || 14)}px`,
-                fontWeight: descStyles.bold || descStyles.elementType === 'heading' ? '700' : descStyles.elementType === 'subheading' ? '600' : '400',
+                fontSize: `${
+                  descStyles.elementType === 'h1' ? 28 :
+                  descStyles.elementType === 'h2' ? 22 :
+                  descStyles.elementType === 'h3' ? 18 :
+                  descStyles.elementType === 'h4' ? 16 :
+                  (descStyles.fontSize || 14)
+                }px`,
+                fontWeight:
+                  descStyles.bold ||
+                  descStyles.elementType === 'h1' ||
+                  descStyles.elementType === 'h2' ? '700' :
+                  descStyles.elementType === 'h3' || descStyles.elementType === 'h4' ? '600' : '400',
                 fontStyle: descStyles.italic ? 'italic' : 'normal',
+                textDecoration: descStyles.underline ? 'underline' : 'none',
                 color: descStyles.color || undefined,
-                lineHeight: descStyles.elementType === 'heading' ? '1.4' : descStyles.elementType === 'caption' ? '1.5' : '1.7',
+                textAlign: descStyles.align || 'right',
+                lineHeight:
+                  descStyles.elementType === 'h1' ? '1.3' :
+                  descStyles.elementType === 'h2' ? '1.4' :
+                  '1.75',
+                letterSpacing: descStyles.elementType === 'h1' ? '-0.02em' : 'normal',
+                resize: 'none',
+                overflow: 'hidden',
               }}
             />
+
             <div className="pf-char-counter">
-              <span className={(product.description || '').length >= MAX_DESC_CHARS ? 'pf-char-limit' : ''}>
-                {(product.description || '').length} / {MAX_DESC_CHARS}
+              <span className="pf-word-count">
+                {(product.description || '').trim() ? (product.description || '').trim().split(/\s+/).length : 0} كلمة
+              </span>
+              <span className="pf-char-count">
+                {(product.description || '').length} حرف
               </span>
             </div>
           </div>

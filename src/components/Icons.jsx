@@ -164,3 +164,15 @@ export const ArrowUpIcon = (p) => I(<><line x1="12" y1="19" x2="12" y2="5"/><pol
 export const ArrowDownIcon = (p) => I(<><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>, p);
 
 export const MinusIcon = (p) => I(<><line x1="5" y1="12" x2="19" y2="12"/></>, p);
+
+export const UnderlineIcon = (p) => I(<><path d="M6 3v7a6 6 0 006 6 6 6 0 006-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></>, p);
+
+export const AlignRightIcon = (p) => I(<><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></>, p);
+
+export const AlignCenterIcon = (p) => I(<><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></>, p);
+
+export const AlignLeftIcon = (p) => I(<><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></>, p);
+
+export const AlignJustifyIcon = (p) => I(<><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></>, p);
+
+export const EraserIcon = (p) => I(<><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/><path d="M6.5 17.5l4-4"/></>, p);
