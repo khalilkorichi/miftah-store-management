@@ -3027,24 +3027,38 @@ body {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
-  padding: 14px 14px;
+  padding: 0 16px;
+  height: 56px;
   white-space: nowrap;
   background: var(--bg-table-alt);
+  border-inline-end: 3px solid transparent;
+  transition: border-color 0.2s;
+}
+.grouped-table .product-group-row:hover .td-group-name {
+  background: var(--bg-hover);
 }
 .group-chevron {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  background: var(--accent-blue);
-  color: #fff;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s, color 0.2s, border-color 0.2s;
   flex-shrink: 0;
 }
 .grouped-table .product-group-row:hover .group-chevron {
-  background: #4a3cc9;
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #fff;
+}
+.grouped-table .group-expanded .group-chevron {
+  background: rgba(255,255,255,0.2) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  color: #fff !important;
 }
 .group-chevron.chevron-collapsed {
   transform: rotate(-90deg);
@@ -3056,10 +3070,13 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
-  background: var(--bg-hover);
-  padding: 3px 10px;
-  border-radius: 10px;
-  margin-inline-start: 4px;
+  background: transparent;
+  border: 1.5px solid var(--border-color);
+  padding: 2px 9px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+  margin-inline-start: auto;
 }
 .td-group-summary {
   font-size: 12px;
@@ -3151,12 +3168,9 @@ body {
   background: linear-gradient(135deg, var(--accent-blue), #4a3cc9);
   color: #fff;
 }
-.grouped-table .group-expanded .group-chevron {
-  background: rgba(255,255,255,0.25);
-}
 .grouped-table .group-expanded .group-plan-count {
-  background: rgba(255,255,255,0.2);
-  color: #fff;
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.85);
 }
 .plan-sub-row td {
   padding: 10px 14px;
@@ -3179,31 +3193,34 @@ body {
   min-width: 200px;
 }
 
-/* Product avatar — colored circle with initial */
+/* Product avatar — colored rounded square with initial */
 .product-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  font-size: 13px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 800;
   color: #fff;
   flex-shrink: 0;
   letter-spacing: 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: box-shadow 0.2s;
+}
+.grouped-table .product-group-row:hover .product-avatar {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.28);
 }
 .product-name-text {
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 200px;
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.2px;
+  line-height: 1.2;
 }
 
 /* Price unit label ($ ﷼ %) — lighter weight */
