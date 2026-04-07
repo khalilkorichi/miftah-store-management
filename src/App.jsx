@@ -9,6 +9,7 @@ import {
   DEFAULT_BUNDLES,
   DEFAULT_COUPONS,
   DEFAULT_PRICING_DATA,
+  DEFAULT_CATEGORIES,
 } from './data/initialData';
 import ProductTable from './components/ProductTable';
 import ImportSallaModal from './components/ImportSallaModal';
@@ -44,11 +45,13 @@ function migrateData(data) {
   const needsMigration = data.products.some((p) => p.prices && !p.plans);
   if (!needsMigration) {
     const productsNeedFeatures = data.products.some(p => p.description === undefined || (p.plans || []).some(plan => (plan.features || []).some(f => f.order === undefined)));
-    if (productsNeedFeatures) {
+    const productsNeedCategory = data.products.some(p => !('categoryId' in p));
+    if (productsNeedFeatures || productsNeedCategory) {
       data = { ...data, products: data.products.map(p => ({
         ...p,
         description: p.description || '',
         descriptionStyles: p.descriptionStyles || {},
+        categoryId: 'categoryId' in p ? p.categoryId : null,
         plans: (p.plans || []).map(plan => ({
           ...plan,
           features: (plan.features || []).map((f, i) => ({ ...f, order: f.order !== undefined ? f.order : i + 1 })),
@@ -154,6 +157,7 @@ function App() {
   const [bundles, setBundles] = useState(savedData?.bundles || DEFAULT_BUNDLES);
   const [coupons, setCoupons] = useState(savedData?.coupons || DEFAULT_COUPONS);
   const [pricingData, setPricingData] = useState(savedData?.pricingData || DEFAULT_PRICING_DATA);
+  const [categories, setCategories] = useState(savedData?.categories || DEFAULT_CATEGORIES);
   const [customLogo, setCustomLogo] = useState(savedData?.customLogo || null);
   const [appSettings, setAppSettings] = useState(savedData?.appSettings || {
     accentColor: 'purple',
@@ -177,11 +181,11 @@ function App() {
 
   // Save data whenever it changes
   useEffect(() => {
-    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings });
+    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories });
     setSaveIndicator(true);
     const timer = setTimeout(() => setSaveIndicator(false), 1500);
     return () => clearTimeout(timer);
-  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings]);
+  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories]);
 
   // Apply dark mode class
   useEffect(() => {
@@ -306,7 +310,7 @@ function App() {
   }, []);
 
   // === Product Management ===
-  const handleAddProduct = useCallback((name, customPlans, activationMethods = [], accountType = 'none', storeUrl = '') => {
+  const handleAddProduct = useCallback((name, customPlans, activationMethods = [], accountType = 'none', storeUrl = '', categoryId = null) => {
     const newId = Math.max(0, ...products.map((p) => p.id)) + 1;
     let plans;
     if (customPlans && customPlans.length > 0) {
@@ -322,11 +326,24 @@ function App() {
       suppliers.forEach((s) => { prices[s.id] = 0; });
       plans = [{ id: 1, durationId: 'month_1', prices }];
     }
-    const newProduct = { id: newId, name, plans, activationMethods, accountType };
+    const newProduct = { id: newId, name, plans, activationMethods, accountType, categoryId };
     if (storeUrl) newProduct.storeUrl = storeUrl;
     setProducts((prev) => [...prev, newProduct]);
     toast(`تمت إضافة المنتج "${name}" بنجاح`, 'success');
   }, [products, suppliers, toast]);
+
+  const handleAddCategory = useCallback((cat) => {
+    setCategories((prev) => [...prev, cat]);
+  }, []);
+
+  const handleDeleteCategory = useCallback((catId) => {
+    const inUse = products.some((p) => p.categoryId === catId);
+    if (inUse) {
+      toast('لا يمكن حذف الفئة — هي مستخدمة في منتجات حالية', 'error');
+      return;
+    }
+    setCategories((prev) => prev.filter((c) => c.id !== catId));
+  }, [products, toast]);
 
   const handleDeleteProduct = useCallback((productId) => {
     const product = products.find((p) => p.id === productId);
@@ -713,6 +730,7 @@ function App() {
             durations={durations}
             exchangeRate={exchangeRate}
             activationMethods={activationMethods}
+            categories={categories}
             onUpdatePrice={handleUpdatePrice}
             onAddProduct={handleAddProduct}
             onDeleteProduct={handleDeleteProduct}
@@ -735,6 +753,7 @@ function App() {
             onUpdateCompetitor={handleUpdateCompetitor}
             onDeleteCompetitor={handleDeleteCompetitor}
             onImportProducts={handleImportProducts}
+            onAddCategory={handleAddCategory}
           />
           </div>
         )}
@@ -746,6 +765,7 @@ function App() {
             durations={durations}
             exchangeRate={exchangeRate}
             activationMethods={activationMethods}
+            categories={categories}
           />
           </div>
         )}

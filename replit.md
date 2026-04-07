@@ -6,7 +6,8 @@ A web-based admin dashboard for managing a digital products store. Features incl
 - Product and supplier management with card-based UI
 - Pricing strategies and bundle management
 - Exchange rate tracking (USD/SAR)
-- Reports with PDF/Excel export
+- Reports with PDF/Excel export + visual SVG charts (donut + bar charts)
+- Product categories system with color/icon picker and inline creation
 - Arabic-language UI (RTL layout)
 - Western Arabic numerals (0-9) enforced throughout
 

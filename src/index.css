@@ -71,6 +71,8 @@
   --plan-bg: #1e2038;
   --plan-border: #2a2c50;
   --product-header-bg: #1a1c30;
+  --accent-blue-bg: rgba(94, 79, 222, 0.12);
+  --bg-tertiary: #242640;
 }
 
 [data-theme="light"] {
@@ -110,6 +112,8 @@
   --plan-bg: #f8f9ff;
   --plan-border: #e8e9f5;
   --product-header-bg: #f0f1fb;
+  --accent-blue-bg: rgba(94, 79, 222, 0.08);
+  --bg-tertiary: #eef0f7;
 }
 
 /* ===== GLOBAL RESETS ===== */
@@ -9220,4 +9224,281 @@ body.dark-mode .selectable-card.selected {
   transform: scale(0.75);
   transform-origin: top right;
   margin-bottom: -25%;
+}
+
+/* ═══════════════════════════════════════════════════
+   CATEGORY CHIPS — AddProductModal
+═══════════════════════════════════════════════════ */
+.cat-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.18s ease;
+  direction: rtl;
+}
+.cat-chip:hover {
+  border-color: var(--accent-blue);
+  background: var(--accent-blue-bg);
+  color: var(--text-primary);
+}
+.cat-chip-selected {
+  border-color: var(--accent-blue);
+  background: var(--accent-blue-bg);
+}
+.cat-chip-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.cat-chip-name {
+  white-space: nowrap;
+}
+.cat-chip-check {
+  display: flex;
+  align-items: center;
+  margin-right: 2px;
+}
+.cat-chip-add {
+  border-style: dashed;
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: transparent;
+}
+.cat-chip-add:hover,
+.cat-chip-add-active {
+  background: var(--accent-blue-bg);
+}
+.cat-selected-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid;
+  direction: rtl;
+}
+
+/* New Category Form */
+.new-cat-form {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--border-color);
+  background: var(--bg-tertiary);
+  direction: rtl;
+}
+.new-cat-form-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.new-cat-name-input {
+  margin-bottom: 12px !important;
+}
+.new-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.new-cat-section-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 46px;
+}
+.new-cat-colors {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cat-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.cat-color-swatch:hover {
+  transform: scale(1.2);
+}
+.cat-color-swatch-active {
+  border-color: var(--text-primary);
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2px var(--bg-card);
+}
+.new-cat-icons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.cat-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-icon-btn:hover {
+  border-color: var(--accent-blue);
+  background: var(--accent-blue-bg);
+}
+.cat-icon-btn-active {
+  border-color: currentColor;
+}
+.new-cat-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+.new-cat-cancel {
+  padding: 6px 14px !important;
+  font-size: 0.82rem !important;
+}
+.new-cat-save {
+  padding: 6px 14px !important;
+  font-size: 0.82rem !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+.new-cat-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════
+   STATS / CHARTS SECTION — ReportsExport
+═══════════════════════════════════════════════════ */
+.stats-section {
+  padding: 20px 0 8px;
+  direction: rtl;
+}
+.stats-section-header {
+  margin-bottom: 20px;
+}
+.stats-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.stats-section-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.stats-donuts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.stats-bars-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.stats-chart-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  padding: 18px 20px;
+  flex: 1 1 260px;
+  min-width: 240px;
+}
+.stats-chart-half {
+  flex: 1 1 340px;
+}
+.stats-chart-full {
+  width: 100%;
+  flex: 1 1 100%;
+}
+.stats-chart-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.stats-chart-subtitle {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.stats-donut-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.stats-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+.stats-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  direction: rtl;
+}
+.stats-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.stats-legend-label {
+  color: var(--text-secondary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats-legend-count {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 22px;
+  text-align: left;
+}
+.stats-empty-msg {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  background: var(--bg-card);
+  border: 1.5px dashed var(--border-color);
+  border-radius: 14px;
 }

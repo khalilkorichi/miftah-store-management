@@ -139,7 +139,64 @@ const Badge = ({ children, color = pdfColors.accent, bg }) => (
   }}>{children}</span>
 );
 
-function ReportsExport({ products, suppliers, durations, exchangeRate, activationMethods = [] }) {
+const DonutChartVisual = ({ data, size = 160, thickness = 34, label, sublabel }) => {
+  const total = data.reduce((s, d) => s + (d.value || 0), 0);
+  if (!total) return (
+    <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 12 }}>لا بيانات</div>
+  );
+  const r = (size - thickness) / 2;
+  const cx = size / 2, cy = size / 2;
+  const C = 2 * Math.PI * r;
+  let cumFrac = 0;
+  const segs = data.map(d => {
+    const frac = d.value / total;
+    const dashLen = frac * C;
+    const rot = cumFrac * 360 - 90;
+    cumFrac += frac;
+    return { color: d.color, dashLen, rot };
+  });
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg-tertiary)" strokeWidth={thickness} />
+        {segs.map((s, i) => (
+          <circle key={i} cx={cx} cy={cy} r={r}
+            fill="none" stroke={s.color} strokeWidth={thickness - 3}
+            strokeDasharray={`${s.dashLen} ${C - s.dashLen}`}
+            transform={`rotate(${s.rot}, ${cx}, ${cy})`}
+          />
+        ))}
+      </svg>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+        {label !== undefined && <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{label}</div>}
+        {sublabel && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{sublabel}</div>}
+      </div>
+    </div>
+  );
+};
+
+const HBarChartVisual = ({ data }) => {
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  return (
+    <div style={{ width: '100%', padding: '4px 0' }}>
+      {data.map((d, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, direction: 'rtl' }}>
+          <div style={{ width: 120, fontSize: 12, color: 'var(--text-primary)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.label}>
+            {d.label}
+          </div>
+          <div style={{ flex: 1, height: 22, background: 'var(--bg-tertiary)', borderRadius: 6, overflow: 'hidden' }}>
+            <div style={{ width: `${Math.max((d.value / maxVal) * 100, 2)}%`, height: '100%', background: d.color || 'var(--accent-blue)', borderRadius: 6, minWidth: 6 }} />
+          </div>
+          <div style={{ width: 64, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'left', flexShrink: 0, direction: 'ltr' }}>
+            {d.display || d.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+function ReportsExport({ products, suppliers, durations, exchangeRate, activationMethods = [], categories = [] }) {
   const reportRef = useRef(null);
   const [generating, setGenerating] = useState(null);
   const [activeSection, setActiveSection] = useState('global');
@@ -1371,6 +1428,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           { id: 'product',  label: <span className="flex-row gap-2 align-center"><PackageIcon className="icon-sm" /> تقرير منتج</span> },
           { id: 'supplier', label: <span className="flex-row gap-2 align-center"><BuildingIcon className="icon-sm" /> تقرير مورد</span> },
           { id: 'features', label: <span className="flex-row gap-2 align-center"><FileTextIcon className="icon-sm" /> تقرير المزايا</span> },
+          { id: 'stats',    label: <span className="flex-row gap-2 align-center"><BarChartIcon className="icon-sm" /> الإحصائيات</span> },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1646,6 +1704,130 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           })()}
         </div>
       )}
+
+      {activeSection === 'stats' && (() => {
+        const catCounts = {};
+        products.forEach(p => {
+          const cid = p.categoryId || '__none__';
+          catCounts[cid] = (catCounts[cid] || 0) + 1;
+        });
+        const catDonutData = Object.entries(catCounts).map(([cid, count]) => {
+          const cat = categories.find(c => c.id === cid);
+          return { label: cat ? `${cat.icon} ${cat.name}` : '📦 غير مصنف', value: count, color: cat ? cat.color : '#9CA3AF' };
+        }).sort((a, b) => b.value - a.value);
+
+        const accMap = { individual: 0, team: 0, none: 0 };
+        products.forEach(p => { accMap[p.accountType || 'none']++; });
+        const accDonutData = [
+          { label: '👤 فردي', value: accMap.individual, color: '#5E4FDE' },
+          { label: '👥 فريق', value: accMap.team, color: '#11BA65' },
+          { label: '📦 غير محدد', value: accMap.none, color: '#9CA3AF' },
+        ].filter(d => d.value > 0);
+
+        const planCountData = products.map(p => ({
+          label: p.name,
+          value: p.plans.length,
+          display: `${p.plans.length} خطة`,
+          color: '#1A51F4',
+        })).sort((a, b) => b.value - a.value).slice(0, 8);
+
+        const supplierAvgData = suppliers.map(s => {
+          let total = 0, cnt = 0;
+          products.forEach(p => p.plans.forEach(pl => { const pr = pl.prices[s.id] || 0; if (pr > 0) { total += pr; cnt++; } }));
+          return { label: s.name, value: cnt > 0 ? total / cnt : 0, display: cnt > 0 ? `$${fmt(total / cnt)}` : '—', color: '#F7784A' };
+        }).filter(d => d.value > 0).sort((a, b) => a.value - b.value);
+
+        const productBestPriceData = products.map(p => {
+          let best = Infinity;
+          p.plans.forEach(pl => suppliers.forEach(s => { const pr = pl.prices[s.id] || 0; if (pr > 0) best = Math.min(best, pr); }));
+          return { label: p.name, value: best < Infinity ? best : 0, display: best < Infinity ? `$${fmt(best)}` : '—', color: '#11BA65' };
+        }).filter(d => d.value > 0).sort((a, b) => b.value - a.value).slice(0, 8);
+
+        const savingsData = analytics.filter(a => a.savings > 0)
+          .sort((a, b) => b.savings - a.savings).slice(0, 8)
+          .map(a => ({ label: `${a.productName} — ${a.planDuration}`, value: a.savings, display: `$${fmt(a.savings)}`, color: '#EC4899' }));
+
+        return (
+          <div className="stats-section">
+            <div className="stats-section-header">
+              <div className="stats-section-title"><BarChartIcon className="icon-sm" /> الإحصائيات البصرية</div>
+              <div className="stats-section-subtitle">تحليلات فورية مرئية لجميع بياناتك — {products.length} منتج — {suppliers.length} مورد</div>
+            </div>
+
+            <div className="stats-donuts-row">
+              {catDonutData.length > 0 && (
+                <div className="stats-chart-card">
+                  <div className="stats-chart-title">توزيع المنتجات حسب الفئة</div>
+                  <div className="stats-donut-wrap">
+                    <DonutChartVisual data={catDonutData} size={170} thickness={36} label={products.length} sublabel="منتج" />
+                    <div className="stats-legend">
+                      {catDonutData.map((d, i) => (
+                        <div key={i} className="stats-legend-item">
+                          <span className="stats-legend-dot" style={{ background: d.color }} />
+                          <span className="stats-legend-label">{d.label}</span>
+                          <span className="stats-legend-count">{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {accDonutData.length > 0 && (
+                <div className="stats-chart-card">
+                  <div className="stats-chart-title">توزيع أنواع الحسابات</div>
+                  <div className="stats-donut-wrap">
+                    <DonutChartVisual data={accDonutData} size={170} thickness={36} label={products.length} sublabel="منتج" />
+                    <div className="stats-legend">
+                      {accDonutData.map((d, i) => (
+                        <div key={i} className="stats-legend-item">
+                          <span className="stats-legend-dot" style={{ background: d.color }} />
+                          <span className="stats-legend-label">{d.label}</span>
+                          <span className="stats-legend-count">{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {planCountData.length > 0 && (
+                <div className="stats-chart-card">
+                  <div className="stats-chart-title">عدد الخطط لكل منتج</div>
+                  <HBarChartVisual data={planCountData} />
+                </div>
+              )}
+            </div>
+
+            <div className="stats-bars-row">
+              {supplierAvgData.length > 0 && (
+                <div className="stats-chart-card stats-chart-half">
+                  <div className="stats-chart-title">متوسط سعر الشراء لكل مورد</div>
+                  <div className="stats-chart-subtitle">المتوسط ($) عبر جميع الخطط</div>
+                  <HBarChartVisual data={supplierAvgData} />
+                </div>
+              )}
+              {productBestPriceData.length > 0 && (
+                <div className="stats-chart-card stats-chart-half">
+                  <div className="stats-chart-title">أفضل سعر لكل منتج</div>
+                  <div className="stats-chart-subtitle">أدنى سعر متاح عبر جميع الموردين ($)</div>
+                  <HBarChartVisual data={productBestPriceData} />
+                </div>
+              )}
+            </div>
+
+            {savingsData.length > 0 && (
+              <div className="stats-chart-card stats-chart-full">
+                <div className="stats-chart-title">التوفير المحتمل لكل خطة</div>
+                <div className="stats-chart-subtitle">الفرق بين أغلى مورد وأرخصه ($) — أعلى 8 فرص</div>
+                <HBarChartVisual data={savingsData} />
+              </div>
+            )}
+
+            {products.length === 0 && (
+              <div className="stats-empty-msg">لا توجد بيانات كافية لعرض الإحصائيات. أضف منتجات وأسعاراً لترى الرسوم البيانية هنا.</div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="analytics-preview">
         <div className="analytics-header">
