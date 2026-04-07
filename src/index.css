@@ -3176,8 +3176,98 @@ body {
 }
 .analytics-table .th-product {
   text-align: right;
-  min-width: 140px;
+  min-width: 200px;
 }
+
+/* Product avatar — colored circle with initial */
+.product-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  transition: background 0.2s;
+}
+.product-name-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+/* Price unit label ($ ﷼ %) — lighter weight */
+.price-unit {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.65;
+  letter-spacing: 0;
+}
+
+/* Price cell wrapper in expanded rows */
+.price-unit-sm {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.6;
+  margin-inline-end: 1px;
+}
+.price-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.td-sar .price-cell {
+  color: var(--accent-gold);
+}
+
+/* Savings pill */
+.savings-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  background: rgba(247, 120, 74, 0.1);
+  color: var(--accent-orange);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+
+/* Percentage badge */
+.pct-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(94, 79, 222, 0.1);
+  color: var(--accent-blue);
+  font-weight: 800;
+  font-size: 12.5px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+}
+
+/* Average price column subtle tint */
+.td-avg {
+  color: var(--text-secondary);
+}
+
 @media (max-width: 768px) {
   .grouped-table .td-group-name {
     font-size: 13px;

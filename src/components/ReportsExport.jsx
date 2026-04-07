@@ -1829,7 +1829,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
         );
       })()}
 
-      <div className="analytics-preview">
+      {activeSection === 'global' && <div className="analytics-preview">
         <div className="analytics-header">
           <h3 className="flex-row align-center gap-2"><BarChartIcon className="icon-sm" /> ملخص التحليلات</h3>
           <div className="analytics-actions">
@@ -1851,10 +1851,14 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
               </tr>
             </thead>
             <tbody>
-              {groupedAnalytics.map((group, gi) => {
+              {(() => {
+                const PALETTE = ['#5E4FDE','#11BA65','#1A51F4','#F7784A','#F94B60','#FFC530','#0088cc','#e056cd','#ff9f43','#54a0ff'];
+                return groupedAnalytics.map((group, gi) => {
                 const isExpanded = expandedProducts[group.productName];
                 const bestPlan = group.plans.reduce((best, a) => parseFloat(a.savingsPercent) > parseFloat(best.savingsPercent) ? a : best, group.plans[0]);
                 const totalGroupSavings = group.plans.reduce((s, a) => s + a.savings, 0);
+                const avatarColor = PALETTE[gi % PALETTE.length];
+                const initial = group.productName.trim().charAt(0).toUpperCase();
                 return (
                   <React.Fragment key={gi}>
                     <tr className={`product-group-row ${isExpanded ? 'group-expanded' : ''}`} onClick={() => toggleProduct(group.productName)}>
@@ -1862,7 +1866,8 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                         <span className={`group-chevron ${!isExpanded ? 'chevron-collapsed' : ''}`}>
                           <ChevronDownIcon className="icon-xs" />
                         </span>
-                        {group.productName}
+                        <span className="product-avatar" style={{ background: isExpanded ? 'rgba(255,255,255,0.22)' : avatarColor }}>{initial}</span>
+                        <span className="product-name-text">{group.productName}</span>
                         <span className="group-plan-count">{group.plans.length} خطة</span>
                       </td>
                       {!isExpanded ? (
@@ -1875,22 +1880,28 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                             <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell">
                               <span className="collapsed-label">أقل سعر</span>
-                              <span className="collapsed-value blue">${fmt(bestPlan.cheapest.price)}</span>
+                              <span className="collapsed-value blue">
+                                <span className="price-unit">$</span>{fmt(bestPlan.cheapest.price)}
+                              </span>
                             </div>
                             <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell">
                               <span className="collapsed-label">بالريال</span>
-                              <span className="collapsed-value">{fmt(bestPlan.cheapest.price * exchangeRate)} ﷼</span>
+                              <span className="collapsed-value">
+                                {fmt(bestPlan.cheapest.price * exchangeRate)}<span className="price-unit"> ﷼</span>
+                              </span>
                             </div>
                             <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell">
                               <span className="collapsed-label">إجمالي التوفير</span>
-                              <span className="collapsed-value orange">${fmt(totalGroupSavings)}</span>
+                              <span className="collapsed-value orange">
+                                <span className="price-unit">$</span>{fmt(totalGroupSavings)}
+                              </span>
                             </div>
                             <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell">
                               <span className="collapsed-label">نسبة التوفير</span>
-                              <span className="collapsed-value purple">{bestPlan.savingsPercent}%</span>
+                              <span className="collapsed-value purple">{bestPlan.savingsPercent}<span className="price-unit">%</span></span>
                             </div>
                           </div>
                         </td>
@@ -1900,24 +1911,24 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                     </tr>
                     {isExpanded && group.plans.map((a, pi) => (
                       <tr key={pi} className="plan-sub-row">
-                        <td className="td-plan-indent"></td>
+                        <td className="td-plan-indent" style={{ borderRightColor: avatarColor }}></td>
                         <td><span className="plan-badge">{a.planDuration}</span></td>
                         <td className="td-warranty">{a.warrantyDays > 0 ? <span className="warranty-badge-sm">{a.warrantyDays} يوم</span> : <span className="price-not-available" style={{opacity: 0.5}}>—</span>}</td>
                         <td className="td-best-supplier">{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span className="price-not-available">لا يوجد</span>}</td>
-                        <td className="td-price">{a.cheapest.price > 0 ? `$${fmt(a.cheapest.price)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                        <td className="td-price">{a.cheapest.price > 0 ? `${fmt(a.cheapest.price * exchangeRate)} ﷼` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                        <td className="td-price">{a.avgPrice > 0 ? `$${fmt(a.avgPrice)}` : <span className="price-not-available" style={{opacity: 0.5}}>-</span>}</td>
-                        <td className="td-savings">${fmt(a.savings)}</td>
-                        <td className="td-savings-pct">{a.savingsPercent}%</td>
+                        <td className="td-price">{a.cheapest.price > 0 ? <span className="price-cell"><span className="price-unit-sm">$</span>{fmt(a.cheapest.price)}</span> : <span className="price-not-available" style={{opacity: 0.5}}>—</span>}</td>
+                        <td className="td-price td-sar">{a.cheapest.price > 0 ? <span className="price-cell">{fmt(a.cheapest.price * exchangeRate)}<span className="price-unit-sm"> ﷼</span></span> : <span className="price-not-available" style={{opacity: 0.5}}>—</span>}</td>
+                        <td className="td-price td-avg">{a.avgPrice > 0 ? <span className="price-cell"><span className="price-unit-sm">$</span>{fmt(a.avgPrice)}</span> : <span className="price-not-available" style={{opacity: 0.5}}>—</span>}</td>
+                        <td className="td-savings"><span className="savings-pill"><span className="price-unit-sm">$</span>{fmt(a.savings)}</span></td>
+                        <td className="td-savings-pct"><span className="pct-badge">{a.savingsPercent}%</span></td>
                       </tr>
                     ))}
                   </React.Fragment>
                 );
-              })}
+              });})()}
             </tbody>
           </table>
         </div>
-      </div>
+      </div>}
 
       {generating && (
         <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
