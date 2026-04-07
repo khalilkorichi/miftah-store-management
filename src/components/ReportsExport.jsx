@@ -1879,22 +1879,18 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                               <span className="collapsed-label">أفضل مورد</span>
                               <span className="collapsed-value">{bestPlan.cheapest.supplierName}</span>
                             </div>
-                            <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell cs-price">
                               <span className="collapsed-label">أقل سعر</span>
                               <span className="collapsed-value"><span className="cv-unit">$</span>{fmt(bestPlan.cheapest.price)}</span>
                             </div>
-                            <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell cs-sar">
                               <span className="collapsed-label">بالريال</span>
                               <span className="collapsed-value">{fmt(bestPlan.cheapest.price * exchangeRate)}<span className="cv-unit"> ﷼</span></span>
                             </div>
-                            <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell cs-savings">
                               <span className="collapsed-label">إجمالي التوفير</span>
                               <span className="collapsed-value"><span className="cv-unit">$</span>{fmt(totalGroupSavings)}</span>
                             </div>
-                            <div className="collapsed-summary-divider"></div>
                             <div className="collapsed-summary-cell cs-pct">
                               <span className="collapsed-label">نسبة التوفير</span>
                               <span className="collapsed-value">{bestPlan.savingsPercent}<span className="cv-unit">%</span></span>

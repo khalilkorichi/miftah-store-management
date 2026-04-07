@@ -3087,53 +3087,80 @@ body {
   vertical-align: middle;
 }
 .collapsed-summary-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0 4px;
-  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  flex-wrap: nowrap;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .collapsed-summary-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
-  padding: 6px 14px;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  min-width: 100px;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
 }
-.collapsed-summary-divider {
-  width: 1px;
-  height: 28px;
-  background: var(--border-color);
-  flex-shrink: 0;
-  opacity: 0.5;
+.collapsed-summary-cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 3px;
+  border-radius: 0 10px 10px 0;
 }
+/* per-metric color tokens */
+.cs-supplier::before { background: var(--accent-green); }
+.cs-supplier { border-color: rgba(17, 186, 101, 0.2); }
+.cs-supplier .collapsed-value { color: var(--accent-green); }
+
+.cs-price::before { background: var(--accent-blue); }
+.cs-price { border-color: rgba(94, 79, 222, 0.2); }
+.cs-price .collapsed-value { color: var(--accent-blue); }
+
+.cs-sar::before { background: var(--accent-gold); }
+.cs-sar { border-color: rgba(255, 197, 48, 0.25); }
+.cs-sar .collapsed-value { color: var(--accent-gold); }
+
+.cs-savings::before { background: var(--accent-orange); }
+.cs-savings { border-color: rgba(247, 120, 74, 0.2); }
+.cs-savings .collapsed-value { color: var(--accent-orange); }
+
+.cs-pct::before { background: var(--accent-purple); }
+.cs-pct { border-color: rgba(26, 81, 244, 0.2); }
+.cs-pct .collapsed-value { color: var(--accent-purple); }
+
+.grouped-table .product-group-row:hover .collapsed-summary-cell {
+  transform: translateY(-1px);
+}
+.collapsed-summary-divider { display: none; }
 .collapsed-label {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
 .collapsed-value {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  line-height: 1.2;
-  color: var(--text-primary);
+  line-height: 1.1;
 }
-.cs-supplier .collapsed-value { color: var(--accent-green); }
-.cs-price .collapsed-value    { color: var(--accent-blue); }
-.cs-sar .collapsed-value      { color: var(--accent-gold); }
-.cs-savings .collapsed-value  { color: var(--accent-orange); }
-.cs-pct .collapsed-value      { color: var(--text-primary); }
 .cv-unit {
-  font-size: 10.5px;
-  font-weight: 500;
-  opacity: 0.6;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.65;
 }
 .group-summary-text {
   display: inline-flex;
