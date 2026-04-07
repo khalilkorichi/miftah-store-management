@@ -3673,6 +3673,89 @@ body {
   border: 1px solid color-mix(in srgb, var(--act-color, #888) 25%, transparent);
 }
 
+.pdm-url-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-muted);
+  min-height: 36px;
+}
+.pdm-url-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--accent-blue);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  outline: none;
+}
+.pdm-url-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.pdm-url-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-blue);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  transition: color 0.15s;
+}
+.pdm-url-link:hover {
+  color: var(--accent-blue-hover);
+  text-decoration: underline;
+}
+.pdm-url-edit-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.pdm-url-edit-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+.pdm-url-add-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+.pdm-url-add-btn:hover {
+  color: var(--accent-blue);
+}
+
 .pdm-stats-bar {
   display: flex;
   gap: 20px;
@@ -5252,6 +5335,21 @@ body {
   border: 1px solid var(--border-color);
 }
 
+.ppc-url {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--accent-blue);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  background: rgba(26,81,244,0.06);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(26,81,244,0.15);
+  overflow: hidden;
+  word-break: break-all;
+}
+
 .ppc-plans {
   display: flex;
   flex-direction: column;
@@ -5283,6 +5381,55 @@ body {
 .ppc-empty {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.bulk-export-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.bulk-export-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+.bulk-export-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.bulk-export-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 2px dashed var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-card);
+  transition: border-color 0.2s;
+}
+.bulk-export-card:hover {
+  border-color: rgba(94, 79, 222, 0.3);
+}
+.bulk-export-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+.bulk-export-info p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+.btn-generate.bulk {
+  width: auto;
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 11px 24px;
 }
 
 /* ===================================================

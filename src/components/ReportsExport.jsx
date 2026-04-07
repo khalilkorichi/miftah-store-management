@@ -305,6 +305,59 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
     }
   };
 
+  const generateAllProductPDFs = async () => {
+    setGenerating('all-products');
+    try {
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        await new Promise((r) => setTimeout(r, 300));
+        const element = reportRef.current;
+        if (!element) continue;
+        setGenerating(`all-products-${product.id}`);
+        await new Promise((r) => setTimeout(r, 250));
+        const canvas = await html2canvas(element, {
+          scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+        });
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const margin = 8;
+        const usableW = pageW - margin * 2;
+        const usableH = pageH - margin * 2;
+        const scale = usableW / canvas.width;
+        const scaledH = canvas.height * scale;
+
+        if (scaledH <= usableH) {
+          const imgData = canvas.toDataURL('image/png');
+          const xOff = (pageW - canvas.width * scale) / 2;
+          doc.addImage(imgData, 'PNG', xOff, margin, canvas.width * scale, scaledH);
+        } else {
+          const sliceHeightPx = Math.floor(usableH / scale);
+          const totalPages = Math.ceil(canvas.height / sliceHeightPx);
+          for (let page = 0; page < totalPages; page++) {
+            if (page > 0) doc.addPage();
+            const srcY = page * sliceHeightPx;
+            const srcH = Math.min(sliceHeightPx, canvas.height - srcY);
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = srcH;
+            const ctx = sliceCanvas.getContext('2d');
+            ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+            const sliceData = sliceCanvas.toDataURL('image/png');
+            const drawH = srcH * scale;
+            doc.addImage(sliceData, 'PNG', margin, margin, usableW, drawH);
+          }
+        }
+        const safeName = `تقرير_${product.name}_مفتاح.pdf`.replace(/[<>:"/\\|?*]/g, '_').trim();
+        doc.save(safeName);
+      }
+    } catch (e) {
+      alert('حدث خطأ أثناء إنشاء التقارير: ' + e.message);
+    } finally {
+      setGenerating(null);
+    }
+  };
+
   // ══════════════════════════════════════════════════════════
   // 1. FULL REPORT — All products with all suppliers
   // ══════════════════════════════════════════════════════════
@@ -363,7 +416,14 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                       {planIdx === 0 && (
                         <>
                           <td style={{ ...tdStyle, fontWeight: '700', color: '#888' }} rowSpan={product.plans.length}>{pi + 1}</td>
-                          <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '700' }} rowSpan={product.plans.length}>{formatProductName(product)}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '700' }} rowSpan={product.plans.length}>
+                            <div>{formatProductName(product)}</div>
+                            {product.storeUrl && (
+                              <div style={{ fontSize: '9px', color: pdfColors.blue, fontFamily: 'monospace', marginTop: '3px', wordBreak: 'break-all', fontWeight: '500', lineHeight: '1.3' }}>
+                                {product.storeUrl}
+                              </div>
+                            )}
+                          </td>
                           <td style={{ ...tdStyle, fontSize: '10px' }} rowSpan={product.plans.length}>
                             <Badge color={product.accountType === 'team' ? pdfColors.blue : pdfColors.accent}>
                               {product.accountType === 'team' ? 'فريق' : product.accountType === 'individual' ? 'فردي' : 'عام'}
@@ -469,6 +529,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
               <InfoRow label="اسم المنتج" value={product.name} bold />
               <InfoRow label="نوع الحساب" value={product.accountType === 'team' ? 'فريق' : product.accountType === 'individual' ? 'فردي' : 'عام'} />
               <InfoRow label="عدد الخطط" value={product.plans.length} />
+              {product.storeUrl && <InfoRow label="رابط المتجر" value={product.storeUrl} color={pdfColors.blue} />}
               {assignedMethods.length > 0 && <InfoRow label="طرق التفعيل" value={assignedMethods.map(m => m.label).join('، ')} />}
             </div>
             <div style={{ background: pdfColors.light, border: `1px solid ${pdfColors.border}`, borderRadius: '10px', padding: '14px' }}>
@@ -987,6 +1048,10 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
     if (generating === 'full')       return renderFullReport();
     if (generating === 'comparison') return renderComparisonReport();
     if (generating === 'summary')    return renderSummaryReport();
+    if (generating?.startsWith('all-products-')) {
+      const pid = parseInt(generating.replace('all-products-', ''));
+      return renderProductReport(products.find((p) => p.id === pid));
+    }
     if (generating?.startsWith('product-')) {
       const pid = parseInt(generating.replace('product-', ''));
       return renderProductReport(products.find((p) => p.id === pid));
@@ -1128,6 +1193,12 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                   <span className="flex-row gap-1 align-center"><ZapIcon className="icon-xs" /> {selectedProduct.activationMethods.length} طرق تفعيل</span>
                 )}
               </div>
+              {selectedProduct.storeUrl && (
+                <div className="ppc-url">
+                  <GlobeIcon className="icon-xs" />
+                  <span dir="ltr">{selectedProduct.storeUrl}</span>
+                </div>
+              )}
               <div className="ppc-plans">
                 {selectedProduct.plans.map((plan) => {
                   let minP = Infinity, bestName = '';
@@ -1146,6 +1217,30 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
               </div>
             </div>
           )}
+
+          <div className="bulk-export-divider">
+            <div className="bulk-export-line"></div>
+            <span className="bulk-export-text">أو</span>
+            <div className="bulk-export-line"></div>
+          </div>
+
+          <div className="bulk-export-card">
+            <div className="bulk-export-info">
+              <h4>تصدير جميع المنتجات</h4>
+              <p>تصدير تقرير لكل منتج في ملف PDF منفصل ({products.length} ملف)</p>
+            </div>
+            <button
+              className="btn-generate bulk"
+              disabled={!!generating || products.length === 0}
+              onClick={generateAllProductPDFs}
+            >
+              {generating?.startsWith('all-products') ? (
+                <><span className="spinner" /> جاري التصدير ({products.findIndex(p => `all-products-${p.id}` === generating) + 1}/{products.length})...</>
+              ) : (
+                <><DownloadIcon className="icon-sm" /> تصدير الكل ({products.length} ملف)</>
+              )}
+            </button>
+          </div>
         </div>
       )}
 

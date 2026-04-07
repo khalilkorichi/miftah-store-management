@@ -317,6 +317,12 @@ function App() {
     );
   }, [toast]);
 
+  const handleUpdateProductUrl = useCallback((productId, url) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, storeUrl: url } : p))
+    );
+  }, []);
+
   const handleDuplicateProduct = useCallback((productId) => {
     setProducts((prev) => {
       const productToDuplicate = prev.find((p) => p.id === productId);
@@ -688,6 +694,7 @@ function App() {
             onAddProduct={handleAddProduct}
             onDeleteProduct={handleDeleteProduct}
             onUpdateProductName={handleUpdateProductName}
+            onUpdateProductUrl={handleUpdateProductUrl}
             onUpdateProductAccountType={handleUpdateProductAccountType}
             onDuplicateProduct={handleDuplicateProduct}
             onAddPlan={handleAddPlan}

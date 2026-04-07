@@ -262,7 +262,7 @@ function ProductCard({
 function ProductTable({
   products, suppliers, durations, exchangeRate, activationMethods = [],
   onUpdatePrice, onAddProduct, onDeleteProduct, onDuplicateProduct,
-  onUpdateProductName, onUpdateProductAccountType, onAddPlan, onDeletePlan,
+  onUpdateProductName, onUpdateProductUrl, onUpdateProductAccountType, onAddPlan, onDeletePlan,
   onUpdatePlanDuration, onUpdateSupplier, onDeleteSupplier, onAddSupplier,
   onToggleProductMethod, onAddActivationMethodType, onDeleteActivationMethodType,
   onUpdateOfficialPrice, onUpdateWarranty, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
@@ -412,6 +412,7 @@ function ProductTable({
         onUpdatePrice={onUpdatePrice}
         onUpdateOfficialPrice={onUpdateOfficialPrice}
         onUpdateWarranty={onUpdateWarranty}
+        onUpdateProductUrl={onUpdateProductUrl}
         onAddPlan={onAddPlan}
         onDeletePlan={onDeletePlan}
         getDurationLabel={getDurationLabel}
