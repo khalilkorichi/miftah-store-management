@@ -1,14 +1,131 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   FileTextIcon, PackageIcon, SearchIcon, PlusIcon, TrashIcon,
-  CheckCircleIcon, AlertTriangleIcon, CopyIcon, StarIcon,
-  ArrowUpIcon, ArrowDownIcon, SaveIcon, DownloadIcon, ListIcon,
-  BoldIcon, ItalicIcon, TypeIcon, MinusIcon, ClipboardIcon,
-  ChevronDownIcon, TagIcon
+  CheckCircleIcon, AlertTriangleIcon, CopyIcon,
+  ArrowUpIcon, ArrowDownIcon, DownloadIcon, ListIcon,
+  BoldIcon, ItalicIcon, MinusIcon,
+  ChevronDownIcon, TagIcon, XIcon
 } from './Icons';
 import { FEATURE_ICONS, FEATURE_BADGES, PRODUCT_TEMPLATES } from '../data/productTemplates';
 
 const MAX_DESC_CHARS = 500;
+
+function useClickOutside(ref, handler) {
+  useEffect(() => {
+    const listener = (e) => {
+      if (!ref.current || ref.current.contains(e.target)) return;
+      handler();
+    };
+    document.addEventListener('mousedown', listener);
+    return () => document.removeEventListener('mousedown', listener);
+  }, [ref, handler]);
+}
+
+function IconPicker({ currentIcon, onSelect, onClose }) {
+  const ref = useRef(null);
+  const [search, setSearch] = useState('');
+  const searchRef = useRef(null);
+
+  useClickOutside(ref, onClose);
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  useEffect(() => {
+    setTimeout(() => searchRef.current?.focus(), 50);
+  }, []);
+
+  const filtered = useMemo(() =>
+    search.trim()
+      ? FEATURE_ICONS.filter(ic => ic.label.includes(search) || ic.id.includes(search.toLowerCase()))
+      : FEATURE_ICONS,
+    [search]
+  );
+
+  return (
+    <div className="pf-icon-picker" ref={ref}>
+      <div className="pf-icon-picker-header">
+        <div className="pf-icon-search-wrap">
+          <SearchIcon className="icon-xs" />
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="بحث عن أيقونة..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pf-icon-search-input"
+          />
+          {search && (
+            <button className="pf-icon-search-clear" onClick={() => setSearch('')}>
+              <XIcon className="icon-xs" />
+            </button>
+          )}
+        </div>
+        <button className="pf-picker-close-btn" onClick={onClose} title="إغلاق">
+          <XIcon className="icon-xs" />
+        </button>
+      </div>
+      <div className="pf-icon-grid">
+        {filtered.length === 0 ? (
+          <div className="pf-icon-empty">لا نتائج</div>
+        ) : (
+          filtered.map(ic => (
+            <button
+              key={ic.id}
+              className={`pf-icon-option ${currentIcon === ic.id ? 'active' : ''}`}
+              onClick={() => onSelect(ic.id)}
+              title={ic.label}
+            >
+              <span className="pf-icon-emoji">{ic.emoji}</span>
+              <span className="pf-icon-label">{ic.label}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BadgePicker({ currentBadge, onSelect, onClose }) {
+  const ref = useRef(null);
+  useClickOutside(ref, onClose);
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  return (
+    <div className="pf-badge-picker" ref={ref}>
+      <div className="pf-badge-picker-title">اختر وسماً</div>
+      <button
+        className={`pf-badge-option pf-badge-none ${!currentBadge ? 'active' : ''}`}
+        onClick={() => onSelect(null)}
+      >
+        بدون وسم
+      </button>
+      <div className="pf-badge-divider" />
+      {FEATURE_BADGES.map(b => (
+        <button
+          key={b.id}
+          className={`pf-badge-option ${currentBadge === b.id ? 'active' : ''}`}
+          style={{
+            color: b.color,
+            background: currentBadge === b.id ? `${b.color}18` : undefined,
+            borderRight: currentBadge === b.id ? `3px solid ${b.color}` : '3px solid transparent',
+          }}
+          onClick={() => onSelect(b.id)}
+        >
+          {b.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function ProductFeatures({ products, setProducts, durations, suppliers, exchangeRate }) {
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -17,6 +134,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
   const [showIconPicker, setShowIconPicker] = useState(null);
   const [showBadgePicker, setShowBadgePicker] = useState(null);
   const [copyFromPlan, setCopyFromPlan] = useState(null);
+  const featureInputRefs = useRef({});
 
   const product = products.find(p => p.id === parseInt(selectedProductId));
 
@@ -29,8 +147,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
   const handleDescriptionChange = useCallback((text) => {
     if (!product) return;
-    const trimmed = text.slice(0, MAX_DESC_CHARS);
-    updateProduct(product.id, { description: trimmed });
+    updateProduct(product.id, { description: text.slice(0, MAX_DESC_CHARS) });
   }, [product, updateProduct]);
 
   const handleDescStyleChange = useCallback((key, value) => {
@@ -39,8 +156,9 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     updateProduct(product.id, { descriptionStyles: { ...styles, [key]: value } });
   }, [product, updateProduct]);
 
-  const addFeature = useCallback((planId) => {
+  const addFeature = useCallback((planId, focusNew = false) => {
     if (!product) return;
+    const newId = `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     updateProduct(product.id, (p) => ({
       ...p,
       plans: p.plans.map(plan => {
@@ -49,10 +167,13 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         const maxOrder = features.reduce((max, f) => Math.max(max, f.order || 0), 0);
         return {
           ...plan,
-          features: [...features, { text: '', icon: 'check', badge: null, order: maxOrder + 1, id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }]
+          features: [...features, { text: '', icon: 'check', badge: null, order: maxOrder + 1, id: newId }]
         };
       })
     }));
+    if (focusNew) {
+      setTimeout(() => featureInputRefs.current[newId]?.focus(), 60);
+    }
   }, [product, updateProduct]);
 
   const updateFeature = useCallback((planId, featureId, updates) => {
@@ -92,8 +213,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         const newIdx = direction === 'up' ? idx - 1 : idx + 1;
         if (newIdx < 0 || newIdx >= features.length) return plan;
         [features[idx], features[newIdx]] = [features[newIdx], features[idx]];
-        const reordered = features.map((f, i) => ({ ...f, order: i + 1 }));
-        return { ...plan, features: reordered };
+        return { ...plan, features: features.map((f, i) => ({ ...f, order: i + 1 })) };
       })
     }));
   }, [product, updateProduct]);
@@ -107,7 +227,11 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         const features = plan.features || [];
         return {
           ...plan,
-          features: [...features, { text: '---', icon: 'none', badge: null, isSeparator: true, order: features.reduce((max, f) => Math.max(max, f.order || 0), 0) + 1, id: `sep_${Date.now()}` }]
+          features: [...features, {
+            text: '---', icon: 'none', badge: null, isSeparator: true,
+            order: features.reduce((max, f) => Math.max(max, f.order || 0), 0) + 1,
+            id: `sep_${Date.now()}`
+          }]
         };
       })
     }));
@@ -117,11 +241,10 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     if (!product) return;
     updateProduct(product.id, (p) => {
       const fromPlan = p.plans.find(pl => pl.id === fromPlanId);
-      if (!fromPlan || !fromPlan.features) return p;
+      if (!fromPlan?.features) return p;
       const existingCount = (p.plans.find(pl => pl.id === toPlanId)?.features || []).length;
       const copiedFeatures = fromPlan.features.map((f, i) => ({
-        ...f,
-        order: existingCount + i + 1,
+        ...f, order: existingCount + i + 1,
         id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
       }));
       return {
@@ -137,25 +260,24 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
   const loadTemplate = useCallback((template) => {
     if (!product) return;
-    updateProduct(product.id, (p) => {
-      const newPlans = p.plans.map((plan, idx) => ({
+    updateProduct(product.id, (p) => ({
+      ...p,
+      description: template.description,
+      plans: p.plans.map((plan, idx) => ({
         ...plan,
         features: template.features.map((f, fi) => ({
-          ...f,
-          order: fi + 1,
+          ...f, order: fi + 1,
           id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${idx}`
         }))
-      }));
-      return { ...p, description: template.description, plans: newPlans };
-    });
+      }))
+    }));
     setShowTemplates(false);
   }, [product, updateProduct]);
 
   const stats = useMemo(() => {
-    let withDesc = 0;
-    let totalFeatures = 0;
+    let withDesc = 0, totalFeatures = 0;
     products.forEach(p => {
-      if (p.description && p.description.trim()) withDesc++;
+      if (p.description?.trim()) withDesc++;
       (p.plans || []).forEach(plan => {
         totalFeatures += (plan.features || []).filter(f => !f.isSeparator).length;
       });
@@ -164,7 +286,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
   }, [products]);
 
   const getProductStatus = (p) => {
-    const hasDesc = p.description && p.description.trim();
+    const hasDesc = p.description?.trim();
     const hasFeatures = p.plans?.some(plan => plan.features?.some(f => !f.isSeparator && f.text.trim()));
     return hasDesc && hasFeatures;
   };
@@ -179,17 +301,37 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     return icon ? icon.emoji : '✅';
   };
 
-  const getBadgeInfo = (badgeId) => {
-    return FEATURE_BADGES.find(b => b.id === badgeId);
-  };
+  const getBadgeInfo = (badgeId) => FEATURE_BADGES.find(b => b.id === badgeId);
 
   const descStyles = product?.descriptionStyles || {};
+
+  const closeAllPickers = () => {
+    setShowIconPicker(null);
+    setShowBadgePicker(null);
+  };
+
+  const handleFeatureKeyDown = (e, planId, featureId, features) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addFeature(planId, true);
+    } else if (e.key === 'Escape') {
+      closeAllPickers();
+      e.target.blur();
+    } else if (e.key === 'Backspace' && e.target.value === '') {
+      const idx = features.findIndex(f => f.id === featureId);
+      removeFeature(planId, featureId);
+      if (idx > 0) {
+        const prevId = features[idx - 1]?.id;
+        if (prevId) setTimeout(() => featureInputRefs.current[prevId]?.focus(), 30);
+      }
+    }
+  };
 
   return (
     <div className="pf-container">
       <div className="pf-page-header">
         <div className="pf-header-content">
-          <div className="pf-header-icon-wrap flex-row align-center justify-center">
+          <div className="pf-header-icon-wrap">
             <FileTextIcon className="icon-xl" />
           </div>
           <div>
@@ -201,21 +343,21 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
       <div className="pf-stats-grid">
         <div className="pf-stat-card pf-stat-blue">
-          <div className="pf-stat-icon flex-row align-center justify-center"><PackageIcon className="icon-lg" /></div>
+          <div className="pf-stat-icon"><PackageIcon className="icon-lg" /></div>
           <div className="pf-stat-data">
             <span className="pf-stat-value">{stats.total}</span>
             <span className="pf-stat-label">إجمالي المنتجات</span>
           </div>
         </div>
         <div className="pf-stat-card pf-stat-green">
-          <div className="pf-stat-icon flex-row align-center justify-center"><CheckCircleIcon className="icon-lg" /></div>
+          <div className="pf-stat-icon"><CheckCircleIcon className="icon-lg" /></div>
           <div className="pf-stat-data">
             <span className="pf-stat-value">{stats.withDesc}</span>
             <span className="pf-stat-label">منتجات لها أوصاف</span>
           </div>
         </div>
         <div className="pf-stat-card pf-stat-purple">
-          <div className="pf-stat-icon flex-row align-center justify-center"><ListIcon className="icon-lg" /></div>
+          <div className="pf-stat-icon"><ListIcon className="icon-lg" /></div>
           <div className="pf-stat-data">
             <span className="pf-stat-value">{stats.totalFeatures}</span>
             <span className="pf-stat-label">إجمالي المزايا</span>
@@ -224,7 +366,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
       </div>
 
       <div className="pf-selector-card">
-        <div className="pf-selector-icon flex-row align-center justify-center"><PackageIcon className="icon-lg" /></div>
+        <div className="pf-selector-icon"><PackageIcon className="icon-lg" /></div>
         <div className="pf-selector-content">
           <h3>اختر المنتج لتحرير الوصف والمزايا</h3>
           <p>حدد المنتج من القائمة ثم أضف الوصف والمزايا لكل خطة</p>
@@ -232,7 +374,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         <select
           className="pf-product-select"
           value={selectedProductId}
-          onChange={(e) => { setSelectedProductId(e.target.value); setFeatureSearch(''); }}
+          onChange={(e) => { setSelectedProductId(e.target.value); setFeatureSearch(''); closeAllPickers(); }}
         >
           <option value="">-- اختر منتج --</option>
           {products.map(p => (
@@ -245,28 +387,26 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
       {!product ? (
         <div className="pf-empty-state">
-          <span className="pf-empty-icon flex-row align-center justify-center"><FileTextIcon className="icon-xl" /></span>
+          <div className="pf-empty-icon"><FileTextIcon className="icon-xl" /></div>
           <h3>يرجى اختيار منتج للبدء</h3>
-          <p>اختر منتجاً من القائمة أعلاه لإضافة الوصف والمزايا</p>
+          <p>اختر منتجاً من القائمة أعلاه لإضافة الوصف والمزايا لخططه</p>
         </div>
       ) : (
         <div className="pf-editor-area">
           <div className="pf-editor-header">
             <div className="pf-editor-title-row">
               <h2>{product.name}</h2>
-              <div className="pf-status-indicator">
-                {getProductStatus(product) ? (
-                  <span className="pf-status-complete flex-row align-center gap-1"><CheckCircleIcon className="icon-sm" /> مكتمل</span>
-                ) : (
-                  <span className="pf-status-incomplete flex-row align-center gap-1"><AlertTriangleIcon className="icon-sm" /> ناقص</span>
-                )}
-              </div>
+              {getProductStatus(product) ? (
+                <span className="pf-status-complete"><CheckCircleIcon className="icon-sm" /> مكتمل</span>
+              ) : (
+                <span className="pf-status-incomplete"><AlertTriangleIcon className="icon-sm" /> ناقص</span>
+              )}
             </div>
             <div className="pf-editor-actions">
-              <button className="pf-template-btn flex-row align-center gap-2" onClick={() => setShowTemplates(!showTemplates)}>
+              <button className="pf-template-btn" onClick={() => setShowTemplates(!showTemplates)}>
                 <DownloadIcon className="icon-sm" />
                 تحميل قالب جاهز
-                <ChevronDownIcon className="icon-xs" />
+                <ChevronDownIcon className="icon-xs" style={{ transform: showTemplates ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
             </div>
           </div>
@@ -288,7 +428,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
           <div className="pf-desc-card">
             <div className="pf-desc-header">
-              <span className="pf-desc-icon flex-row align-center justify-center"><FileTextIcon className="icon-sm" /></span>
+              <span className="pf-desc-icon"><FileTextIcon className="icon-sm" /></span>
               <div>
                 <h3>وصف المنتج</h3>
                 <p>أضف وصفاً تعريفياً شاملاً عن المنتج</p>
@@ -297,11 +437,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
             <div className="pf-toolbar">
               <div className="pf-toolbar-group">
                 <label className="pf-toolbar-label">الحجم</label>
-                <select
-                  value={descStyles.fontSize || '14'}
-                  onChange={(e) => handleDescStyleChange('fontSize', e.target.value)}
-                  className="pf-toolbar-select"
-                >
+                <select value={descStyles.fontSize || '14'} onChange={(e) => handleDescStyleChange('fontSize', e.target.value)} className="pf-toolbar-select">
                   <option value="12">12</option>
                   <option value="14">14</option>
                   <option value="16">16</option>
@@ -310,12 +446,8 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                 </select>
               </div>
               <div className="pf-toolbar-group">
-                <label className="pf-toolbar-label">نوع العنصر</label>
-                <select
-                  value={descStyles.elementType || 'paragraph'}
-                  onChange={(e) => handleDescStyleChange('elementType', e.target.value)}
-                  className="pf-toolbar-select"
-                >
+                <label className="pf-toolbar-label">النوع</label>
+                <select value={descStyles.elementType || 'paragraph'} onChange={(e) => handleDescStyleChange('elementType', e.target.value)} className="pf-toolbar-select">
                   <option value="paragraph">فقرة</option>
                   <option value="heading">عنوان</option>
                   <option value="subheading">عنوان فرعي</option>
@@ -323,29 +455,16 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                 </select>
               </div>
               <div className="pf-toolbar-group">
-                <button
-                  className={`pf-toolbar-btn ${descStyles.bold ? 'active' : ''}`}
-                  onClick={() => handleDescStyleChange('bold', !descStyles.bold)}
-                  title="تغميق"
-                >
+                <button className={`pf-toolbar-btn ${descStyles.bold ? 'active' : ''}`} onClick={() => handleDescStyleChange('bold', !descStyles.bold)} title="تغميق">
                   <BoldIcon className="icon-sm" />
                 </button>
-                <button
-                  className={`pf-toolbar-btn ${descStyles.italic ? 'active' : ''}`}
-                  onClick={() => handleDescStyleChange('italic', !descStyles.italic)}
-                  title="مائل"
-                >
+                <button className={`pf-toolbar-btn ${descStyles.italic ? 'active' : ''}`} onClick={() => handleDescStyleChange('italic', !descStyles.italic)} title="مائل">
                   <ItalicIcon className="icon-sm" />
                 </button>
               </div>
               <div className="pf-toolbar-group">
                 <label className="pf-toolbar-label">اللون</label>
-                <input
-                  type="color"
-                  value={descStyles.color || '#ffffff'}
-                  onChange={(e) => handleDescStyleChange('color', e.target.value)}
-                  className="pf-color-picker"
-                />
+                <input type="color" value={descStyles.color || '#ffffff'} onChange={(e) => handleDescStyleChange('color', e.target.value)} className="pf-color-picker" />
               </div>
             </div>
             <textarea
@@ -355,7 +474,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               placeholder="اكتب وصفاً تفصيلياً للمنتج... مثال: اشتراك ChatGPT Plus يمنحك وصولاً إلى نموذج GPT-4o المتقدم..."
               rows={4}
               style={{
-                fontSize: `${descStyles.elementType === 'heading' ? (descStyles.fontSize ? Math.max(Number(descStyles.fontSize), 18) : 20) : descStyles.elementType === 'subheading' ? (descStyles.fontSize ? Math.max(Number(descStyles.fontSize), 16) : 16) : descStyles.elementType === 'caption' ? (descStyles.fontSize ? Math.min(Number(descStyles.fontSize), 13) : 12) : (descStyles.fontSize || 14)}px`,
+                fontSize: `${descStyles.elementType === 'heading' ? Math.max(Number(descStyles.fontSize || 14), 18) : descStyles.elementType === 'subheading' ? Math.max(Number(descStyles.fontSize || 14), 16) : descStyles.elementType === 'caption' ? Math.min(Number(descStyles.fontSize || 14), 13) : (descStyles.fontSize || 14)}px`,
                 fontWeight: descStyles.bold || descStyles.elementType === 'heading' ? '700' : descStyles.elementType === 'subheading' ? '600' : '400',
                 fontStyle: descStyles.italic ? 'italic' : 'normal',
                 color: descStyles.color || undefined,
@@ -364,7 +483,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
             />
             <div className="pf-char-counter">
               <span className={(product.description || '').length >= MAX_DESC_CHARS ? 'pf-char-limit' : ''}>
-                {(product.description || '').length}/{MAX_DESC_CHARS}
+                {(product.description || '').length} / {MAX_DESC_CHARS}
               </span>
             </div>
           </div>
@@ -378,6 +497,11 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                 value={featureSearch}
                 onChange={(e) => setFeatureSearch(e.target.value)}
               />
+              {featureSearch && (
+                <button className="pf-search-clear" onClick={() => setFeatureSearch('')} title="مسح البحث">
+                  <XIcon className="icon-xs" />
+                </button>
+              )}
             </div>
           )}
 
@@ -387,7 +511,8 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               const filteredFeatures = featureSearch
                 ? features.filter(f => f.isSeparator || f.text.toLowerCase().includes(featureSearch.toLowerCase()))
                 : features;
-              const bestPrice = Math.min(...Object.values(plan.prices).filter(v => v > 0).map(v => v * exchangeRate)) || 0;
+              const prices = Object.values(plan.prices || {}).filter(v => v > 0);
+              const bestPrice = prices.length ? Math.min(...prices.map(v => v * exchangeRate)) : 0;
 
               return (
                 <div key={plan.id} className="pf-plan-card">
@@ -422,6 +547,14 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                   )}
 
                   <div className="pf-features-list">
+                    {filteredFeatures.length === 0 && !featureSearch && (
+                      <div className="pf-features-empty">
+                        <span>لا توجد مزايا بعد</span>
+                        <button className="pf-features-empty-btn" onClick={() => addFeature(plan.id, true)}>
+                          <PlusIcon className="icon-xs" /> أضف أول ميزة
+                        </button>
+                      </div>
+                    )}
                     {filteredFeatures.map((feature, idx) => {
                       if (feature.isSeparator) {
                         return (
@@ -434,61 +567,76 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                         );
                       }
                       const badgeInfo = feature.badge ? getBadgeInfo(feature.badge) : null;
+                      const isIconOpen = showIconPicker === feature.id;
+                      const isBadgeOpen = showBadgePicker === feature.id;
+
                       return (
-                        <div key={feature.id} className="pf-feature-row">
-                          <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <div className="pf-feature-icon-btn" onClick={() => setShowIconPicker(showIconPicker === feature.id ? null : feature.id)} title="تغيير الأيقونة">
+                        <div key={feature.id} className={`pf-feature-row ${isIconOpen || isBadgeOpen ? 'pf-feature-row--active' : ''}`}>
+                          <div className="pf-feature-icon-wrap">
+                            <button
+                              className={`pf-feature-icon-btn ${isIconOpen ? 'open' : ''}`}
+                              onClick={() => {
+                                setShowBadgePicker(null);
+                                setShowIconPicker(isIconOpen ? null : feature.id);
+                              }}
+                              title="تغيير الأيقونة"
+                              type="button"
+                            >
                               {getIconEmoji(feature.icon)}
-                            </div>
-                            {showIconPicker === feature.id && (
-                              <div className="pf-icon-picker">
-                                {FEATURE_ICONS.map(ic => (
-                                  <button
-                                    key={ic.id}
-                                    className={`pf-icon-option ${feature.icon === ic.id ? 'active' : ''}`}
-                                    onClick={() => { updateFeature(plan.id, feature.id, { icon: ic.id }); setShowIconPicker(null); }}
-                                    title={ic.label}
-                                  >
-                                    {ic.emoji}
-                                  </button>
-                                ))}
-                              </div>
+                            </button>
+                            {isIconOpen && (
+                              <IconPicker
+                                currentIcon={feature.icon}
+                                onSelect={(iconId) => {
+                                  updateFeature(plan.id, feature.id, { icon: iconId });
+                                  setShowIconPicker(null);
+                                  featureInputRefs.current[feature.id]?.focus();
+                                }}
+                                onClose={() => setShowIconPicker(null)}
+                              />
                             )}
                           </div>
+
                           <input
+                            ref={el => featureInputRefs.current[feature.id] = el}
                             type="text"
                             className="pf-feature-input"
                             value={feature.text}
                             onChange={(e) => updateFeature(plan.id, feature.id, { text: e.target.value })}
-                            placeholder="اكتب الميزة هنا..."
+                            onKeyDown={(e) => handleFeatureKeyDown(e, plan.id, feature.id, features)}
+                            placeholder="اكتب الميزة... (Enter لإضافة أخرى)"
                           />
-                          <div className="pf-feature-badge-area">
+
+                          <div className="pf-feature-badge-wrap">
                             <button
-                              className="pf-badge-btn"
-                              onClick={() => setShowBadgePicker(showBadgePicker === feature.id ? null : feature.id)}
-                              style={badgeInfo ? { background: `${badgeInfo.color}20`, color: badgeInfo.color, borderColor: `${badgeInfo.color}40` } : {}}
+                              className={`pf-badge-btn ${isBadgeOpen ? 'open' : ''} ${badgeInfo ? 'has-badge' : ''}`}
+                              onClick={() => {
+                                setShowIconPicker(null);
+                                setShowBadgePicker(isBadgeOpen ? null : feature.id);
+                              }}
+                              style={badgeInfo ? {
+                                background: `${badgeInfo.color}18`,
+                                color: badgeInfo.color,
+                                borderColor: `${badgeInfo.color}50`,
+                              } : {}}
                               title="إضافة وسم"
+                              type="button"
                             >
                               {badgeInfo ? badgeInfo.label : <TagIcon className="icon-xs" />}
                             </button>
-                            {showBadgePicker === feature.id && (
-                              <div className="pf-badge-picker">
-                                <button className="pf-badge-option" style={{ color: 'var(--text-muted)' }} onClick={() => { updateFeature(plan.id, feature.id, { badge: null }); setShowBadgePicker(null); }}>
-                                  بدون وسم
-                                </button>
-                                {FEATURE_BADGES.map(b => (
-                                  <button
-                                    key={b.id}
-                                    className="pf-badge-option"
-                                    style={{ color: b.color }}
-                                    onClick={() => { updateFeature(plan.id, feature.id, { badge: b.id }); setShowBadgePicker(null); }}
-                                  >
-                                    {b.label}
-                                  </button>
-                                ))}
-                              </div>
+                            {isBadgeOpen && (
+                              <BadgePicker
+                                currentBadge={feature.badge}
+                                onSelect={(badgeId) => {
+                                  updateFeature(plan.id, feature.id, { badge: badgeId });
+                                  setShowBadgePicker(null);
+                                  featureInputRefs.current[feature.id]?.focus();
+                                }}
+                                onClose={() => setShowBadgePicker(null)}
+                              />
                             )}
                           </div>
+
                           <div className="pf-feature-controls">
                             <button className="pf-move-btn" onClick={() => moveFeature(plan.id, feature.id, 'up')} disabled={idx === 0} title="نقل لأعلى">
                               <ArrowUpIcon className="icon-xs" />
@@ -506,11 +654,11 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                   </div>
 
                   <div className="pf-plan-footer">
-                    <button className="pf-add-feature-btn flex-row align-center gap-2" onClick={() => addFeature(plan.id)}>
+                    <button className="pf-add-feature-btn" onClick={() => addFeature(plan.id, true)}>
                       <PlusIcon className="icon-sm" />
                       إضافة ميزة
                     </button>
-                    <button className="pf-add-separator-btn flex-row align-center gap-2" onClick={() => addSeparator(plan.id)}>
+                    <button className="pf-add-separator-btn" onClick={() => addSeparator(plan.id)}>
                       <MinusIcon className="icon-sm" />
                       فاصل
                     </button>
