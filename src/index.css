@@ -8648,16 +8648,11 @@ body.dark-mode .selectable-card.selected {
   transform: scale(1.08);
 }
 .pf-icon-picker {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 200;
   padding: 14px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
-  min-width: 310px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
   width: 310px;
 }
 .pf-icon-option {
@@ -8733,11 +8728,6 @@ body.dark-mode .selectable-card.selected {
   color: var(--accent-purple);
 }
 .pf-badge-picker {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -8745,9 +8735,8 @@ body.dark-mode .selectable-card.selected {
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 12px 36px rgba(0,0,0,0.2);
-  margin-top: 4px;
-  min-width: 130px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+  min-width: 140px;
 }
 .pf-badge-option {
   padding: 7px 14px;

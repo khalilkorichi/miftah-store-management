@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import {
   FileTextIcon, PackageIcon, SearchIcon, PlusIcon, TrashIcon,
   CheckCircleIcon, AlertTriangleIcon, CopyIcon,
@@ -10,23 +11,56 @@ import { FEATURE_ICONS, FEATURE_BADGES, PRODUCT_TEMPLATES } from '../data/produc
 
 const MAX_DESC_CHARS = 500;
 
-function useClickOutside(ref, handler) {
+function useClickOutside(ref, handler, excludeRef) {
   useEffect(() => {
     const listener = (e) => {
       if (!ref.current || ref.current.contains(e.target)) return;
+      if (excludeRef?.current && excludeRef.current.contains(e.target)) return;
       handler();
     };
     document.addEventListener('mousedown', listener);
     return () => document.removeEventListener('mousedown', listener);
-  }, [ref, handler]);
+  }, [ref, handler, excludeRef]);
 }
 
-function IconPicker({ currentIcon, onSelect, onClose }) {
+function useFixedPosition(triggerRef, isOpen) {
+  const [style, setStyle] = useState({});
+
+  useEffect(() => {
+    if (!isOpen || !triggerRef?.current) return;
+    const updatePos = () => {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const showAbove = spaceBelow < 300 && spaceAbove > spaceBelow;
+      setStyle({
+        position: 'fixed',
+        right: Math.max(8, window.innerWidth - rect.right),
+        ...(showAbove
+          ? { bottom: window.innerHeight - rect.top + 6 }
+          : { top: rect.bottom + 6 }),
+        zIndex: 9999,
+      });
+    };
+    updatePos();
+    window.addEventListener('scroll', updatePos, true);
+    window.addEventListener('resize', updatePos);
+    return () => {
+      window.removeEventListener('scroll', updatePos, true);
+      window.removeEventListener('resize', updatePos);
+    };
+  }, [isOpen, triggerRef]);
+
+  return style;
+}
+
+function IconPicker({ currentIcon, onSelect, onClose, triggerRef }) {
   const ref = useRef(null);
   const [search, setSearch] = useState('');
-  const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const style = useFixedPosition(triggerRef, true);
 
-  useClickOutside(ref, onClose);
+  useClickOutside(ref, onClose, triggerRef);
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -35,7 +69,7 @@ function IconPicker({ currentIcon, onSelect, onClose }) {
   }, [onClose]);
 
   useEffect(() => {
-    setTimeout(() => searchRef.current?.focus(), 50);
+    setTimeout(() => searchInputRef.current?.focus(), 50);
   }, []);
 
   const filtered = useMemo(() =>
@@ -45,13 +79,13 @@ function IconPicker({ currentIcon, onSelect, onClose }) {
     [search]
   );
 
-  return (
-    <div className="pf-icon-picker" ref={ref}>
+  return ReactDOM.createPortal(
+    <div className="pf-icon-picker" ref={ref} style={style}>
       <div className="pf-icon-picker-header">
         <div className="pf-icon-search-wrap">
           <SearchIcon className="icon-xs" />
           <input
-            ref={searchRef}
+            ref={searchInputRef}
             type="text"
             placeholder="بحث عن أيقونة..."
             value={search}
@@ -80,18 +114,20 @@ function IconPicker({ currentIcon, onSelect, onClose }) {
               title={ic.label}
             >
               <span className="pf-icon-emoji">{ic.emoji}</span>
-              <span className="pf-icon-label">{ic.label}</span>
             </button>
           ))
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-function BadgePicker({ currentBadge, onSelect, onClose }) {
+function BadgePicker({ currentBadge, onSelect, onClose, triggerRef }) {
   const ref = useRef(null);
-  useClickOutside(ref, onClose);
+  const style = useFixedPosition(triggerRef, true);
+
+  useClickOutside(ref, onClose, triggerRef);
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -99,8 +135,8 @@ function BadgePicker({ currentBadge, onSelect, onClose }) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  return (
-    <div className="pf-badge-picker" ref={ref}>
+  return ReactDOM.createPortal(
+    <div className="pf-badge-picker" ref={ref} style={style}>
       <div className="pf-badge-picker-title">اختر وسماً</div>
       <button
         className={`pf-badge-option pf-badge-none ${!currentBadge ? 'active' : ''}`}
@@ -123,7 +159,8 @@ function BadgePicker({ currentBadge, onSelect, onClose }) {
           {b.label}
         </button>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -135,6 +172,8 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
   const [showBadgePicker, setShowBadgePicker] = useState(null);
   const [copyFromPlan, setCopyFromPlan] = useState(null);
   const featureInputRefs = useRef({});
+  const iconBtnRefs = useRef({});
+  const badgeBtnRefs = useRef({});
 
   const product = products.find(p => p.id === parseInt(selectedProductId));
 
@@ -574,6 +613,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                         <div key={feature.id} className={`pf-feature-row ${isIconOpen || isBadgeOpen ? 'pf-feature-row--active' : ''}`}>
                           <div className="pf-feature-icon-wrap">
                             <button
+                              ref={el => iconBtnRefs.current[feature.id] = el}
                               className={`pf-feature-icon-btn ${isIconOpen ? 'open' : ''}`}
                               onClick={() => {
                                 setShowBadgePicker(null);
@@ -587,6 +627,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                             {isIconOpen && (
                               <IconPicker
                                 currentIcon={feature.icon}
+                                triggerRef={{ current: iconBtnRefs.current[feature.id] }}
                                 onSelect={(iconId) => {
                                   updateFeature(plan.id, feature.id, { icon: iconId });
                                   setShowIconPicker(null);
@@ -609,6 +650,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
                           <div className="pf-feature-badge-wrap">
                             <button
+                              ref={el => badgeBtnRefs.current[feature.id] = el}
                               className={`pf-badge-btn ${isBadgeOpen ? 'open' : ''} ${badgeInfo ? 'has-badge' : ''}`}
                               onClick={() => {
                                 setShowIconPicker(null);
@@ -627,6 +669,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                             {isBadgeOpen && (
                               <BadgePicker
                                 currentBadge={feature.badge}
+                                triggerRef={{ current: badgeBtnRefs.current[feature.id] }}
                                 onSelect={(badgeId) => {
                                   updateFeature(plan.id, feature.id, { badge: badgeId });
                                   setShowBadgePicker(null);
