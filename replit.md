@@ -34,8 +34,10 @@ All state is saved to browser `localStorage` under the key `miftah_store_data`. 
 - `src/components/SettingsPage.jsx` — Settings with card grid layout, theme toggle, data management, duration chips
 - `src/components/pricing/` — PricingDashboard, PricingOverview, CostManager, PricingMechanisms, CouponsManager
 - `src/components/bundles/` — BundleManager, BundleOverview, BundleBuilder, BundlePricing
-- `src/components/Icons.jsx` — SVG icon components
+- `src/components/ProductFeatures.jsx` — Product descriptions & features editor with formatting toolbar, icon/badge picker, copy features, templates
+- `src/components/Icons.jsx` — SVG icon components (Lucide-inspired)
 - `src/data/initialData.js` — Default configuration values
+- `src/data/productTemplates.js` — Pre-built feature templates for popular products (ChatGPT, Spotify, Canva, etc.)
 - `src/index.css` — Global styles (card layout, responsive grid, numeral settings)
 - `public/` — Static assets
 
@@ -47,7 +49,7 @@ All components use `toLocaleString('en-US')` helpers to ensure Western Arabic nu
 - Dates use `ar-SA-u-nu-latn` locale to force Western numerals
 
 ## Tab Navigation
-Hash-based routing: `#dashboard` (default), `#products`, `#pricing`, `#bundles`, `#reports`, `#settings`
+State-based routing: `dashboard` (default), `products`, `pricing`, `bundles`, `features`, `reports`, `settings`
 - Sticky nav bar (stays visible while scrolling, below header)
 - Active tab: subtle purple gradient bg, border highlight, bottom indicator line
 - Hover: border reveal + partial indicator line preview

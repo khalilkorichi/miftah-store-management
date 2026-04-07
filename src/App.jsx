@@ -19,9 +19,10 @@ import PricingDashboard from './components/pricing/PricingDashboard';
 import BundleManager from './components/bundles/BundleManager';
 import { useToast } from './components/Toast';
 import Dashboard from './components/Dashboard';
+import ProductFeatures from './components/ProductFeatures';
 import {
   PackageIcon, DollarSignIcon, GiftIcon, BarChartIcon, SettingsIcon,
-  SunIcon, MoonIcon, CheckCircleIcon, HomeIcon
+  SunIcon, MoonIcon, CheckCircleIcon, HomeIcon, FileTextIcon
 } from './components/Icons';
 
 const STORAGE_KEY = 'miftah_store_data';
@@ -32,6 +33,7 @@ const TAB_LIST = [
   { id: 'products', label: 'المنتجات والأسعار', icon: PackageIcon },
   { id: 'pricing', label: 'إدارة التسعير', icon: DollarSignIcon },
   { id: 'bundles', label: 'الحزم والمجموعات', icon: GiftIcon },
+  { id: 'features', label: 'وصف المنتجات', icon: FileTextIcon },
   { id: 'reports', label: 'التقارير', icon: BarChartIcon },
   { id: 'settings', label: 'الإعدادات', icon: SettingsIcon },
 ];
@@ -40,18 +42,40 @@ function migrateData(data) {
   if (!data || !data.products) return data;
   // Check if old format (products have 'prices' directly instead of 'plans')
   const needsMigration = data.products.some((p) => p.prices && !p.plans);
-  if (!needsMigration) return data;
+  if (!needsMigration) {
+    const productsNeedFeatures = data.products.some(p => p.description === undefined);
+    if (productsNeedFeatures) {
+      data.products = data.products.map(p => ({
+        ...p,
+        description: p.description || '',
+        descriptionStyles: p.descriptionStyles || {},
+        plans: (p.plans || []).map(plan => ({
+          ...plan,
+          features: plan.features || [],
+        })),
+      }));
+    }
+    return data;
+  }
 
   const migratedProducts = data.products.map((product) => {
-    if (product.plans) return product;
+    if (product.plans) return {
+      ...product,
+      description: product.description || '',
+      descriptionStyles: product.descriptionStyles || {},
+      plans: product.plans.map(plan => ({ ...plan, features: plan.features || [] })),
+    };
     return {
       id: product.id,
       name: product.name,
+      description: '',
+      descriptionStyles: {},
       plans: [
         {
           id: 1,
           durationId: 'month_1',
           prices: product.prices || {},
+          features: [],
         },
       ],
     };
@@ -141,7 +165,7 @@ function App() {
   // Custom hook logic for hash-based routing
   const getInitialTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'reports', 'settings'];
+    const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'features', 'reports', 'settings'];
     return validTabs.includes(hash) ? hash : 'dashboard';
   };
   
@@ -189,7 +213,7 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'reports', 'settings'];
+      const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'features', 'reports', 'settings'];
       if (validTabs.includes(hash)) {
         setPageTransition(true);
         setTimeout(() => {
@@ -751,6 +775,17 @@ function App() {
             exchangeRate={exchangeRate}
             pricingData={pricingData}
             costs={costs}
+          />
+          </div>
+        )}
+        {activeTab === 'features' && (
+          <div role="tabpanel" id="panel-features" aria-labelledby="tab-features">
+          <ProductFeatures
+            products={products}
+            setProducts={setProducts}
+            durations={durations}
+            suppliers={suppliers}
+            exchangeRate={exchangeRate}
           />
           </div>
         )}

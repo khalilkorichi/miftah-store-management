@@ -4,8 +4,9 @@ import html2canvas from 'html2canvas';
 import { 
   BarChartIcon, PackageIcon, BuildingIcon, ClipboardIcon, 
   CurrencyIcon, GlobeIcon, ScaleIcon, TrendingUpIcon, ZapIcon, DownloadIcon,
-  StarIcon, KeyIcon, ChevronDownIcon
+  StarIcon, KeyIcon, ChevronDownIcon, FileTextIcon, ListIcon, CheckCircleIcon
 } from './Icons';
+import { FEATURE_ICONS, FEATURE_BADGES } from '../data/productTemplates';
 
 const fmt = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (v) => Number(v).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -1044,6 +1045,200 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
     );
   };
 
+  const getIconEmoji = (iconId) => {
+    const icon = FEATURE_ICONS.find(i => i.id === iconId);
+    return icon ? icon.emoji : '✅';
+  };
+  const getBadgeLabel = (badgeId) => {
+    const b = FEATURE_BADGES.find(x => x.id === badgeId);
+    return b ? b.label : '';
+  };
+  const getBadgeColor = (badgeId) => {
+    const b = FEATURE_BADGES.find(x => x.id === badgeId);
+    return b ? b.color : pdfColors.accent;
+  };
+
+  const [featuresPdfTemplate, setFeaturesPdfTemplate] = useState('professional');
+  const [featuresSelectedProductId, setFeaturesSelectedProductId] = useState('');
+
+  const renderFeaturesReport = (product, template = 'professional') => {
+    if (!product) return null;
+    const showLogo = template === 'logo';
+    const isSimple = template === 'simple';
+    const headerColor = isSimple ? pdfColors.primary : pdfColors.accent;
+
+    const totalFeatures = product.plans.reduce((s, plan) => s + (plan.features || []).filter(f => !f.isSeparator).length, 0);
+    return (
+      <div style={{ fontFamily: 'Tajawal, sans-serif', direction: 'rtl', background: '#fff', color: pdfColors.primary, minWidth: '700px', maxWidth: '900px' }}>
+        <div style={{ background: `linear-gradient(135deg, ${headerColor} 0%, ${headerColor}bb 100%)`, color: '#fff', padding: '24px 32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: '22px', margin: '0 0 4px', fontWeight: '800' }}>
+                {showLogo && '🏪 '}تقرير مزايا المنتج — {formatProductName(product)}
+              </h1>
+              <p style={{ fontSize: '12px', margin: 0, opacity: 0.85 }}>وصف المنتج وقائمة المزايا لكل خطة</p>
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '16px', fontWeight: '800' }}>متجر مفتاح</div>
+              <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '2px' }}>
+                {new Date().toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '20px 32px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+            <MetricCard label="عدد الخطط" value={fmtInt(product.plans.length)} color={pdfColors.blue} />
+            <MetricCard label="إجمالي المزايا" value={fmtInt(totalFeatures)} color={pdfColors.accent} />
+            <MetricCard label="حالة الوصف" value={product.description ? 'مكتمل' : 'ناقص'} color={product.description ? pdfColors.green : pdfColors.orange} />
+          </div>
+
+          {product.description && (
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '15px', fontWeight: '700', color: pdfColors.accent, borderBottom: `2px solid ${pdfColors.accent}20`, paddingBottom: '8px', marginBottom: '10px' }}>
+                وصف المنتج
+              </h2>
+              <p style={{ fontSize: '13px', lineHeight: '1.8', color: pdfColors.primary, background: pdfColors.light, padding: '14px 18px', borderRadius: '8px', border: `1px solid ${pdfColors.border}`, margin: 0 }}>
+                {product.description}
+              </p>
+            </div>
+          )}
+
+          {product.plans.map((plan, pi) => {
+            const features = (plan.features || []).filter(f => !f.isSeparator);
+            const bestPrice = Math.min(...Object.values(plan.prices).filter(v => v > 0)) || 0;
+            return (
+              <div key={pi} style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${pdfColors.blue}08`, padding: '10px 16px', borderRadius: '8px', border: `1px solid ${pdfColors.blue}20`, marginBottom: '10px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: pdfColors.blue }}>{getDurationLabel(plan.durationId)}</span>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
+                    {bestPrice > 0 && <span style={{ color: pdfColors.green, fontWeight: '600' }}>أفضل سعر: ${fmt(bestPrice)} ({fmt(bestPrice * exchangeRate)} ر.س)</span>}
+                    <span style={{ color: pdfColors.muted }}>{features.length} ميزة</span>
+                  </div>
+                </div>
+                {features.length > 0 ? (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ ...thStyle, width: '40px' }}>#</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>الميزة</th>
+                        <th style={{ ...thStyle, width: '80px' }}>التصنيف</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {features.map((f, fi) => (
+                        <tr key={fi}>
+                          <td style={{ ...tdStyle, textAlign: 'center' }}>{getIconEmoji(f.icon)}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '500' }}>{f.text || '—'}</td>
+                          <td style={tdStyle}>
+                            {f.badge ? <Badge color={getBadgeColor(f.badge)}>{getBadgeLabel(f.badge)}</Badge> : <span style={{ color: '#ccc' }}>—</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p style={{ fontSize: '12px', color: pdfColors.muted, textAlign: 'center', padding: '16px' }}>لا توجد مزايا مُضافة لهذه الخطة</p>
+                )}
+              </div>
+            );
+          })}
+
+          {product.plans.length >= 2 && (
+            <div style={{ marginTop: '24px' }}>
+              <h2 style={{ fontSize: '15px', fontWeight: '700', color: pdfColors.accent, borderBottom: `2px solid ${pdfColors.accent}20`, paddingBottom: '8px', marginBottom: '10px' }}>
+                مقارنة المزايا بين الخطط
+              </h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>الميزة</th>
+                    {product.plans.map((plan, pi) => (
+                      <th key={pi} style={thStyle}>{getDurationLabel(plan.durationId)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const allFeatureTexts = [...new Set(product.plans.flatMap(plan => (plan.features || []).filter(f => !f.isSeparator && f.text.trim()).map(f => f.text)))];
+                    return allFeatureTexts.map((text, ti) => (
+                      <tr key={ti}>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontWeight: '500' }}>{text}</td>
+                        {product.plans.map((plan, pi) => {
+                          const has = (plan.features || []).some(f => f.text === text);
+                          return <td key={pi} style={{ ...tdStyle, color: has ? pdfColors.green : '#ddd', fontSize: '16px' }}>{has ? '✅' : '—'}</td>;
+                        })}
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: pdfColors.light, padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `2px solid ${pdfColors.border}` }}>
+          <span style={{ fontSize: '11px', color: pdfColors.muted }}>
+            متجر مفتاح — تقرير مزايا المنتج — {new Date().toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <span style={{ fontSize: '10px', color: '#bbb' }}>miftahdigital.store</span>
+        </div>
+      </div>
+    );
+  };
+
+  const generateAllFeaturesPDFs = async () => {
+    const productsWithFeatures = products.filter(p => p.description || p.plans.some(plan => plan.features?.length > 0));
+    if (productsWithFeatures.length === 0) return;
+    setGenerating('all-features');
+    try {
+      for (const product of productsWithFeatures) {
+        setGenerating(`features-${product.id}`);
+        await new Promise(r => setTimeout(r, 300));
+        const element = reportRef.current;
+        if (!element) continue;
+        await new Promise(r => setTimeout(r, 250));
+        const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const margin = 8;
+        const usableW = pageW - margin * 2;
+        const usableH = pageH - margin * 2;
+        const scale = usableW / canvas.width;
+        const scaledH = canvas.height * scale;
+        if (scaledH <= usableH) {
+          const imgData = canvas.toDataURL('image/png');
+          const xOff = (pageW - canvas.width * scale) / 2;
+          doc.addImage(imgData, 'PNG', xOff, margin, canvas.width * scale, scaledH);
+        } else {
+          const sliceHeightPx = Math.floor(usableH / scale);
+          const totalPages = Math.ceil(canvas.height / sliceHeightPx);
+          for (let page = 0; page < totalPages; page++) {
+            if (page > 0) doc.addPage();
+            const srcY = page * sliceHeightPx;
+            const srcH = Math.min(sliceHeightPx, canvas.height - srcY);
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = srcH;
+            const ctx = sliceCanvas.getContext('2d');
+            ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+            const sliceData = sliceCanvas.toDataURL('image/png');
+            const drawH = srcH * scale;
+            doc.addImage(sliceData, 'PNG', margin, margin, usableW, drawH);
+          }
+        }
+        const safeName = `مزايا_${product.name}_مفتاح.pdf`.replace(/[<>:"/\\|?*]/g, '_').trim();
+        doc.save(safeName);
+      }
+    } catch (e) {
+      alert('حدث خطأ أثناء إنشاء التقارير: ' + e.message);
+    } finally {
+      setGenerating(null);
+    }
+  };
+
   const renderHiddenContent = () => {
     if (generating === 'full')       return renderFullReport();
     if (generating === 'comparison') return renderComparisonReport();
@@ -1059,6 +1254,10 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
     if (generating?.startsWith('supplier-')) {
       const sid = generating.replace('supplier-', '');
       return renderSupplierReport(sid);
+    }
+    if (generating?.startsWith('features-')) {
+      const pid = parseInt(generating.replace('features-', ''));
+      return renderFeaturesReport(products.find((p) => p.id === pid), featuresPdfTemplate);
     }
     return null;
   };
@@ -1105,6 +1304,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           { id: 'global',   label: <span className="flex-row gap-2 align-center"><GlobeIcon className="icon-sm" /> تقارير عامة</span> },
           { id: 'product',  label: <span className="flex-row gap-2 align-center"><PackageIcon className="icon-sm" /> تقرير منتج</span> },
           { id: 'supplier', label: <span className="flex-row gap-2 align-center"><BuildingIcon className="icon-sm" /> تقرير مورد</span> },
+          { id: 'features', label: <span className="flex-row gap-2 align-center"><FileTextIcon className="icon-sm" /> تقرير المزايا</span> },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1308,6 +1508,94 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
               );
             })}
           </div>
+        </div>
+      )}
+
+      {activeSection === 'features' && (
+        <div className="individual-report-panel">
+          <div className="individual-report-header">
+            <span className="individual-icon"><FileTextIcon /></span>
+            <div>
+              <h3>تقرير مزايا المنتج</h3>
+              <p>اختر منتجاً لتصدير تقرير مزاياه مع وصفه وقائمة المزايا لكل خطة — أو صدّر جميع المنتجات دفعة واحدة</p>
+            </div>
+          </div>
+          <div className="individual-select-row">
+            <select
+              className="individual-select"
+              value={featuresSelectedProductId}
+              onChange={(e) => setFeaturesSelectedProductId(e.target.value)}
+              dir="rtl"
+            >
+              <option value="">— اختر منتجاً —</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {formatProductName(p)} — {p.description ? '✓ وصف' : '⚠️ بدون وصف'} — {p.plans.reduce((s, plan) => s + (plan.features || []).filter(f => !f.isSeparator).length, 0)} ميزة
+                </option>
+              ))}
+            </select>
+            <select
+              className="individual-select"
+              value={featuresPdfTemplate}
+              onChange={(e) => setFeaturesPdfTemplate(e.target.value)}
+              dir="rtl"
+              style={{ maxWidth: '160px' }}
+            >
+              <option value="simple">بسيط</option>
+              <option value="professional">احترافي</option>
+              <option value="logo">مع لوجو</option>
+            </select>
+            {featuresSelectedProductId && (
+              <button
+                className="btn-generate"
+                disabled={!!generating}
+                onClick={() => {
+                  const p = products.find(pr => pr.id === parseInt(featuresSelectedProductId));
+                  if (p) generatePDF(`features-${p.id}`, `مزايا_${p.name}_مفتاح.pdf`);
+                }}
+              >
+                {generating?.startsWith('features-') ? <><span className="spinner" /> جاري الإنشاء...</> : <><DownloadIcon className="icon-sm" /> تصدير PDF</>}
+              </button>
+            )}
+            <button
+              className="btn-generate green-btn"
+              disabled={!!generating}
+              onClick={generateAllFeaturesPDFs}
+            >
+              {generating === 'all-features' ? <><span className="spinner" /> جاري التصدير...</> : <><DownloadIcon className="icon-sm" /> تصدير الكل</>}
+            </button>
+          </div>
+
+          {featuresSelectedProductId && (() => {
+            const previewProduct = products.find(p => p.id === parseInt(featuresSelectedProductId));
+            if (!previewProduct) return null;
+            const totalFeatCount = previewProduct.plans.reduce((s, plan) => s + (plan.features || []).filter(f => !f.isSeparator).length, 0);
+            return (
+              <div className="features-preview-card">
+                <div className="features-preview-header">
+                  <h4>{formatProductName(previewProduct)}</h4>
+                  <div className="features-preview-stats">
+                    <span className="features-preview-stat">{previewProduct.plans.length} خطة</span>
+                    <span className="features-preview-stat">{totalFeatCount} ميزة</span>
+                    <span className={`features-preview-stat ${previewProduct.description ? 'stat-ok' : 'stat-warn'}`}>
+                      {previewProduct.description ? '✓ وصف مكتمل' : '⚠️ وصف ناقص'}
+                    </span>
+                  </div>
+                </div>
+                {previewProduct.description && (
+                  <p className="features-preview-desc">{previewProduct.description.slice(0, 150)}{previewProduct.description.length > 150 ? '...' : ''}</p>
+                )}
+                <div className="features-preview-plans">
+                  {previewProduct.plans.map((plan, pi) => (
+                    <div key={pi} className="features-preview-plan">
+                      <span className="features-plan-label">{getDurationLabel(plan.durationId)}</span>
+                      <span className="features-plan-count">{(plan.features || []).filter(f => !f.isSeparator).length} ميزة</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
