@@ -1903,7 +1903,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                     </tr>
                     {isExpanded && group.plans.map((a, pi) => (
                       <tr key={pi} className="plan-sub-row">
-                        <td className="td-plan-indent" style={{ borderRightColor: avatarColor }}></td>
+                        <td className="td-plan-indent"></td>
                         <td><span className="plan-badge">{a.planDuration}</span></td>
                         <td className="td-warranty">{a.warrantyDays > 0 ? <span className="warranty-badge-sm">{a.warrantyDays} يوم</span> : <span className="price-not-available" style={{opacity: 0.5}}>—</span>}</td>
                         <td className="td-best-supplier">{a.cheapest.supplierName !== '-' ? a.cheapest.supplierName : <span className="price-not-available">لا يوجد</span>}</td>
