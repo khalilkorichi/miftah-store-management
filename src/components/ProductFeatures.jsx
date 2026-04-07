@@ -184,25 +184,75 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     }));
   }, [setProducts]);
 
-  const descTextareaRef = useRef(null);
+  const editorRef = useRef(null);
+  const [editorFormats, setEditorFormats] = useState({});
+  const isFocusedRef = useRef(false);
 
-  const handleDescriptionChange = useCallback((text) => {
+  const handleDescriptionChange = useCallback((html) => {
     if (!product) return;
-    updateProduct(product.id, { description: text });
+    updateProduct(product.id, { description: html });
   }, [product, updateProduct]);
 
   useEffect(() => {
-    const el = descTextareaRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.max(120, el.scrollHeight)}px`;
-  }, [product?.description]);
+    if (editorRef.current && !isFocusedRef.current) {
+      editorRef.current.innerHTML = product?.description || '';
+    }
+  }, [product?.id]);
 
-  const handleDescStyleChange = useCallback((key, value) => {
-    if (!product) return;
-    const styles = product.descriptionStyles || {};
-    updateProduct(product.id, { descriptionStyles: { ...styles, [key]: value } });
-  }, [product, updateProduct]);
+  const updateFormats = useCallback(() => {
+    try {
+      setEditorFormats({
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline'),
+        justifyRight: document.queryCommandState('justifyRight'),
+        justifyCenter: document.queryCommandState('justifyCenter'),
+        justifyLeft: document.queryCommandState('justifyLeft'),
+        justifyFull: document.queryCommandState('justifyFull'),
+      });
+    } catch (_) {}
+  }, []);
+
+  const applyFormat = useCallback((command, value = null) => {
+    editorRef.current?.focus();
+    document.execCommand(command, false, value);
+    handleDescriptionChange(editorRef.current?.innerHTML || '');
+    updateFormats();
+  }, [handleDescriptionChange, updateFormats]);
+
+  const applyFontSize = useCallback((px) => {
+    editorRef.current?.focus();
+    document.execCommand('fontSize', false, '7');
+    const fontEls = editorRef.current?.querySelectorAll('font[size="7"]') || [];
+    fontEls.forEach(font => {
+      const span = document.createElement('span');
+      span.style.fontSize = `${px}px`;
+      span.innerHTML = font.innerHTML;
+      font.parentNode.replaceChild(span, font);
+    });
+    handleDescriptionChange(editorRef.current?.innerHTML || '');
+  }, [handleDescriptionChange]);
+
+  const applyColor = useCallback((hex) => {
+    editorRef.current?.focus();
+    document.execCommand('foreColor', false, hex);
+    handleDescriptionChange(editorRef.current?.innerHTML || '');
+  }, [handleDescriptionChange]);
+
+  const applyHeading = useCallback((tag) => {
+    editorRef.current?.focus();
+    document.execCommand('formatBlock', false, tag);
+    handleDescriptionChange(editorRef.current?.innerHTML || '');
+    updateFormats();
+  }, [handleDescriptionChange, updateFormats]);
+
+  const clearAllFormat = useCallback(() => {
+    editorRef.current?.focus();
+    document.execCommand('removeFormat', false, null);
+    document.execCommand('formatBlock', false, 'p');
+    handleDescriptionChange(editorRef.current?.innerHTML || '');
+    updateFormats();
+  }, [handleDescriptionChange, updateFormats]);
 
   const addFeature = useCallback((planId, focusNew = false) => {
     if (!product) return;
@@ -351,8 +401,6 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
   const getBadgeInfo = (badgeId) => FEATURE_BADGES.find(b => b.id === badgeId);
 
-  const descStyles = product?.descriptionStyles || {};
-
   const closeAllPickers = () => {
     setShowIconPicker(null);
     setShowBadgePicker(null);
@@ -479,23 +527,24 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               <span className="pf-desc-icon"><FileTextIcon className="icon-sm" /></span>
               <div>
                 <h3>وصف المنتج</h3>
-                <p>أضف وصفاً تعريفياً شاملاً — بدون حد أقصى للنص</p>
+                <p>ظلّل النص ثم اختر التنسيق — بدون حد أقصى للنص</p>
               </div>
             </div>
 
             <div className="pf-toolbar pf-toolbar-rich">
               <div className="pf-toolbar-group pf-heading-group">
                 {[
-                  { label: 'عادي', value: 'normal', title: 'نص عادي' },
-                  { label: 'H1', value: 'h1', title: 'عنوان رئيسي (H1)' },
-                  { label: 'H2', value: 'h2', title: 'عنوان ثانوي (H2)' },
-                  { label: 'H3', value: 'h3', title: 'عنوان ثالثي (H3)' },
-                  { label: 'H4', value: 'h4', title: 'عنوان رابع (H4)' },
+                  { label: 'عادي', tag: 'p', title: 'نص عادي' },
+                  { label: 'H1', tag: 'h1', title: 'عنوان رئيسي' },
+                  { label: 'H2', tag: 'h2', title: 'عنوان ثانوي' },
+                  { label: 'H3', tag: 'h3', title: 'عنوان ثالثي' },
+                  { label: 'H4', tag: 'h4', title: 'عنوان رابع' },
                 ].map(h => (
                   <button
-                    key={h.value}
-                    className={`pf-heading-btn ${(descStyles.elementType || 'normal') === h.value ? 'active' : ''}`}
-                    onClick={() => handleDescStyleChange('elementType', h.value)}
+                    key={h.tag}
+                    className="pf-heading-btn"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => applyHeading(h.tag)}
                     title={h.title}
                   >
                     {h.label}
@@ -506,13 +555,28 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               <div className="pf-toolbar-divider" />
 
               <div className="pf-toolbar-group">
-                <button className={`pf-toolbar-btn ${descStyles.bold ? 'active' : ''}`} onClick={() => handleDescStyleChange('bold', !descStyles.bold)} title="تغميق (Ctrl+B)">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.bold ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('bold')}
+                  title="تغميق (Ctrl+B)"
+                >
                   <BoldIcon className="icon-sm" />
                 </button>
-                <button className={`pf-toolbar-btn ${descStyles.italic ? 'active' : ''}`} onClick={() => handleDescStyleChange('italic', !descStyles.italic)} title="مائل (Ctrl+I)">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.italic ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('italic')}
+                  title="مائل (Ctrl+I)"
+                >
                   <ItalicIcon className="icon-sm" />
                 </button>
-                <button className={`pf-toolbar-btn ${descStyles.underline ? 'active' : ''}`} onClick={() => handleDescStyleChange('underline', !descStyles.underline)} title="تسطير (Ctrl+U)">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.underline ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('underline')}
+                  title="تسطير (Ctrl+U)"
+                >
                   <UnderlineIcon className="icon-sm" />
                 </button>
               </div>
@@ -520,16 +584,36 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               <div className="pf-toolbar-divider" />
 
               <div className="pf-toolbar-group">
-                <button className={`pf-toolbar-btn ${(descStyles.align || 'right') === 'right' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'right')} title="محاذاة يميناً">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.justifyRight ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('justifyRight')}
+                  title="محاذاة يميناً"
+                >
                   <AlignRightIcon className="icon-sm" />
                 </button>
-                <button className={`pf-toolbar-btn ${descStyles.align === 'center' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'center')} title="توسيط">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.justifyCenter ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('justifyCenter')}
+                  title="توسيط"
+                >
                   <AlignCenterIcon className="icon-sm" />
                 </button>
-                <button className={`pf-toolbar-btn ${descStyles.align === 'left' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'left')} title="محاذاة يساراً">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.justifyLeft ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('justifyLeft')}
+                  title="محاذاة يساراً"
+                >
                   <AlignLeftIcon className="icon-sm" />
                 </button>
-                <button className={`pf-toolbar-btn ${descStyles.align === 'justify' ? 'active' : ''}`} onClick={() => handleDescStyleChange('align', 'justify')} title="ضبط الأطراف">
+                <button
+                  className={`pf-toolbar-btn ${editorFormats.justifyFull ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => applyFormat('justifyFull')}
+                  title="ضبط الأطراف"
+                >
                   <AlignJustifyIcon className="icon-sm" />
                 </button>
               </div>
@@ -538,25 +622,28 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
 
               <div className="pf-toolbar-group pf-toolbar-size-group">
                 <label className="pf-toolbar-label">حجم</label>
-                <select value={descStyles.fontSize || '14'} onChange={(e) => handleDescStyleChange('fontSize', e.target.value)} className="pf-toolbar-select">
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="13">13</option>
-                  <option value="14">14</option>
-                  <option value="15">15</option>
-                  <option value="16">16</option>
-                  <option value="18">18</option>
-                  <option value="20">20</option>
-                  <option value="22">22</option>
-                  <option value="24">24</option>
-                  <option value="28">28</option>
-                  <option value="32">32</option>
+                <select
+                  className="pf-toolbar-select"
+                  defaultValue="14"
+                  onChange={(e) => applyFontSize(Number(e.target.value))}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  {[11,12,13,14,15,16,18,20,22,24,28,32,36,42,48].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
                 </select>
               </div>
 
               <div className="pf-toolbar-group">
                 <label className="pf-toolbar-label">لون</label>
-                <input type="color" value={descStyles.color || '#e2e8f0'} onChange={(e) => handleDescStyleChange('color', e.target.value)} className="pf-color-picker" title="لون النص" />
+                <input
+                  type="color"
+                  defaultValue="#e2e8f0"
+                  className="pf-color-picker"
+                  title="لون النص المحدد"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onChange={(e) => applyColor(e.target.value)}
+                />
               </div>
 
               <div className="pf-toolbar-divider" />
@@ -564,60 +651,41 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               <div className="pf-toolbar-group">
                 <button
                   className="pf-toolbar-btn pf-clear-btn"
-                  onClick={() => updateProduct(product.id, { descriptionStyles: {} })}
-                  title="مسح كل التنسيقات"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={clearAllFormat}
+                  title="مسح تنسيق النص المحدد"
                 >
                   <EraserIcon className="icon-sm" />
                 </button>
               </div>
             </div>
 
-            <textarea
-              ref={descTextareaRef}
-              className="pf-desc-textarea"
-              value={product.description || ''}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.ctrlKey || e.metaKey) {
-                  if (e.key === 'b') { e.preventDefault(); handleDescStyleChange('bold', !descStyles.bold); }
-                  if (e.key === 'i') { e.preventDefault(); handleDescStyleChange('italic', !descStyles.italic); }
-                  if (e.key === 'u') { e.preventDefault(); handleDescStyleChange('underline', !descStyles.underline); }
-                }
+            <div
+              ref={editorRef}
+              className="pf-desc-editor"
+              contentEditable
+              suppressContentEditableWarning
+              dir="rtl"
+              onFocus={() => { isFocusedRef.current = true; updateFormats(); }}
+              onBlur={() => {
+                isFocusedRef.current = false;
+                handleDescriptionChange(editorRef.current?.innerHTML || '');
               }}
-              placeholder="اكتب وصفاً تفصيلياً للمنتج... بدون حد للنص. مثال: اشتراك ChatGPT Plus يمنحك وصولاً إلى نموذج GPT-4o المتقدم مع ميزات إضافية متميزة..."
-              style={{
-                fontSize: `${
-                  descStyles.elementType === 'h1' ? 28 :
-                  descStyles.elementType === 'h2' ? 22 :
-                  descStyles.elementType === 'h3' ? 18 :
-                  descStyles.elementType === 'h4' ? 16 :
-                  (descStyles.fontSize || 14)
-                }px`,
-                fontWeight:
-                  descStyles.bold ||
-                  descStyles.elementType === 'h1' ||
-                  descStyles.elementType === 'h2' ? '700' :
-                  descStyles.elementType === 'h3' || descStyles.elementType === 'h4' ? '600' : '400',
-                fontStyle: descStyles.italic ? 'italic' : 'normal',
-                textDecoration: descStyles.underline ? 'underline' : 'none',
-                color: descStyles.color || undefined,
-                textAlign: descStyles.align || 'right',
-                lineHeight:
-                  descStyles.elementType === 'h1' ? '1.3' :
-                  descStyles.elementType === 'h2' ? '1.4' :
-                  '1.75',
-                letterSpacing: descStyles.elementType === 'h1' ? '-0.02em' : 'normal',
-                resize: 'none',
-                overflow: 'hidden',
-              }}
+              onInput={() => handleDescriptionChange(editorRef.current?.innerHTML || '')}
+              onKeyUp={updateFormats}
+              onMouseUp={updateFormats}
+              data-placeholder="ظلّل النص ثم اختر تنسيقه... اكتب وصفاً تفصيلياً للمنتج بدون حد للنص."
             />
 
             <div className="pf-char-counter">
               <span className="pf-word-count">
-                {(product.description || '').trim() ? (product.description || '').trim().split(/\s+/).length : 0} كلمة
+                {(() => {
+                  const txt = (editorRef.current?.innerText || product?.description?.replace(/<[^>]*>/g,'') || '').trim();
+                  return txt ? txt.split(/\s+/).length : 0;
+                })()} كلمة
               </span>
               <span className="pf-char-count">
-                {(product.description || '').length} حرف
+                {(editorRef.current?.innerText || product?.description?.replace(/<[^>]*>/g,'') || '').length} حرف
               </span>
             </div>
           </div>

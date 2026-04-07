@@ -8459,7 +8459,7 @@ body.dark-mode .selectable-card.selected {
   cursor: pointer;
   background: var(--bg-card);
 }
-.pf-desc-textarea {
+.pf-desc-editor {
   width: 100%;
   padding: 16px 18px;
   border-radius: 0 0 11px 11px;
@@ -8470,18 +8470,31 @@ body.dark-mode .selectable-card.selected {
   font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.8;
-  resize: none;
-  min-height: 120px;
+  min-height: 140px;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
   display: block;
-}
-.pf-desc-textarea:focus {
-  border-color: var(--accent-blue);
   outline: none;
+  direction: rtl;
+  word-break: break-word;
+}
+.pf-desc-editor:focus {
+  border-color: var(--accent-blue);
   box-shadow: 0 0 0 3px rgba(26,81,244,0.1);
 }
-.pf-desc-textarea:focus + .pf-char-counter,
+.pf-desc-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+  display: block;
+  font-style: italic;
+  opacity: 0.6;
+}
+.pf-desc-editor h1 { font-size: 1.8rem; font-weight: 700; line-height: 1.3; margin: 0.4em 0; }
+.pf-desc-editor h2 { font-size: 1.4rem; font-weight: 700; line-height: 1.4; margin: 0.35em 0; }
+.pf-desc-editor h3 { font-size: 1.15rem; font-weight: 600; line-height: 1.5; margin: 0.3em 0; }
+.pf-desc-editor h4 { font-size: 1rem; font-weight: 600; line-height: 1.5; margin: 0.25em 0; }
+.pf-desc-editor p  { margin: 0.25em 0; }
 .pf-desc-card:focus-within .pf-toolbar {
   border-color: var(--accent-blue);
 }
