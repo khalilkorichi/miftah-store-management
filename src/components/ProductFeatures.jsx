@@ -369,7 +369,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
             </div>
           </div>
 
-          {product.plans.length > 1 && (
+          {(product.plans.length > 1 || product.plans.some(pl => (pl.features || []).length > 5)) && (
             <div className="pf-search-bar">
               <SearchIcon className="icon-sm" />
               <input
