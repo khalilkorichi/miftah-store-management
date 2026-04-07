@@ -107,9 +107,9 @@ function Dashboard({
   })();
 
   const alertItems = [
-    ...lossProducts.map(p => ({ type: 'danger', icon: <TrendingDownIcon className="icon-sm" />, text: `${p.name} - يباع بخسارة`, action: 'pricing' })),
-    ...lowMarginProducts.map(p => ({ type: 'warning', icon: <AlertTriangleIcon className="icon-sm" />, text: `${p.name} - هامش ربح منخفض (${fmtPct(p.margin)}%)`, action: 'pricing' })),
-    ...unpricedProducts.map(p => ({ type: 'info', icon: <TagIcon className="icon-sm" />, text: `${p.name} - لم يتم تسعيره بعد`, action: 'products' })),
+    ...lossProducts.map(p => ({ type: 'danger', name: p.name, desc: 'يباع بخسارة', badge: 'خسارة', action: 'pricing' })),
+    ...lowMarginProducts.map(p => ({ type: 'warning', name: p.name, desc: 'هامش ربح منخفض', badge: `${fmtPct(p.margin)}%`, action: 'pricing' })),
+    ...unpricedProducts.map(p => ({ type: 'info', name: p.name, desc: 'لم يتم تسعيره بعد', badge: 'غير مسعّر', action: 'products' })),
   ];
 
   const [showAllAlerts, setShowAllAlerts] = useState(false);
@@ -170,17 +170,30 @@ function Dashboard({
 
       <div className="dashboard-body">
         <div className="dashboard-main-col">
-          {alertItems.length > 0 && (
-            <div className="dash-section">
-              <h2 className="dash-section-title">
-                <AlertTriangleIcon className="icon-sm" /> تنبيهات تحتاج انتباهك
-                <span className="dash-section-badge">{alertItems.length}</span>
-              </h2>
+          <div className="dash-section">
+            <h2 className="dash-section-title">
+              <AlertTriangleIcon className="icon-sm" />
+              تنبيهات تحتاج انتباهك
+              {alertItems.length > 0 && <span className="dash-section-badge">{alertItems.length}</span>}
+            </h2>
+            {alertItems.length === 0 ? (
+              <div className="dash-all-good">
+                <div className="dash-all-good-icon-wrap"><CheckCircleIcon /></div>
+                <div className="dash-all-good-content">
+                  <span className="dash-all-good-title">كل شيء على ما يرام!</span>
+                  <span className="dash-all-good-sub">جميع المنتجات مسعّرة بشكل صحيح</span>
+                </div>
+              </div>
+            ) : (
               <div className="dash-alerts-list">
                 {visibleAlerts.map((alert, idx) => (
                   <div key={idx} className={`dash-alert-item alert-${alert.type}`} onClick={() => onNavigate(alert.action)}>
-                    <span className="dash-alert-icon">{alert.icon}</span>
-                    <span className="dash-alert-text">{alert.text}</span>
+                    <div className={`dash-alert-avatar avatar-${alert.type}`}>{alert.name.charAt(0)}</div>
+                    <div className="dash-alert-body">
+                      <span className="dash-alert-name">{alert.name}</span>
+                      <span className="dash-alert-desc">{alert.desc}</span>
+                    </div>
+                    <span className={`dash-alert-badge badge-${alert.type}`}>{alert.badge}</span>
                     <ArrowLeftIcon className="icon-xs dash-alert-arrow" />
                   </div>
                 ))}
@@ -190,8 +203,8 @@ function Dashboard({
                   </button>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="dash-section">
             <h2 className="dash-section-title">
@@ -230,11 +243,14 @@ function Dashboard({
               </div>
               {visibleProducts.map(p => (
                 <div key={p.id} className={`dash-table-row status-${p.status}`} onClick={() => onNavigate('products')}>
-                  <span className="dash-table-name">{p.name}</span>
+                  <div className="dash-table-name-cell">
+                    <div className={`dash-prod-avatar dash-prod-${p.status}`}>{p.name.charAt(0)}</div>
+                    <span className="dash-table-name">{p.name}</span>
+                  </div>
                   <span className="dash-table-cell" dir="ltr">{p.supplierPrice > 0 ? `$${fmt(p.supplierPrice)}` : '—'}</span>
                   <span className="dash-table-cell" dir="ltr">{p.totalCost > 0 ? `${fmt(p.totalCost)} ﷼` : '—'}</span>
                   <span className="dash-table-cell" dir="ltr">{p.officialPrice > 0 ? `${fmt(p.officialPrice)} ﷼` : '—'}</span>
-                  <span className={`dash-table-cell margin-${p.status}`}>
+                  <span className={`dash-table-margin-pill margin-${p.status}`}>
                     {p.officialPrice > 0 ? `${fmtPct(p.margin)}%` : '—'}
                   </span>
                 </div>
@@ -255,24 +271,44 @@ function Dashboard({
             </h2>
             <div className="dash-quick-actions">
               <button className="dash-quick-btn" onClick={() => onNavigate('products')}>
-                <PlusIcon className="icon-sm" />
-                <span>إضافة منتج</span>
+                <div className="dash-qb-icon dash-qb-blue"><PlusIcon className="icon-sm" /></div>
+                <div className="dash-qb-info">
+                  <span className="dash-qb-title">إضافة منتج</span>
+                  <span className="dash-qb-sub">إدارة المنتجات والخطط</span>
+                </div>
+                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('bundles')}>
-                <GiftIcon className="icon-sm" />
-                <span>إنشاء حزمة</span>
+                <div className="dash-qb-icon dash-qb-purple"><GiftIcon className="icon-sm" /></div>
+                <div className="dash-qb-info">
+                  <span className="dash-qb-title">إنشاء حزمة</span>
+                  <span className="dash-qb-sub">حزم الاشتراكات والكوبونات</span>
+                </div>
+                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('pricing')}>
-                <DollarSignIcon className="icon-sm" />
-                <span>إدارة التكاليف</span>
+                <div className="dash-qb-icon dash-qb-gold"><DollarSignIcon className="icon-sm" /></div>
+                <div className="dash-qb-info">
+                  <span className="dash-qb-title">إدارة التكاليف</span>
+                  <span className="dash-qb-sub">التكاليف والرسوم والهوامش</span>
+                </div>
+                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('reports')}>
-                <BarChartIcon className="icon-sm" />
-                <span>تصدير تقرير</span>
+                <div className="dash-qb-icon dash-qb-green"><BarChartIcon className="icon-sm" /></div>
+                <div className="dash-qb-info">
+                  <span className="dash-qb-title">تصدير تقرير</span>
+                  <span className="dash-qb-sub">تقارير الأسعار والتحليلات</span>
+                </div>
+                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('settings')}>
-                <SettingsIcon className="icon-sm" />
-                <span>الإعدادات</span>
+                <div className="dash-qb-icon dash-qb-gray"><SettingsIcon className="icon-sm" /></div>
+                <div className="dash-qb-info">
+                  <span className="dash-qb-title">الإعدادات</span>
+                  <span className="dash-qb-sub">إعدادات المتجر والتفضيلات</span>
+                </div>
+                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
               </button>
             </div>
           </div>
