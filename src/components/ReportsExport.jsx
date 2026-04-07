@@ -1862,13 +1862,15 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 return (
                   <React.Fragment key={gi}>
                     <tr className={`product-group-row ${isExpanded ? 'group-expanded' : ''}`} onClick={() => toggleProduct(group.productName)}>
-                      <td className="td-product-name td-group-name">
-                        <span className={`group-chevron ${!isExpanded ? 'chevron-collapsed' : ''}`}>
-                          <ChevronDownIcon className="icon-xs" />
-                        </span>
-                        <span className="product-avatar" style={{ background: isExpanded ? 'rgba(255,255,255,0.22)' : avatarColor }}>{initial}</span>
-                        <span className="product-name-text">{group.productName}</span>
-                        <span className="group-plan-count">{group.plans.length} خطة</span>
+                      <td className="td-product-name-cell">
+                        <div className="td-group-name">
+                          <span className={`group-chevron ${!isExpanded ? 'chevron-collapsed' : ''}`}>
+                            <ChevronDownIcon className="icon-xs" />
+                          </span>
+                          <span className="product-avatar" style={{ background: isExpanded ? 'rgba(255,255,255,0.22)' : avatarColor }}>{initial}</span>
+                          <span className="product-name-text">{group.productName}</span>
+                          <span className="group-plan-count">{group.plans.length} خطة</span>
+                        </div>
                       </td>
                       {!isExpanded ? (
                         <td colSpan={8} className="td-group-summary">

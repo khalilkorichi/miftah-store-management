@@ -3020,6 +3020,14 @@ body {
 [dir="rtl"] .grouped-table .product-group-row:hover .collapsed-summary-row {
   transform: translateX(2px);
 }
+.td-product-name-cell {
+  background: var(--bg-table-alt);
+  padding: 0 !important;
+  vertical-align: middle;
+}
+.grouped-table .product-group-row:hover .td-product-name-cell {
+  background: var(--bg-hover);
+}
 .grouped-table .td-group-name {
   display: flex;
   align-items: center;
@@ -3029,13 +3037,6 @@ body {
   color: var(--text-primary);
   padding: 10px 16px;
   white-space: nowrap;
-  background: var(--bg-table-alt);
-  border-inline-end: 3px solid transparent;
-  transition: border-color 0.2s;
-  vertical-align: middle;
-}
-.grouped-table .product-group-row:hover .td-group-name {
-  background: var(--bg-hover);
 }
 .group-chevron {
   display: inline-flex;
@@ -3165,8 +3166,10 @@ body {
   background: linear-gradient(135deg, var(--accent-blue), #4a3cc9);
   color: #fff;
 }
+.grouped-table .group-expanded .td-product-name-cell {
+  background: linear-gradient(135deg, var(--accent-blue), #4a3cc9) !important;
+}
 .grouped-table .group-expanded .td-group-name {
-  background: linear-gradient(135deg, var(--accent-blue), #4a3cc9);
   color: #fff;
 }
 .grouped-table .group-expanded .group-plan-count {
