@@ -1875,25 +1875,35 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                       {!isExpanded ? (
                         <td colSpan={8} className="td-group-summary">
                           <div className="collapsed-summary-row">
-                            <div className="collapsed-summary-cell cs-supplier">
+                            <div className="collapsed-summary-cell">
                               <span className="collapsed-label">أفضل مورد</span>
-                              <span className="collapsed-value">{bestPlan.cheapest.supplierName}</span>
+                              <span className="collapsed-value green">{bestPlan.cheapest.supplierName}</span>
                             </div>
-                            <div className="collapsed-summary-cell cs-price">
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
                               <span className="collapsed-label">أقل سعر</span>
-                              <span className="collapsed-value"><span className="cv-unit">$</span>{fmt(bestPlan.cheapest.price)}</span>
+                              <span className="collapsed-value blue">
+                                <span className="price-unit">$</span>{fmt(bestPlan.cheapest.price)}
+                              </span>
                             </div>
-                            <div className="collapsed-summary-cell cs-sar">
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
                               <span className="collapsed-label">بالريال</span>
-                              <span className="collapsed-value">{fmt(bestPlan.cheapest.price * exchangeRate)}<span className="cv-unit"> ﷼</span></span>
+                              <span className="collapsed-value">
+                                {fmt(bestPlan.cheapest.price * exchangeRate)}<span className="price-unit"> ﷼</span>
+                              </span>
                             </div>
-                            <div className="collapsed-summary-cell cs-savings">
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
                               <span className="collapsed-label">إجمالي التوفير</span>
-                              <span className="collapsed-value"><span className="cv-unit">$</span>{fmt(totalGroupSavings)}</span>
+                              <span className="collapsed-value orange">
+                                <span className="price-unit">$</span>{fmt(totalGroupSavings)}
+                              </span>
                             </div>
-                            <div className="collapsed-summary-cell cs-pct">
+                            <div className="collapsed-summary-divider"></div>
+                            <div className="collapsed-summary-cell">
                               <span className="collapsed-label">نسبة التوفير</span>
-                              <span className="collapsed-value">{bestPlan.savingsPercent}<span className="cv-unit">%</span></span>
+                              <span className="collapsed-value purple">{bestPlan.savingsPercent}<span className="price-unit">%</span></span>
                             </div>
                           </div>
                         </td>
