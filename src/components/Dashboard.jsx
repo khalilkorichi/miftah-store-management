@@ -170,21 +170,12 @@ function Dashboard({
 
       <div className="dashboard-body">
         <div className="dashboard-main-col">
-          <div className="dash-section">
-            <h2 className="dash-section-title">
-              <AlertTriangleIcon className="icon-sm" />
-              تنبيهات تحتاج انتباهك
-              {alertItems.length > 0 && <span className="dash-section-badge">{alertItems.length}</span>}
-            </h2>
-            {alertItems.length === 0 ? (
-              <div className="dash-all-good">
-                <div className="dash-all-good-icon-wrap"><CheckCircleIcon /></div>
-                <div className="dash-all-good-content">
-                  <span className="dash-all-good-title">كل شيء على ما يرام!</span>
-                  <span className="dash-all-good-sub">جميع المنتجات مسعّرة بشكل صحيح</span>
-                </div>
-              </div>
-            ) : (
+          {alertItems.length > 0 && (
+            <div className="dash-section">
+              <h2 className="dash-section-title">
+                <AlertTriangleIcon className="icon-sm" /> تنبيهات تحتاج انتباهك
+                <span className="dash-section-badge">{alertItems.length}</span>
+              </h2>
               <div className="dash-alerts-list">
                 {visibleAlerts.map((alert, idx) => (
                   <div key={idx} className={`dash-alert-item alert-${alert.type}`} onClick={() => onNavigate(alert.action)}>
@@ -199,8 +190,8 @@ function Dashboard({
                   </button>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="dash-section">
             <h2 className="dash-section-title">
@@ -264,44 +255,24 @@ function Dashboard({
             </h2>
             <div className="dash-quick-actions">
               <button className="dash-quick-btn" onClick={() => onNavigate('products')}>
-                <div className="dash-qb-icon dash-qb-blue"><PlusIcon className="icon-sm" /></div>
-                <div className="dash-qb-info">
-                  <span className="dash-qb-title">إضافة منتج</span>
-                  <span className="dash-qb-sub">إدارة المنتجات والخطط</span>
-                </div>
-                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
+                <PlusIcon className="icon-sm" />
+                <span>إضافة منتج</span>
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('bundles')}>
-                <div className="dash-qb-icon dash-qb-purple"><GiftIcon className="icon-sm" /></div>
-                <div className="dash-qb-info">
-                  <span className="dash-qb-title">إنشاء حزمة</span>
-                  <span className="dash-qb-sub">حزم الاشتراكات والكوبونات</span>
-                </div>
-                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
+                <GiftIcon className="icon-sm" />
+                <span>إنشاء حزمة</span>
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('pricing')}>
-                <div className="dash-qb-icon dash-qb-gold"><DollarSignIcon className="icon-sm" /></div>
-                <div className="dash-qb-info">
-                  <span className="dash-qb-title">إدارة التكاليف</span>
-                  <span className="dash-qb-sub">التكاليف والرسوم والهوامش</span>
-                </div>
-                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
+                <DollarSignIcon className="icon-sm" />
+                <span>إدارة التكاليف</span>
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('reports')}>
-                <div className="dash-qb-icon dash-qb-green"><BarChartIcon className="icon-sm" /></div>
-                <div className="dash-qb-info">
-                  <span className="dash-qb-title">تصدير تقرير</span>
-                  <span className="dash-qb-sub">تقارير الأسعار والتحليلات</span>
-                </div>
-                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
+                <BarChartIcon className="icon-sm" />
+                <span>تصدير تقرير</span>
               </button>
               <button className="dash-quick-btn" onClick={() => onNavigate('settings')}>
-                <div className="dash-qb-icon dash-qb-gray"><SettingsIcon className="icon-sm" /></div>
-                <div className="dash-qb-info">
-                  <span className="dash-qb-title">الإعدادات</span>
-                  <span className="dash-qb-sub">إعدادات المتجر والتفضيلات</span>
-                </div>
-                <ArrowLeftIcon className="icon-xs dash-qb-arrow" />
+                <SettingsIcon className="icon-sm" />
+                <span>الإعدادات</span>
               </button>
             </div>
           </div>
