@@ -6,7 +6,8 @@ import {
   ArrowUpIcon, ArrowDownIcon, DownloadIcon, ListIcon,
   BoldIcon, ItalicIcon, MinusIcon,
   ChevronDownIcon, TagIcon, XIcon,
-  UnderlineIcon, AlignRightIcon, AlignCenterIcon, AlignLeftIcon, AlignJustifyIcon, EraserIcon
+  UnderlineIcon, AlignRightIcon, AlignCenterIcon, AlignLeftIcon, AlignJustifyIcon, EraserIcon,
+  UndoIcon, RedoIcon
 } from './Icons';
 import { FEATURE_ICONS, FEATURE_BADGES, PRODUCT_TEMPLATES } from '../data/productTemplates';
 
@@ -188,14 +189,63 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
   const [editorFormats, setEditorFormats] = useState({});
   const isFocusedRef = useRef(false);
 
+  const MAX_HISTORY = 50;
+  const historyRef = useRef([]);
+  const historyIdxRef = useRef(-1);
+  const debounceTimerRef = useRef(null);
+  const [historyState, setHistoryState] = useState({ idx: -1, len: 0 });
+
   const handleDescriptionChange = useCallback((html) => {
     if (!product) return;
     updateProduct(product.id, { description: html });
   }, [product, updateProduct]);
 
+  const pushHistory = useCallback((html) => {
+    if (historyRef.current[historyIdxRef.current] === html) return;
+    const next = historyRef.current.slice(0, historyIdxRef.current + 1);
+    next.push(html);
+    if (next.length > MAX_HISTORY) next.shift();
+    historyRef.current = next;
+    historyIdxRef.current = next.length - 1;
+    setHistoryState({ idx: historyIdxRef.current, len: next.length });
+  }, []);
+
+  const debouncedPushHistory = useCallback((html) => {
+    clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => pushHistory(html), 350);
+  }, [pushHistory]);
+
+  const undo = useCallback(() => {
+    if (historyIdxRef.current <= 0) return;
+    clearTimeout(debounceTimerRef.current);
+    historyIdxRef.current -= 1;
+    const html = historyRef.current[historyIdxRef.current];
+    if (editorRef.current) editorRef.current.innerHTML = html;
+    handleDescriptionChange(html);
+    setHistoryState({ idx: historyIdxRef.current, len: historyRef.current.length });
+  }, [handleDescriptionChange]);
+
+  const redo = useCallback(() => {
+    if (historyIdxRef.current >= historyRef.current.length - 1) return;
+    clearTimeout(debounceTimerRef.current);
+    historyIdxRef.current += 1;
+    const html = historyRef.current[historyIdxRef.current];
+    if (editorRef.current) editorRef.current.innerHTML = html;
+    handleDescriptionChange(html);
+    setHistoryState({ idx: historyIdxRef.current, len: historyRef.current.length });
+  }, [handleDescriptionChange]);
+
+  const canUndo = historyState.idx > 0;
+  const canRedo = historyState.idx < historyState.len - 1;
+
   useEffect(() => {
-    if (editorRef.current && !isFocusedRef.current) {
-      editorRef.current.innerHTML = product?.description || '';
+    if (editorRef.current) {
+      const html = product?.description || '';
+      editorRef.current.innerHTML = html;
+      historyRef.current = [html];
+      historyIdxRef.current = 0;
+      setHistoryState({ idx: 0, len: 1 });
+      isFocusedRef.current = false;
     }
   }, [product?.id]);
 
@@ -214,13 +264,19 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
   }, []);
 
   const applyFormat = useCallback((command, value = null) => {
+    clearTimeout(debounceTimerRef.current);
+    pushHistory(editorRef.current?.innerHTML || '');
     editorRef.current?.focus();
     document.execCommand(command, false, value);
-    handleDescriptionChange(editorRef.current?.innerHTML || '');
+    const html = editorRef.current?.innerHTML || '';
+    handleDescriptionChange(html);
+    pushHistory(html);
     updateFormats();
-  }, [handleDescriptionChange, updateFormats]);
+  }, [handleDescriptionChange, updateFormats, pushHistory]);
 
   const applyFontSize = useCallback((px) => {
+    clearTimeout(debounceTimerRef.current);
+    pushHistory(editorRef.current?.innerHTML || '');
     editorRef.current?.focus();
     document.execCommand('fontSize', false, '7');
     const fontEls = editorRef.current?.querySelectorAll('font[size="7"]') || [];
@@ -230,29 +286,43 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
       span.innerHTML = font.innerHTML;
       font.parentNode.replaceChild(span, font);
     });
-    handleDescriptionChange(editorRef.current?.innerHTML || '');
-  }, [handleDescriptionChange]);
+    const html = editorRef.current?.innerHTML || '';
+    handleDescriptionChange(html);
+    pushHistory(html);
+  }, [handleDescriptionChange, pushHistory]);
 
   const applyColor = useCallback((hex) => {
+    clearTimeout(debounceTimerRef.current);
+    pushHistory(editorRef.current?.innerHTML || '');
     editorRef.current?.focus();
     document.execCommand('foreColor', false, hex);
-    handleDescriptionChange(editorRef.current?.innerHTML || '');
-  }, [handleDescriptionChange]);
+    const html = editorRef.current?.innerHTML || '';
+    handleDescriptionChange(html);
+    pushHistory(html);
+  }, [handleDescriptionChange, pushHistory]);
 
   const applyHeading = useCallback((tag) => {
+    clearTimeout(debounceTimerRef.current);
+    pushHistory(editorRef.current?.innerHTML || '');
     editorRef.current?.focus();
     document.execCommand('formatBlock', false, tag);
-    handleDescriptionChange(editorRef.current?.innerHTML || '');
+    const html = editorRef.current?.innerHTML || '';
+    handleDescriptionChange(html);
+    pushHistory(html);
     updateFormats();
-  }, [handleDescriptionChange, updateFormats]);
+  }, [handleDescriptionChange, updateFormats, pushHistory]);
 
   const clearAllFormat = useCallback(() => {
+    clearTimeout(debounceTimerRef.current);
+    pushHistory(editorRef.current?.innerHTML || '');
     editorRef.current?.focus();
     document.execCommand('removeFormat', false, null);
     document.execCommand('formatBlock', false, 'p');
-    handleDescriptionChange(editorRef.current?.innerHTML || '');
+    const html = editorRef.current?.innerHTML || '';
+    handleDescriptionChange(html);
+    pushHistory(html);
     updateFormats();
-  }, [handleDescriptionChange, updateFormats]);
+  }, [handleDescriptionChange, updateFormats, pushHistory]);
 
   const addFeature = useCallback((planId, focusNew = false) => {
     if (!product) return;
@@ -532,6 +602,34 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
             </div>
 
             <div className="pf-toolbar pf-toolbar-rich">
+              <div className="pf-toolbar-group">
+                <button
+                  className="pf-toolbar-btn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={undo}
+                  disabled={!canUndo}
+                  title={`تراجع (Ctrl+Z) — ${historyState.idx} خطوة`}
+                  style={{ opacity: canUndo ? 1 : 0.35 }}
+                >
+                  <UndoIcon className="icon-sm" />
+                </button>
+                <button
+                  className="pf-toolbar-btn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={redo}
+                  disabled={!canRedo}
+                  title={`إعادة (Ctrl+Shift+Z) — ${historyState.len - 1 - historyState.idx} خطوة`}
+                  style={{ opacity: canRedo ? 1 : 0.35 }}
+                >
+                  <RedoIcon className="icon-sm" />
+                </button>
+                <span className="pf-history-counter" title="الخطوة الحالية / إجمالي الخطوات المحفوظة">
+                  {historyState.idx}/{Math.min(historyState.len - 1, MAX_HISTORY - 1)}
+                </span>
+              </div>
+
+              <div className="pf-toolbar-divider" />
+
               <div className="pf-toolbar-group pf-heading-group">
                 {[
                   { label: 'عادي', tag: 'p', title: 'نص عادي' },
@@ -669,9 +767,29 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               onFocus={() => { isFocusedRef.current = true; updateFormats(); }}
               onBlur={() => {
                 isFocusedRef.current = false;
-                handleDescriptionChange(editorRef.current?.innerHTML || '');
+                const html = editorRef.current?.innerHTML || '';
+                handleDescriptionChange(html);
+                pushHistory(html);
               }}
-              onInput={() => handleDescriptionChange(editorRef.current?.innerHTML || '')}
+              onInput={() => {
+                const html = editorRef.current?.innerHTML || '';
+                handleDescriptionChange(html);
+                debouncedPushHistory(html);
+              }}
+              onKeyDown={(e) => {
+                if (e.ctrlKey || e.metaKey) {
+                  if (e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    undo();
+                  } else if (e.key === 'z' && e.shiftKey) {
+                    e.preventDefault();
+                    redo();
+                  } else if (e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                  }
+                }
+              }}
               onKeyUp={updateFormats}
               onMouseUp={updateFormats}
               data-placeholder="ظلّل النص ثم اختر تنسيقه... اكتب وصفاً تفصيلياً للمنتج بدون حد للنص."

@@ -176,3 +176,7 @@ export const AlignLeftIcon = (p) => I(<><line x1="17" y1="10" x2="3" y2="10"/><l
 export const AlignJustifyIcon = (p) => I(<><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></>, p);
 
 export const EraserIcon = (p) => I(<><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/><path d="M6.5 17.5l4-4"/></>, p);
+
+export const UndoIcon = (p) => I(<><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></>, p);
+
+export const RedoIcon = (p) => I(<><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></>, p);
