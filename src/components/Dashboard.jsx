@@ -107,9 +107,9 @@ function Dashboard({
   })();
 
   const alertItems = [
-    ...lossProducts.map(p => ({ type: 'danger', name: p.name, desc: 'يباع بخسارة', badge: 'خسارة', action: 'pricing' })),
-    ...lowMarginProducts.map(p => ({ type: 'warning', name: p.name, desc: 'هامش ربح منخفض', badge: `${fmtPct(p.margin)}%`, action: 'pricing' })),
-    ...unpricedProducts.map(p => ({ type: 'info', name: p.name, desc: 'لم يتم تسعيره بعد', badge: 'غير مسعّر', action: 'products' })),
+    ...lossProducts.map(p => ({ type: 'danger', icon: <TrendingDownIcon className="icon-sm" />, text: `${p.name} - يباع بخسارة`, action: 'pricing' })),
+    ...lowMarginProducts.map(p => ({ type: 'warning', icon: <AlertTriangleIcon className="icon-sm" />, text: `${p.name} - هامش ربح منخفض (${fmtPct(p.margin)}%)`, action: 'pricing' })),
+    ...unpricedProducts.map(p => ({ type: 'info', icon: <TagIcon className="icon-sm" />, text: `${p.name} - لم يتم تسعيره بعد`, action: 'products' })),
   ];
 
   const [showAllAlerts, setShowAllAlerts] = useState(false);
@@ -188,10 +188,8 @@ function Dashboard({
               <div className="dash-alerts-list">
                 {visibleAlerts.map((alert, idx) => (
                   <div key={idx} className={`dash-alert-item alert-${alert.type}`} onClick={() => onNavigate(alert.action)}>
-                    <div className="dash-alert-body">
-                      <span className="dash-alert-name">{alert.name}</span>
-                      <span className="dash-alert-desc">{alert.desc}</span>
-                    </div>
+                    <span className="dash-alert-icon">{alert.icon}</span>
+                    <span className="dash-alert-text">{alert.text}</span>
                     <ArrowLeftIcon className="icon-xs dash-alert-arrow" />
                   </div>
                 ))}

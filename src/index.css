@@ -1698,53 +1698,50 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s;
   border: 1px solid transparent;
+  border-right: 3px solid transparent;
 }
 .dash-alert-item:hover {
-  transform: translateX(-3px);
+  transform: translateX(-4px);
 }
 
 .alert-danger {
   background: rgba(249, 75, 96, 0.05);
   border-color: rgba(249, 75, 96, 0.12);
+  border-right-color: #F94B60;
 }
 .alert-danger:hover { background: rgba(249, 75, 96, 0.09); }
 
 .alert-warning {
   background: rgba(247, 120, 74, 0.05);
   border-color: rgba(247, 120, 74, 0.12);
+  border-right-color: var(--accent-orange);
 }
 .alert-warning:hover { background: rgba(247, 120, 74, 0.09); }
 
 .alert-info {
-  background: rgba(94, 79, 222, 0.05);
-  border-color: rgba(94, 79, 222, 0.12);
+  background: rgba(249, 75, 96, 0.04);
+  border-color: rgba(249, 75, 96, 0.1);
+  border-right-color: #F94B60;
 }
-.alert-info:hover { background: rgba(94, 79, 222, 0.09); }
+.alert-info:hover { background: rgba(249, 75, 96, 0.07); }
 
-.dash-alert-body {
+.dash-alert-icon {
+  flex-shrink: 0;
+}
+.alert-danger .dash-alert-icon { color: var(--accent-red); }
+.alert-warning .dash-alert-icon { color: var(--accent-orange); }
+.alert-info .dash-alert-icon { color: #F94B60; }
+
+.dash-alert-text {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.dash-alert-name {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.dash-alert-desc {
-  font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .dash-alert-arrow {
