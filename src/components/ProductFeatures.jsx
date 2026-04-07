@@ -46,9 +46,10 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
       plans: p.plans.map(plan => {
         if (plan.id !== planId) return plan;
         const features = plan.features || [];
+        const maxOrder = features.reduce((max, f) => Math.max(max, f.order || 0), 0);
         return {
           ...plan,
-          features: [...features, { text: '', icon: 'check', badge: null, id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }]
+          features: [...features, { text: '', icon: 'check', badge: null, order: maxOrder + 1, id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }]
         };
       })
     }));
@@ -91,7 +92,8 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         const newIdx = direction === 'up' ? idx - 1 : idx + 1;
         if (newIdx < 0 || newIdx >= features.length) return plan;
         [features[idx], features[newIdx]] = [features[newIdx], features[idx]];
-        return { ...plan, features };
+        const reordered = features.map((f, i) => ({ ...f, order: i + 1 }));
+        return { ...plan, features: reordered };
       })
     }));
   }, [product, updateProduct]);
@@ -105,7 +107,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         const features = plan.features || [];
         return {
           ...plan,
-          features: [...features, { text: '---', icon: 'none', badge: null, isSeparator: true, id: `sep_${Date.now()}` }]
+          features: [...features, { text: '---', icon: 'none', badge: null, isSeparator: true, order: features.reduce((max, f) => Math.max(max, f.order || 0), 0) + 1, id: `sep_${Date.now()}` }]
         };
       })
     }));
@@ -116,8 +118,10 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     updateProduct(product.id, (p) => {
       const fromPlan = p.plans.find(pl => pl.id === fromPlanId);
       if (!fromPlan || !fromPlan.features) return p;
-      const copiedFeatures = fromPlan.features.map(f => ({
+      const existingCount = (p.plans.find(pl => pl.id === toPlanId)?.features || []).length;
+      const copiedFeatures = fromPlan.features.map((f, i) => ({
         ...f,
+        order: existingCount + i + 1,
         id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
       }));
       return {
@@ -136,8 +140,9 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
     updateProduct(product.id, (p) => {
       const newPlans = p.plans.map((plan, idx) => ({
         ...plan,
-        features: template.features.map(f => ({
+        features: template.features.map((f, fi) => ({
           ...f,
+          order: fi + 1,
           id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${idx}`
         }))
       }));
@@ -305,6 +310,19 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                 </select>
               </div>
               <div className="pf-toolbar-group">
+                <label className="pf-toolbar-label">نوع العنصر</label>
+                <select
+                  value={descStyles.elementType || 'paragraph'}
+                  onChange={(e) => handleDescStyleChange('elementType', e.target.value)}
+                  className="pf-toolbar-select"
+                >
+                  <option value="paragraph">فقرة</option>
+                  <option value="heading">عنوان</option>
+                  <option value="subheading">عنوان فرعي</option>
+                  <option value="caption">تعليق</option>
+                </select>
+              </div>
+              <div className="pf-toolbar-group">
                 <button
                   className={`pf-toolbar-btn ${descStyles.bold ? 'active' : ''}`}
                   onClick={() => handleDescStyleChange('bold', !descStyles.bold)}
@@ -337,10 +355,11 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
               placeholder="اكتب وصفاً تفصيلياً للمنتج... مثال: اشتراك ChatGPT Plus يمنحك وصولاً إلى نموذج GPT-4o المتقدم..."
               rows={4}
               style={{
-                fontSize: `${descStyles.fontSize || 14}px`,
-                fontWeight: descStyles.bold ? '700' : '400',
+                fontSize: `${descStyles.elementType === 'heading' ? (descStyles.fontSize ? Math.max(Number(descStyles.fontSize), 18) : 20) : descStyles.elementType === 'subheading' ? (descStyles.fontSize ? Math.max(Number(descStyles.fontSize), 16) : 16) : descStyles.elementType === 'caption' ? (descStyles.fontSize ? Math.min(Number(descStyles.fontSize), 13) : 12) : (descStyles.fontSize || 14)}px`,
+                fontWeight: descStyles.bold || descStyles.elementType === 'heading' ? '700' : descStyles.elementType === 'subheading' ? '600' : '400',
                 fontStyle: descStyles.italic ? 'italic' : 'normal',
                 color: descStyles.color || undefined,
+                lineHeight: descStyles.elementType === 'heading' ? '1.4' : descStyles.elementType === 'caption' ? '1.5' : '1.7',
               }}
             />
             <div className="pf-char-counter">

@@ -1188,6 +1188,70 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
     );
   };
 
+  const addFeaturesPdfFooter = (doc) => {
+    const pageCount = doc.getNumberOfPages();
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('متجر Miftah — miftahdigital.store', pageW / 2, pageH - 5, { align: 'center' });
+      doc.setFontSize(7);
+      doc.text(`${i} / ${pageCount}`, pageW - 10, pageH - 5, { align: 'right' });
+      doc.setDrawColor(220, 220, 220);
+      doc.line(10, pageH - 9, pageW - 10, pageH - 9);
+      doc.line(10, 3, pageW - 10, 3);
+    }
+  };
+
+  const generateFeaturesPDF = async (key, filename) => {
+    setGenerating(key);
+    try {
+      await new Promise(r => setTimeout(r, 250));
+      const element = reportRef.current;
+      if (!element) return;
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 8;
+      const footerSpace = 12;
+      const usableW = pageW - margin * 2;
+      const usableH = pageH - margin - footerSpace;
+      const scale = usableW / canvas.width;
+      const scaledH = canvas.height * scale;
+      if (scaledH <= usableH) {
+        const imgData = canvas.toDataURL('image/png');
+        const xOff = (pageW - canvas.width * scale) / 2;
+        doc.addImage(imgData, 'PNG', xOff, margin, canvas.width * scale, scaledH);
+      } else {
+        const sliceHeightPx = Math.floor(usableH / scale);
+        const totalPages = Math.ceil(canvas.height / sliceHeightPx);
+        for (let page = 0; page < totalPages; page++) {
+          if (page > 0) doc.addPage();
+          const srcY = page * sliceHeightPx;
+          const srcH = Math.min(sliceHeightPx, canvas.height - srcY);
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = srcH;
+          const ctx = sliceCanvas.getContext('2d');
+          ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+          const sliceData = sliceCanvas.toDataURL('image/png');
+          const drawH = srcH * scale;
+          doc.addImage(sliceData, 'PNG', margin, margin, usableW, drawH);
+        }
+      }
+      addFeaturesPdfFooter(doc);
+      const safeName = filename.replace(/[<>:"/\\|?*]/g, '_').trim() || 'report.pdf';
+      doc.save(safeName);
+    } catch (e) {
+      alert('حدث خطأ أثناء إنشاء التقرير: ' + e.message);
+    } finally {
+      setGenerating(null);
+    }
+  };
+
   const generateAllFeaturesPDFs = async () => {
     const productsWithFeatures = products.filter(p => p.description || p.plans.some(plan => plan.features?.length > 0));
     if (productsWithFeatures.length === 0) return;
@@ -1204,8 +1268,9 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
         const pageW = doc.internal.pageSize.getWidth();
         const pageH = doc.internal.pageSize.getHeight();
         const margin = 8;
+        const footerSpace = 12;
         const usableW = pageW - margin * 2;
-        const usableH = pageH - margin * 2;
+        const usableH = pageH - margin - footerSpace;
         const scale = usableW / canvas.width;
         const scaledH = canvas.height * scale;
         if (scaledH <= usableH) {
@@ -1229,6 +1294,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
             doc.addImage(sliceData, 'PNG', margin, margin, usableW, drawH);
           }
         }
+        addFeaturesPdfFooter(doc);
         const safeName = `مزايا_${product.name}_مفتاح.pdf`.replace(/[<>:"/\\|?*]/g, '_').trim();
         doc.save(safeName);
       }
@@ -1551,7 +1617,7 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                 disabled={!!generating}
                 onClick={() => {
                   const p = products.find(pr => pr.id === parseInt(featuresSelectedProductId));
-                  if (p) generatePDF(`features-${p.id}`, `مزايا_${p.name}_مفتاح.pdf`);
+                  if (p) generateFeaturesPDF(`features-${p.id}`, `مزايا_${p.name}_مفتاح.pdf`);
                 }}
               >
                 {generating?.startsWith('features-') ? <><span className="spinner" /> جاري الإنشاء...</> : <><DownloadIcon className="icon-sm" /> تصدير PDF</>}
@@ -1569,29 +1635,11 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
           {featuresSelectedProductId && (() => {
             const previewProduct = products.find(p => p.id === parseInt(featuresSelectedProductId));
             if (!previewProduct) return null;
-            const totalFeatCount = previewProduct.plans.reduce((s, plan) => s + (plan.features || []).filter(f => !f.isSeparator).length, 0);
             return (
-              <div className="features-preview-card">
-                <div className="features-preview-header">
-                  <h4>{formatProductName(previewProduct)}</h4>
-                  <div className="features-preview-stats">
-                    <span className="features-preview-stat">{previewProduct.plans.length} خطة</span>
-                    <span className="features-preview-stat">{totalFeatCount} ميزة</span>
-                    <span className={`features-preview-stat ${previewProduct.description ? 'stat-ok' : 'stat-warn'}`}>
-                      {previewProduct.description ? '✓ وصف مكتمل' : '⚠️ وصف ناقص'}
-                    </span>
-                  </div>
-                </div>
-                {previewProduct.description && (
-                  <p className="features-preview-desc">{previewProduct.description.slice(0, 150)}{previewProduct.description.length > 150 ? '...' : ''}</p>
-                )}
-                <div className="features-preview-plans">
-                  {previewProduct.plans.map((plan, pi) => (
-                    <div key={pi} className="features-preview-plan">
-                      <span className="features-plan-label">{getDurationLabel(plan.durationId)}</span>
-                      <span className="features-plan-count">{(plan.features || []).filter(f => !f.isSeparator).length} ميزة</span>
-                    </div>
-                  ))}
+              <div className="features-pdf-preview-wrapper">
+                <div className="features-pdf-preview-label">معاينة شكل التقرير</div>
+                <div className="features-pdf-preview-scroll">
+                  {renderFeaturesReport(previewProduct, featuresPdfTemplate)}
                 </div>
               </div>
             );

@@ -8793,3 +8793,27 @@ body.dark-mode .selectable-card.selected {
   font-size: 0.72rem;
   color: var(--text-muted);
 }
+
+/* Features PDF Preview */
+.features-pdf-preview-wrapper {
+  margin-top: 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  overflow: hidden;
+}
+.features-pdf-preview-label {
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.features-pdf-preview-scroll {
+  max-height: 500px;
+  overflow-y: auto;
+  background: #fff;
+  transform: scale(0.75);
+  transform-origin: top right;
+  margin-bottom: -25%;
+}

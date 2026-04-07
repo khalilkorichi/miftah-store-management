@@ -43,17 +43,17 @@ function migrateData(data) {
   // Check if old format (products have 'prices' directly instead of 'plans')
   const needsMigration = data.products.some((p) => p.prices && !p.plans);
   if (!needsMigration) {
-    const productsNeedFeatures = data.products.some(p => p.description === undefined);
+    const productsNeedFeatures = data.products.some(p => p.description === undefined || (p.plans || []).some(plan => (plan.features || []).some(f => f.order === undefined)));
     if (productsNeedFeatures) {
-      data.products = data.products.map(p => ({
+      data = { ...data, products: data.products.map(p => ({
         ...p,
         description: p.description || '',
         descriptionStyles: p.descriptionStyles || {},
         plans: (p.plans || []).map(plan => ({
           ...plan,
-          features: plan.features || [],
+          features: (plan.features || []).map((f, i) => ({ ...f, order: f.order !== undefined ? f.order : i + 1 })),
         })),
-      }));
+      })) };
     }
     return data;
   }
