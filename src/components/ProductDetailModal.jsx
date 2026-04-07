@@ -191,25 +191,25 @@ function ProductDetailModal({
 
           <div className="pdm-stats-bar">
             {lowestPrice && (
-              <div className="pdm-stat">
+              <div className="pdm-stat pdm-stat-best">
                 <span className="pdm-stat-label">أقل سعر</span>
-                <span className="pdm-stat-value best" dir="ltr">${fmtNum(lowestPrice)}</span>
+                <span className="pdm-stat-value" dir="ltr"><span className="pdm-stat-unit">$</span>{fmtNum(lowestPrice)}</span>
               </div>
             )}
             {highestPrice && (
-              <div className="pdm-stat">
+              <div className="pdm-stat pdm-stat-high">
                 <span className="pdm-stat-label">أعلى سعر</span>
-                <span className="pdm-stat-value" dir="ltr">${fmtNum(highestPrice)}</span>
+                <span className="pdm-stat-value" dir="ltr"><span className="pdm-stat-unit">$</span>{fmtNum(highestPrice)}</span>
               </div>
             )}
-            <div className="pdm-stat">
+            <div className="pdm-stat pdm-stat-count">
               <span className="pdm-stat-label">الموردين</span>
               <span className="pdm-stat-value">{suppliers.length}</span>
             </div>
             {lowestPrice && (
-              <div className="pdm-stat">
+              <div className="pdm-stat pdm-stat-sar">
                 <span className="pdm-stat-label">أقل سعر بالريال</span>
-                <span className="pdm-stat-value" dir="ltr">{fmtNum(lowestPrice * exchangeRate)} ﷼</span>
+                <span className="pdm-stat-value" dir="ltr">{fmtNum(lowestPrice * exchangeRate)}<span className="pdm-stat-unit"> ﷼</span></span>
               </div>
             )}
           </div>
