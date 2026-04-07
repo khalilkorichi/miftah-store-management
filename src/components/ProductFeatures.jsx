@@ -436,23 +436,25 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                       const badgeInfo = feature.badge ? getBadgeInfo(feature.badge) : null;
                       return (
                         <div key={feature.id} className="pf-feature-row">
-                          <div className="pf-feature-icon-btn" onClick={() => setShowIconPicker(showIconPicker === feature.id ? null : feature.id)}>
-                            {getIconEmoji(feature.icon)}
-                          </div>
-                          {showIconPicker === feature.id && (
-                            <div className="pf-icon-picker">
-                              {FEATURE_ICONS.map(ic => (
-                                <button
-                                  key={ic.id}
-                                  className={`pf-icon-option ${feature.icon === ic.id ? 'active' : ''}`}
-                                  onClick={() => { updateFeature(plan.id, feature.id, { icon: ic.id }); setShowIconPicker(null); }}
-                                  title={ic.label}
-                                >
-                                  {ic.emoji}
-                                </button>
-                              ))}
+                          <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <div className="pf-feature-icon-btn" onClick={() => setShowIconPicker(showIconPicker === feature.id ? null : feature.id)} title="تغيير الأيقونة">
+                              {getIconEmoji(feature.icon)}
                             </div>
-                          )}
+                            {showIconPicker === feature.id && (
+                              <div className="pf-icon-picker">
+                                {FEATURE_ICONS.map(ic => (
+                                  <button
+                                    key={ic.id}
+                                    className={`pf-icon-option ${feature.icon === ic.id ? 'active' : ''}`}
+                                    onClick={() => { updateFeature(plan.id, feature.id, { icon: ic.id }); setShowIconPicker(null); }}
+                                    title={ic.label}
+                                  >
+                                    {ic.emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <input
                             type="text"
                             className="pf-feature-input"
@@ -465,13 +467,14 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                               className="pf-badge-btn"
                               onClick={() => setShowBadgePicker(showBadgePicker === feature.id ? null : feature.id)}
                               style={badgeInfo ? { background: `${badgeInfo.color}20`, color: badgeInfo.color, borderColor: `${badgeInfo.color}40` } : {}}
+                              title="إضافة وسم"
                             >
                               {badgeInfo ? badgeInfo.label : <TagIcon className="icon-xs" />}
                             </button>
                             {showBadgePicker === feature.id && (
                               <div className="pf-badge-picker">
-                                <button className="pf-badge-option" onClick={() => { updateFeature(plan.id, feature.id, { badge: null }); setShowBadgePicker(null); }}>
-                                  بدون
+                                <button className="pf-badge-option" style={{ color: 'var(--text-muted)' }} onClick={() => { updateFeature(plan.id, feature.id, { badge: null }); setShowBadgePicker(null); }}>
+                                  بدون وسم
                                 </button>
                                 {FEATURE_BADGES.map(b => (
                                   <button

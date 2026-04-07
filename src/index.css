@@ -7965,26 +7965,32 @@ body.dark-mode .selectable-card.selected {
    Product Features Page
    ═══════════════════════════════════════════════════════════════ */
 .pf-container {
-  padding: 0 0 40px;
+  padding: 0 0 48px;
 }
+
+/* Page Header */
 .pf-page-header {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 .pf-header-content {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 .pf-header-icon-wrap {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   background: var(--gradient-accent);
   color: #fff;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(94,79,222,0.3);
 }
 .pf-page-title {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -7992,22 +7998,26 @@ body.dark-mode .selectable-card.selected {
 .pf-page-subtitle {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin: 4px 0 0;
+  margin: 5px 0 0;
+  line-height: 1.5;
 }
 
 /* Stats Grid */
 .pf-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
+}
+@media (max-width: 600px) {
+  .pf-stats-grid { grid-template-columns: 1fr; }
 }
 .pf-stat-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  border-radius: 14px;
+  gap: 16px;
+  padding: 20px 22px;
+  border-radius: 16px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
   position: relative;
@@ -8015,69 +8025,90 @@ body.dark-mode .selectable-card.selected {
   transition: all 0.3s;
 }
 .pf-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
+.pf-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.pf-stat-card:hover::before { opacity: 1; }
 .pf-stat-card::after {
   content: '';
   position: absolute;
-  left: 0;
+  right: 0;
   top: 0;
   bottom: 0;
   width: 4px;
-  border-radius: 0 4px 4px 0;
+  border-radius: 4px 0 0 4px;
 }
-.pf-stat-blue::after { background: var(--accent-blue); }
-.pf-stat-green::after { background: var(--accent-green); }
-.pf-stat-purple::after { background: var(--accent-purple); }
+.pf-stat-blue::after { background: linear-gradient(180deg, var(--accent-blue), rgba(26,81,244,0.4)); }
+.pf-stat-green::after { background: linear-gradient(180deg, var(--accent-green), rgba(14,168,92,0.4)); }
+.pf-stat-purple::after { background: linear-gradient(180deg, var(--accent-purple), rgba(94,79,222,0.4)); }
 .pf-stat-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.pf-stat-blue .pf-stat-icon { background: rgba(26,81,244,0.1); color: var(--accent-blue); }
-.pf-stat-green .pf-stat-icon { background: rgba(14,168,92,0.1); color: var(--accent-green); }
-.pf-stat-purple .pf-stat-icon { background: rgba(94,79,222,0.1); color: var(--accent-purple); }
+.pf-stat-blue .pf-stat-icon { background: rgba(26,81,244,0.12); color: var(--accent-blue); }
+.pf-stat-green .pf-stat-icon { background: rgba(14,168,92,0.12); color: var(--accent-green); }
+.pf-stat-purple .pf-stat-icon { background: rgba(94,79,222,0.12); color: var(--accent-purple); }
 .pf-stat-data {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 .pf-stat-value {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1;
+  letter-spacing: -0.5px;
 }
 .pf-stat-label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-top: 4px;
+  margin-top: 5px;
+  font-weight: 500;
 }
 
 /* Product Selector */
 .pf-selector-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
   padding: 20px 24px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
   margin-bottom: 24px;
-  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .pf-selector-card { grid-template-columns: auto 1fr; }
+  .pf-product-select { grid-column: 1 / -1; }
 }
 .pf-selector-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(94,79,222,0.1);
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: rgba(94,79,222,0.12);
   color: var(--accent-purple);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pf-selector-content {
-  flex: 1;
-  min-width: 150px;
+  min-width: 0;
 }
 .pf-selector-content h3 {
   font-size: 0.95rem;
@@ -8088,12 +8119,12 @@ body.dark-mode .selectable-card.selected {
 .pf-selector-content p {
   font-size: 0.8rem;
   color: var(--text-secondary);
-  margin: 2px 0 0;
+  margin: 3px 0 0;
 }
 .pf-product-select {
-  min-width: 220px;
-  padding: 10px 16px;
-  border-radius: 10px;
+  min-width: 240px;
+  padding: 11px 16px;
+  border-radius: 11px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-input);
   color: var(--text-primary);
@@ -8101,7 +8132,7 @@ body.dark-mode .selectable-card.selected {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 .pf-product-select:focus {
   border-color: var(--accent-purple);
@@ -8112,27 +8143,33 @@ body.dark-mode .selectable-card.selected {
 /* Empty State */
 .pf-empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 72px 20px;
   color: var(--text-secondary);
 }
 .pf-empty-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
   background: rgba(94,79,222,0.08);
   color: var(--accent-purple);
-  margin: 0 auto 16px;
-  font-size: 1.5rem;
+  margin: 0 auto 20px;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pf-empty-state h3 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 8px;
+  margin: 0 0 10px;
 }
 .pf-empty-state p {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   margin: 0;
+  max-width: 360px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
 /* Editor Area */
@@ -8144,6 +8181,10 @@ body.dark-mode .selectable-card.selected {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -8153,33 +8194,50 @@ body.dark-mode .selectable-card.selected {
   gap: 12px;
 }
 .pf-editor-title-row h2 {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
 }
 .pf-status-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--accent-green);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  background: rgba(14,168,92,0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(14,168,92,0.2);
 }
 .pf-status-incomplete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--accent-orange);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  background: rgba(247,120,74,0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(247,120,74,0.2);
 }
 .pf-editor-actions {
   display: flex;
   gap: 8px;
 }
 .pf-template-btn {
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
   border-radius: 10px;
   border: 1.5px solid var(--border-color);
-  background: var(--bg-card);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -8187,7 +8245,8 @@ body.dark-mode .selectable-card.selected {
 .pf-template-btn:hover {
   border-color: var(--accent-purple);
   color: var(--accent-purple);
-  background: rgba(94,79,222,0.05);
+  background: rgba(94,79,222,0.06);
+  transform: translateY(-1px);
 }
 
 /* Templates Panel */
@@ -8195,9 +8254,10 @@ body.dark-mode .selectable-card.selected {
   padding: 20px 24px;
   border-radius: 14px;
   background: var(--bg-card);
-  border: 1.5px solid var(--accent-purple);
+  border: 1.5px solid rgba(94,79,222,0.4);
   margin-bottom: 20px;
   animation: fadeIn 0.2s ease;
+  box-shadow: 0 4px 16px rgba(94,79,222,0.08);
 }
 .pf-templates-panel h4 {
   font-size: 0.95rem;
@@ -8208,16 +8268,16 @@ body.dark-mode .selectable-card.selected {
 .pf-templates-note {
   font-size: 0.78rem;
   color: var(--text-secondary);
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 .pf-templates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
 }
 .pf-template-item {
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: 12px 14px;
+  border-radius: 11px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -8228,8 +8288,9 @@ body.dark-mode .selectable-card.selected {
 }
 .pf-template-item:hover {
   border-color: var(--accent-purple);
-  background: rgba(94,79,222,0.05);
-  transform: translateY(-1px);
+  background: rgba(94,79,222,0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(94,79,222,0.12);
 }
 .pf-template-name {
   display: block;
@@ -8240,33 +8301,36 @@ body.dark-mode .selectable-card.selected {
   display: block;
   font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* Description Card */
 .pf-desc-card {
-  padding: 20px 24px;
-  border-radius: 14px;
+  padding: 22px 26px;
+  border-radius: 16px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 .pf-desc-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 .pf-desc-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   background: rgba(26,81,244,0.1);
   color: var(--accent-blue);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pf-desc-header h3 {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -8274,19 +8338,19 @@ body.dark-mode .selectable-card.selected {
 .pf-desc-header p {
   font-size: 0.78rem;
   color: var(--text-secondary);
-  margin: 2px 0 0;
+  margin: 3px 0 0;
 }
 
 /* Toolbar */
 .pf-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 11px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 .pf-toolbar-group {
@@ -8294,14 +8358,19 @@ body.dark-mode .selectable-card.selected {
   align-items: center;
   gap: 6px;
 }
+.pf-toolbar-group + .pf-toolbar-group {
+  border-right: 1px solid var(--border-color);
+  padding-right: 10px;
+}
 .pf-toolbar-label {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   color: var(--text-muted);
   font-weight: 600;
+  white-space: nowrap;
 }
 .pf-toolbar-select {
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 5px 9px;
+  border-radius: 7px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-primary);
@@ -8310,8 +8379,8 @@ body.dark-mode .selectable-card.selected {
   cursor: pointer;
 }
 .pf-toolbar-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8325,6 +8394,7 @@ body.dark-mode .selectable-card.selected {
 .pf-toolbar-btn:hover {
   background: rgba(94,79,222,0.1);
   color: var(--accent-purple);
+  border-color: var(--accent-purple);
 }
 .pf-toolbar-btn.active {
   background: var(--accent-purple);
@@ -8332,8 +8402,8 @@ body.dark-mode .selectable-card.selected {
   border-color: var(--accent-purple);
 }
 .pf-color-picker {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 2px;
@@ -8343,15 +8413,15 @@ body.dark-mode .selectable-card.selected {
 .pf-desc-textarea {
   width: 100%;
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: 11px;
   border: 1.5px solid var(--border-color);
   background: var(--bg-input);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.7;
+  font-size: 0.92rem;
+  line-height: 1.8;
   resize: vertical;
-  min-height: 100px;
+  min-height: 110px;
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
@@ -8362,9 +8432,9 @@ body.dark-mode .selectable-card.selected {
 }
 .pf-char-counter {
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
-  margin-top: 6px;
+  margin-top: 7px;
 }
 .pf-char-limit {
   color: var(--accent-red, #F94B60);
@@ -8376,12 +8446,17 @@ body.dark-mode .selectable-card.selected {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 16px;
-  border-radius: 10px;
+  padding: 10px 18px;
+  border-radius: 11px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
   margin-bottom: 20px;
   color: var(--text-secondary);
+  transition: border-color 0.2s;
+}
+.pf-search-bar:focus-within {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(94,79,222,0.08);
 }
 .pf-search-bar input {
   flex: 1;
@@ -8389,75 +8464,96 @@ body.dark-mode .selectable-card.selected {
   background: transparent;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   outline: none;
 }
 
 /* Plans Grid */
 .pf-plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
+@media (max-width: 720px) {
+  .pf-plans-grid { grid-template-columns: 1fr; }
+}
 .pf-plan-card {
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
   overflow: hidden;
   transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
 }
 .pf-plan-card:hover {
-  box-shadow: var(--shadow);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+  border-color: rgba(94,79,222,0.3);
 }
 .pf-plan-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(94,79,222,0.04) 100%);
+  gap: 10px;
 }
 .pf-plan-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 }
 .pf-plan-name {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
 .pf-plan-price {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--accent-green);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.pf-plan-price::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
 }
 .pf-plan-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .pf-features-count {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--bg-primary);
-  padding: 3px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--accent-purple);
+  background: rgba(94,79,222,0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(94,79,222,0.2);
+  white-space: nowrap;
 }
 .pf-plan-btns {
   display: flex;
   gap: 4px;
 }
 .pf-plan-action-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -8467,12 +8563,13 @@ body.dark-mode .selectable-card.selected {
 .pf-plan-action-btn:hover {
   color: var(--accent-purple);
   border-color: var(--accent-purple);
+  background: rgba(94,79,222,0.08);
 }
 
 /* Copy Panel */
 .pf-copy-panel {
-  padding: 12px 20px;
-  background: rgba(94,79,222,0.05);
+  padding: 12px 18px;
+  background: rgba(94,79,222,0.06);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -8487,7 +8584,7 @@ body.dark-mode .selectable-card.selected {
   flex-wrap: wrap;
 }
 .pf-copy-target-btn {
-  padding: 4px 14px;
+  padding: 5px 14px;
   border-radius: 8px;
   border: 1px solid var(--accent-purple);
   background: rgba(94,79,222,0.1);
@@ -8501,64 +8598,69 @@ body.dark-mode .selectable-card.selected {
 .pf-copy-target-btn:hover {
   background: var(--accent-purple);
   color: #fff;
+  transform: translateY(-1px);
 }
 
 /* Features List */
 .pf-features-list {
-  padding: 12px 16px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 400px;
+  gap: 7px;
+  max-height: 440px;
   overflow-y: auto;
+  flex: 1;
 }
 .pf-feature-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 38px 1fr auto auto;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 9px 10px;
+  border-radius: 11px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   transition: all 0.2s;
   position: relative;
 }
 .pf-feature-row:hover {
-  border-color: var(--accent-purple);
-  box-shadow: 0 2px 8px rgba(94,79,222,0.08);
+  border-color: rgba(94,79,222,0.4);
+  box-shadow: 0 2px 10px rgba(94,79,222,0.08);
 }
 .pf-feature-icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
   transition: all 0.2s;
+  position: relative;
 }
 .pf-feature-icon-btn:hover {
   border-color: var(--accent-purple);
-  transform: scale(1.05);
+  background: rgba(94,79,222,0.08);
+  transform: scale(1.08);
 }
 .pf-icon-picker {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   right: 0;
-  z-index: 50;
+  z-index: 100;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-  padding: 10px;
+  padding: 12px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  margin-top: 4px;
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.2);
+  min-width: 280px;
 }
 .pf-icon-option {
   width: 36px;
@@ -8566,16 +8668,17 @@ body.dark-mode .selectable-card.selected {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
   background: transparent;
   cursor: pointer;
   font-size: 1.1rem;
   transition: all 0.15s;
+  title: attr(title);
 }
 .pf-icon-option:hover {
-  background: rgba(94,79,222,0.1);
-  transform: scale(1.15);
+  background: rgba(94,79,222,0.12);
+  transform: scale(1.2);
 }
 .pf-icon-option.active {
   border-color: var(--accent-purple);
@@ -8584,68 +8687,75 @@ body.dark-mode .selectable-card.selected {
 .pf-feature-input {
   flex: 1;
   min-width: 0;
-  padding: 7px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border-color);
   background: var(--bg-input);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   transition: border-color 0.2s;
 }
 .pf-feature-input:focus {
   border-color: var(--accent-blue);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(26,81,244,0.08);
 }
 
 /* Badge Area */
 .pf-feature-badge-area {
   position: relative;
+  flex-shrink: 0;
 }
 .pf-badge-btn {
-  padding: 4px 10px;
+  height: 30px;
+  padding: 0 10px;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 .pf-badge-btn:hover {
   border-color: var(--accent-purple);
+  color: var(--accent-purple);
 }
 .pf-badge-picker {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 50;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 8px;
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.2);
   margin-top: 4px;
-  min-width: 90px;
+  min-width: 130px;
 }
 .pf-badge-option {
-  padding: 6px 12px;
+  padding: 7px 14px;
   border: none;
   background: transparent;
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 7px;
   text-align: right;
   transition: background 0.15s;
+  color: var(--text-primary);
 }
 .pf-badge-option:hover {
   background: rgba(94,79,222,0.08);
@@ -8656,35 +8766,37 @@ body.dark-mode .selectable-card.selected {
   display: flex;
   gap: 3px;
   flex-shrink: 0;
+  align-items: center;
 }
 .pf-move-btn, .pf-remove-btn {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 7px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
-.pf-move-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
-.pf-remove-btn:hover { color: var(--accent-red, #F94B60); border-color: var(--accent-red, #F94B60); }
-.pf-move-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.pf-move-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); background: rgba(26,81,244,0.06); }
+.pf-remove-btn:hover { color: var(--accent-red, #F94B60); border-color: var(--accent-red, #F94B60); background: rgba(249,75,96,0.06); }
+.pf-move-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
 /* Separator */
 .pf-separator-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
+  gap: 10px;
+  padding: 6px 10px;
 }
 .pf-separator-line {
   flex: 1;
-  height: 1px;
-  background: var(--border-color);
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+  border-radius: 2px;
 }
 
 /* Plan Footer */
@@ -8694,27 +8806,50 @@ body.dark-mode .selectable-card.selected {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  background: var(--bg-primary);
 }
-.pf-add-feature-btn, .pf-add-separator-btn {
-  padding: 7px 16px;
-  border-radius: 8px;
-  border: 1px dashed var(--border-color);
+.pf-add-feature-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1.5px dashed rgba(14,168,92,0.4);
+  background: rgba(14,168,92,0.04);
+  color: var(--accent-green);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pf-add-feature-btn:hover {
+  border-color: var(--accent-green);
+  background: rgba(14,168,92,0.1);
+  transform: translateY(-1px);
+}
+.pf-add-separator-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  border: 1.5px dashed var(--border-color);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
-.pf-add-feature-btn:hover {
-  border-color: var(--accent-green);
-  color: var(--accent-green);
-  background: rgba(14,168,92,0.05);
-}
 .pf-add-separator-btn:hover {
-  border-color: var(--text-muted);
+  border-color: var(--text-secondary);
   color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
 }
 
 /* Features Report Preview */
