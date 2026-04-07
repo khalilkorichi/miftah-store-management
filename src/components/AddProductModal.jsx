@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PackageIcon, XIcon, CheckIcon, CheckCircleIcon, TagIcon, CalendarIcon, InfoIcon, ZapIcon, UserIcon, UsersIcon, ShieldCheckIcon } from './Icons';
+import { PackageIcon, XIcon, CheckIcon, CheckCircleIcon, TagIcon, CalendarIcon, InfoIcon, ZapIcon, UserIcon, UsersIcon, ShieldCheckIcon, LinkIcon } from './Icons';
 
 function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, allMethods = [] }) {
   const [name, setName] = useState('');
   const [selectedDurations, setSelectedDurations] = useState(['month_1', 'year_1']);
   const [selectedMethods, setSelectedMethods] = useState([]);
   const [accountType, setAccountType] = useState('none');
+  const [storeUrl, setStoreUrl] = useState('');
   const [prices, setPrices] = useState({});
   const [warranties, setWarranties] = useState({});
   const [step, setStep] = useState(1);
@@ -20,6 +21,7 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
       setSelectedDurations(['month_1', 'year_1']);
       setSelectedMethods([]);
       setAccountType('none');
+      setStoreUrl('');
       setPrices({});
       setWarranties({});
       setStep(1);
@@ -84,6 +86,14 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
     setStep(2);
   };
 
+  const sanitizeUrl = (raw) => {
+    const trimmed = (raw || '').trim();
+    if (!trimmed) return '';
+    if (/^(javascript|data|vbscript):/i.test(trimmed)) return '';
+    if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`;
+    return trimmed;
+  };
+
   const handleSubmit = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -98,7 +108,7 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
       return { id: idx + 1, durationId: durId, prices: planPrices, warrantyDays };
     });
 
-    onConfirm({ name: trimmed, plans, activationMethods: selectedMethods, accountType });
+    onConfirm({ name: trimmed, plans, activationMethods: selectedMethods, accountType, storeUrl: sanitizeUrl(storeUrl) });
     onClose();
   };
 
@@ -166,6 +176,24 @@ function AddProductModal({ isOpen, onClose, onConfirm, durations, suppliers, all
                 />
                 {nameError && <span className="modal-error">{nameError}</span>}
                 <span className="modal-char-count">{name.length}/100</span>
+              </div>
+
+              {/* Store URL */}
+              <div className="modal-field">
+                <label className="modal-label">
+                  <span className="label-icon" style={{ display: 'flex' }}><LinkIcon className="icon-xs" /></span>
+                  رابط المنتج في المتجر
+                  <span className="modal-hint">اختياري — رابط صفحة المنتج</span>
+                </label>
+                <input
+                  type="url"
+                  className="modal-input"
+                  placeholder="https://store.example.com/product/..."
+                  value={storeUrl}
+                  onChange={(e) => setStoreUrl(e.target.value)}
+                  dir="ltr"
+                  style={{ textAlign: 'left' }}
+                />
               </div>
 
               {/* Account Type Selection */}

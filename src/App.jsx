@@ -282,7 +282,7 @@ function App() {
   }, []);
 
   // === Product Management ===
-  const handleAddProduct = useCallback((name, customPlans, activationMethods = [], accountType = 'none') => {
+  const handleAddProduct = useCallback((name, customPlans, activationMethods = [], accountType = 'none', storeUrl = '') => {
     const newId = Math.max(0, ...products.map((p) => p.id)) + 1;
     let plans;
     if (customPlans && customPlans.length > 0) {
@@ -298,10 +298,9 @@ function App() {
       suppliers.forEach((s) => { prices[s.id] = 0; });
       plans = [{ id: 1, durationId: 'month_1', prices }];
     }
-    setProducts((prev) => [
-      ...prev,
-      { id: newId, name, plans, activationMethods, accountType },
-    ]);
+    const newProduct = { id: newId, name, plans, activationMethods, accountType };
+    if (storeUrl) newProduct.storeUrl = storeUrl;
+    setProducts((prev) => [...prev, newProduct]);
     toast(`تمت إضافة المنتج "${name}" بنجاح`, 'success');
   }, [products, suppliers, toast]);
 
