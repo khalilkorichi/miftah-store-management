@@ -1852,13 +1852,10 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
             </thead>
             <tbody>
               {(() => {
-                const PALETTE = ['#5E4FDE','#11BA65','#1A51F4','#F7784A','#F94B60','#FFC530','#0088cc','#e056cd','#ff9f43','#54a0ff'];
                 return groupedAnalytics.map((group, gi) => {
                 const isExpanded = expandedProducts[group.productName];
                 const bestPlan = group.plans.reduce((best, a) => parseFloat(a.savingsPercent) > parseFloat(best.savingsPercent) ? a : best, group.plans[0]);
                 const totalGroupSavings = group.plans.reduce((s, a) => s + a.savings, 0);
-                const avatarColor = PALETTE[gi % PALETTE.length];
-                const initial = group.productName.trim().charAt(0).toUpperCase();
                 return (
                   <React.Fragment key={gi}>
                     <tr className={`product-group-row ${isExpanded ? 'group-expanded' : ''}`} onClick={() => toggleProduct(group.productName)}>
@@ -1867,7 +1864,6 @@ function ReportsExport({ products, suppliers, durations, exchangeRate, activatio
                           <span className={`group-chevron ${!isExpanded ? 'chevron-collapsed' : ''}`}>
                             <ChevronDownIcon className="icon-xs" />
                           </span>
-                          <span className="product-avatar" style={{ background: isExpanded ? 'rgba(255,255,255,0.22)' : avatarColor }}>{initial}</span>
                           <span className="product-name-text">{group.productName}</span>
                           <span className="group-plan-count">{group.plans.length} خطة</span>
                         </div>
