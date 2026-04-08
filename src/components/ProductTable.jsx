@@ -266,7 +266,7 @@ function ProductTable({
   onUpdateProductName, onUpdateProductUrl, onUpdateProductAccountType, onAddPlan, onDeletePlan,
   onUpdatePlanDuration, onUpdateSupplier, onDeleteSupplier, onAddSupplier,
   onToggleProductMethod, onAddActivationMethodType, onDeleteActivationMethodType,
-  onUpdateOfficialPrice, onUpdateWarranty, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
+  onUpdateOfficialPrice, onUpdateWarranty, onUpdateSupplierWarranty, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
   onImportProducts,
 }) {
   const [editingCell, setEditingCell] = useState(null);
@@ -413,6 +413,7 @@ function ProductTable({
         onUpdatePrice={onUpdatePrice}
         onUpdateOfficialPrice={onUpdateOfficialPrice}
         onUpdateWarranty={onUpdateWarranty}
+        onUpdateSupplierWarranty={onUpdateSupplierWarranty}
         onUpdateProductUrl={onUpdateProductUrl}
         onAddPlan={onAddPlan}
         onDeletePlan={onDeletePlan}
