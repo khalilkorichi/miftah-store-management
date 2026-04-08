@@ -306,9 +306,9 @@ function PlanRow({
   const finalVal       = parseFloat(localPrices[planKey]);
   const savedFinal     = finalPrices[planKey];
   const isSet          = savedFinal !== undefined;
-  const priceForMargin = isSet ? savedFinal : (isNaN(finalVal) ? 0 : finalVal);
+  const priceForMargin = isSet && savedFinal > 0 ? savedFinal : 0;
   const profitMargin   = priceForMargin > 0 ? ((priceForMargin - totalCost) / priceForMargin) * 100 : 0;
-  const pricingStatus  = getPricingStatus(priceForMargin, totalCost, suggested);
+  const pricingStatus  = isSet && priceForMargin > 0 ? getPricingStatus(priceForMargin, totalCost, suggested) : null;
   const diffFromOfficial = officialSAR > 0 && priceForMargin > 0 ? priceForMargin - officialSAR : null;
 
   const handleSave = () => {
@@ -407,24 +407,6 @@ function PlanRow({
         }
       </div>
 
-      {/* Status — clickable */}
-      <div className="fpm-plan-col fpm-plan-col-status">
-        {pricingStatus ? (
-          <button
-            className={`po-status-badge po-status-${pricingStatus.type} fpm-status-clickable flex-row align-center gap-1`}
-            onClick={handleStatusClick}
-            title="انقر لعرض تفاصيل التقييم"
-            type="button"
-          >
-            <span style={{ display: 'flex' }}>{pricingStatus.icon}</span>
-            {pricingStatus.label}
-            <span className="fpm-status-hint">؟</span>
-          </button>
-        ) : (
-          <span className="fpm-empty-dash">—</span>
-        )}
-      </div>
-
       {/* Final price input */}
       <div className="fpm-plan-col fpm-plan-col-final">
         <div className="fpm-price-input-wrap">
@@ -445,6 +427,26 @@ function PlanRow({
           ? <span className="fpm-status-set"><CheckCircleIcon className="icon-xs" />{fmt(savedFinal)} ر.س</span>
           : <span className="fpm-status-unset">لم يُحدَّد</span>
         }
+      </div>
+
+      {/* Status — clickable, shown only after price is saved */}
+      <div className="fpm-plan-col fpm-plan-col-status">
+        {pricingStatus ? (
+          <button
+            className={`po-status-badge po-status-${pricingStatus.type} fpm-status-clickable flex-row align-center gap-1`}
+            onClick={handleStatusClick}
+            title="انقر لعرض تفاصيل التقييم"
+            type="button"
+          >
+            <span style={{ display: 'flex' }}>{pricingStatus.icon}</span>
+            {pricingStatus.label}
+            <span className="fpm-status-hint">؟</span>
+          </button>
+        ) : (
+          <span className="fpm-empty-dash fpm-status-pending" title={!isSet ? 'احفظ السعر أولاً لتفعيل التقييم' : ''}>
+            {!isSet ? 'بعد الحفظ' : '—'}
+          </span>
+        )}
       </div>
 
       {/* Save / Clear */}
@@ -522,9 +524,9 @@ function ProductAccordionRow({
           <span className="fpm-plans-col-head">المعامل</span>
           <span className="fpm-plans-col-head">السعر المقترح</span>
           <span className="fpm-plans-col-head fpm-ph-margin">هامش الربح</span>
-          <span className="fpm-plans-col-head fpm-ph-status">تقييم السعر</span>
           <span className="fpm-plans-col-head">السعر النهائي</span>
           <span className="fpm-plans-col-head fpm-ph-setstate">الحالة</span>
+          <span className="fpm-plans-col-head fpm-ph-status">تقييم السعر</span>
           <span className="fpm-plans-col-head fpm-ph-actions">حفظ</span>
         </div>
         {plans.map(plan => {
