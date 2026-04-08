@@ -68,8 +68,13 @@ State-based routing: `dashboard` (default), `products`, `pricing`, `bundles`, `f
 ### Products & Prices Page
 - **Card Grid Layout:** Products displayed as responsive cards (1 col mobile, 2 tablet, 3+ desktop)
 - **Product Cards:** Show product name, account type, activation methods, plan summaries with best prices
+- **Branch Products:** Products can have child "branches" (parentId); branch cards show indent + green left-border + parent name indicator; main cards show branch count badge
+- **Add Branch Button:** Each product card has a branch button (GitBranchIcon) to create a child branch product
+- **Advanced Filter Panel:** Toggle button next to search reveals: product type filter (all/main/branches), supplier filter, category filter, sort by (name/price asc/desc); active filter count badge shown on button
 - **Expandable Plans:** Click "عرض التفاصيل" to see full supplier price breakdowns per plan
 - **Supplier Manager Panel:** Collapsible panel at top for managing suppliers and their contact info
+- **Per-supplier Product Links (PDM):** In ProductDetailModal comparison table, each supplier row has an inline editable URL link stored at `product.supplierLinks[supplierId]`
+- **Per-supplier Activation Methods (PDM):** Each supplier row in the comparison table shows its own activation method chips with a picker dropdown for adding/removing methods, stored at `product.supplierActivationMethods[supplierId]`
 - **All numbers use Western Arabic numerals (0-9)** via CSS font-feature-settings and `toLocaleString('en-US')`
 
 ## UX Features
