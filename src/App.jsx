@@ -174,6 +174,10 @@ function App() {
     compactMode: false,
     borderRadius: 'rounded',
     storeUrl: 'https://miftahdigital.store/',
+    timezones: [
+      { id: 'dz', label: 'الجزائر', tz: 'Africa/Algiers', flag: '🇩🇿', enabled: true },
+      { id: 'sa', label: 'السعودية', tz: 'Asia/Riyadh', flag: '🇸🇦', enabled: true },
+    ],
   });
   
   // Custom hook logic for hash-based routing
