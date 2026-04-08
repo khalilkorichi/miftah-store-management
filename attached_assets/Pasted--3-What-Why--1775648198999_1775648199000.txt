@@ -1,0 +1,63 @@
+#3 - تقرير الأسعار النهائية في صفحة التقارير
+What & Why
+إضافة تبويبة "الأسعار النهائية" في صفحة التقارير تعرض أسعار البيع النهائية المحفوظة من جدول الأسعار النهائية (FinalPricesManager) مع السعر الرسمي للمقارنة، وتصديرها كملف PDF.
+هذا يمكّن المستخدم من:
+تسليم الأسعار للمورد في شكل تقرير PDF احترافي
+مقارنة سعر البيع بالسعر الرسمي للمنتج
+تدريب نماذج الذكاء الاصطناعي على الأسعار المحدّثة بسهولة
+Done looks like
+تبويبة جديدة "الأسعار النهائية" تظهر في شريط تبويبات التقارير
+ملخص فوري يُظهر: عدد الخطط المسعّرة من الإجمالي، متوسط هامش الربح، عدد المنتجات المكتملة
+جدول لكل منتج وكل خطة يحتوي على:
+سعر البيع النهائي مُبرز (من FinalPricesManager)
+السعر الرسمي (مُميّز بلون خاص، للمقارنة فقط)
+الفرق عن السعر الرسمي
+زر "تصدير PDF" يُولّد ملفاً احترافياً بنفس الجدول
+خيار تصدير جميع المنتجات أو منتج واحد فقط
+تحذير واضح للمنتجات التي لم تُسعَّر بعد
+Technical Plan
+Files to change
+src/App.jsx — pass finalPrices, costs, pricingData to ReportsExport
+src/components/ReportsExport.jsx — all new report logic
+App.jsx change (line ~867)
+Add three props to the ReportsExport JSX call:
+finalPrices={finalPrices}
+costs={costs}
+pricingData={pricingData}
+ReportsExport.jsx changes
+Update component signature: function ReportsExport({ ..., finalPrices = {}, costs = [], pricingData = {} })
+Copy helper functions from FinalPricesManager (locally, not exported):
+computeTotalCost(baseSAR, costs)
+computeSuggested(mechanism, baseSAR, costs, params)
+getPricingStatusLabel(finalPrice, totalCost, suggested) → returns string (not JSX)
+Add renderFinalPricesReport(productFilter) — builds PDF-ready HTML:
+Header with store branding and summary metrics (set/total, avg margin, complete products)
+For each product (filtered if productFilter specified), for each plan:
+supplier price: use pricingData[prod.id].primarySupplierId if set, else cheapest supplier price × exchangeRate
+total cost: computeTotalCost(baseSAR, costs)
+suggested: computeSuggested using default costplus 20% params
+final price: finalPrices[productId_planId] (SAR) — highlighted in accent color
+official price: plan.officialPriceUsd * exchangeRate — blue, italic, "للمقارنة"
+margin: ((final - totalCost) / final) * 100
+status label: text string from getPricingStatusLabel
+diff from official: final - official SAR (green if positive, red if negative)
+Rows with no saved final price show "—" in final/margin/status columns
+Footer with generation date
+Add tab in report-section-tabs array: { id: 'final-prices', label: <><CurrencyIcon className="icon-sm" /> الأسعار النهائية</> }
+Add UI section activeSection === 'final-prices':
+Summary stat cards (مسعّر/إجمالي, متوسط هامش, مكتمل)
+Warning banner if no prices saved yet (link hint to pricing page)
+Product dropdown + export button (single or all)
+Preview table of what will be exported
+Update renderHiddenContent:
+if (generating === 'final-prices-all') return renderFinalPricesReport(null);
+if (generating?.startsWith('final-prices-prod-')) {
+  const pid = parseInt(generating.replace('final-prices-prod-', ''));
+  return renderFinalPricesReport(products.find(p => p.id === pid));
+}
+Design
+Final price column header: purple/accent background (#5E4FDE)
+Official price: blue italic, small "(مقارنة)" tag
+Status badges: text-only colored badges (no JSX icons in PDF)
+Unset prices: gray "—" text
+Row alternating: light purple tint for even rows
