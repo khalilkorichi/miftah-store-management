@@ -166,6 +166,7 @@ function App() {
   const [coupons, setCoupons] = useState(savedData?.coupons || DEFAULT_COUPONS);
   const [pricingData, setPricingData] = useState(savedData?.pricingData || DEFAULT_PRICING_DATA);
   const [categories, setCategories] = useState(savedData?.categories || DEFAULT_CATEGORIES);
+  const [finalPrices, setFinalPrices] = useState(savedData?.finalPrices || {});
   const [customLogo, setCustomLogo] = useState(savedData?.customLogo || null);
   const [appSettings, setAppSettings] = useState(savedData?.appSettings || {
     accentColor: 'purple',
@@ -189,11 +190,11 @@ function App() {
 
   // Save data whenever it changes
   useEffect(() => {
-    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories });
+    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices });
     setSaveIndicator(true);
     const timer = setTimeout(() => setSaveIndicator(false), 1500);
     return () => clearTimeout(timer);
-  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories]);
+  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices]);
 
   // Apply dark mode class
   useEffect(() => {
@@ -352,6 +353,14 @@ function App() {
     }
     setCategories((prev) => prev.filter((c) => c.id !== catId));
   }, [products, toast]);
+
+  const handleUpdateProductCategory = useCallback((productId, categoryId) => {
+    setProducts((prev) => prev.map((p) => p.id === productId ? { ...p, categoryId } : p));
+  }, []);
+
+  const handleSetFinalPrices = useCallback((prices) => {
+    setFinalPrices(prices);
+  }, []);
 
   const handleDeleteProduct = useCallback((productId) => {
     const product = products.find((p) => p.id === productId);
@@ -846,6 +855,7 @@ function App() {
             onDeleteCompetitor={handleDeleteCompetitor}
             onImportProducts={handleImportProducts}
             onAddCategory={handleAddCategory}
+            onUpdateProductCategory={handleUpdateProductCategory}
             onUpdateSupplierActivationMethod={handleUpdateSupplierActivationMethod}
             onAddBranch={handleAddBranch}
             onUpdateSupplierPlanLink={handleUpdateSupplierPlanLink}
@@ -877,6 +887,8 @@ function App() {
             setPricingData={setPricingData}
             coupons={coupons}
             setCoupons={setCoupons}
+            finalPrices={finalPrices}
+            onSetFinalPrices={handleSetFinalPrices}
           />
           </div>
         )}
