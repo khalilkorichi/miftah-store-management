@@ -36,6 +36,7 @@ export const OPENROUTER_MODELS = [
   { id: 'google/gemini-2.5-pro',            label: 'Gemini 2.5 Pro ✦' },
   { id: 'google/gemini-2.5-flash',          label: 'Gemini 2.5 Flash ✦' },
   { id: 'google/gemma-3-27b-it',            label: 'Gemma 3 27B (مجاني)' },
+  { id: 'google/gemma-4-26b-a4b-it:free',   label: 'Gemma 4 26B (مجاني)' },
   // ── Meta Llama ──
   { id: 'meta-llama/llama-4-maverick',      label: 'Llama 4 Maverick' },
   { id: 'meta-llama/llama-4-scout',         label: 'Llama 4 Scout (10M ctx)' },
