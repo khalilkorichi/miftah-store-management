@@ -223,21 +223,17 @@ function AIAssistantTab({
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedOutput, setGeneratedOutput] = useState('');
   const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(
     appSettings?.aiCustomPrompt || DEFAULT_AI_PROMPT
   );
   const [pendingAction, setPendingAction] = useState(null);
-  const [copiedOutput, setCopiedOutput] = useState(false);
-  const [appliedOutput, setAppliedOutput] = useState(false);
   const [error, setError] = useState('');
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
     setMessages([]);
-    setGeneratedOutput('');
     setError('');
     setPendingAction(null);
   }, [product?.id]);
@@ -265,26 +261,26 @@ function AIAssistantTab({
     if (!product || isLoading) return;
     setIsLoading(true);
     setError('');
-    setGeneratedOutput('');
 
     const userMsg = {
       role: 'user',
       content: `اكتب وصفاً تسويقياً احترافياً وجاهزاً للنشر في متجر سلة لمنتج "${product.name}". الوصف يجب أن يكون مقنعاً وشاملاً لجميع الخطط والمزايا المتاحة.`,
+      id: `u_${Date.now()}`,
     };
+    setMessages([userMsg]);
 
     try {
       const result = await callAI({
         systemPrompt: getSystemPrompt(),
-        messages: [userMsg],
+        messages: [{ role: userMsg.role, content: userMsg.content }],
         appSettings,
       });
 
       const { clean, action } = parseActionFromText(result);
-      setGeneratedOutput(clean);
       if (action) setPendingAction(action);
 
-      setMessages([
-        { ...userMsg, id: `u_${Date.now()}` },
+      setMessages(prev => [
+        ...prev,
         { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` },
       ]);
     } catch (e) {
@@ -347,15 +343,6 @@ function AIAssistantTab({
     if (!product) return;
     const html = textToHtml(text);
     updateProduct(product.id, { description: html });
-    setAppliedOutput(true);
-    setTimeout(() => setAppliedOutput(false), 2500);
-  };
-
-  const handleCopyOutput = () => {
-    navigator.clipboard.writeText(generatedOutput).then(() => {
-      setCopiedOutput(true);
-      setTimeout(() => setCopiedOutput(false), 2000);
-    });
   };
 
   const handleConfirmAction = () => {
@@ -568,33 +555,6 @@ function AIAssistantTab({
         </button>
       </div>
 
-      {/* Generated Output */}
-      {generatedOutput && (
-        <div className="ai-output-card">
-          <div className="ai-output-header">
-            <span className="ai-output-label">
-              <SparklesIcon className="icon-xs" /> الوصف المُولَّد
-            </span>
-            <div className="ai-output-actions">
-              <button className="ai-output-btn" onClick={handleCopyOutput}>
-                {copiedOutput ? <CheckCircleIcon className="icon-xs" /> : <CopyIcon className="icon-xs" />}
-                {copiedOutput ? 'تم النسخ' : 'نسخ'}
-              </button>
-              <button
-                className={`ai-output-btn ai-output-apply-btn ${appliedOutput ? 'applied' : ''}`}
-                onClick={() => handleApplyDescription(generatedOutput)}
-              >
-                <CheckCircleIcon className="icon-xs" />
-                {appliedOutput ? 'تم التطبيق ✓' : 'تطبيق على المنتج'}
-              </button>
-            </div>
-          </div>
-          <div className="ai-output-body">
-            <MarkdownRenderer content={generatedOutput} />
-          </div>
-        </div>
-      )}
-
       {/* Pending Action Confirmation */}
       {pendingAction && (
         <div className="ai-action-card">
@@ -637,88 +597,87 @@ function AIAssistantTab({
         </div>
       )}
 
-      {/* Chat Thread */}
-      {messages.length > 0 && (
-        <div className="ai-chat-section">
-          <div className="ai-chat-header">
-            <span>المحادثة</span>
+      {/* Unified Chat Panel */}
+      <div className="ai-chat-panel">
+        <div className="ai-chat-panel-header">
+          <span>المحادثة</span>
+          {messages.length > 0 && (
             <button
               className="ai-chat-clear-btn"
-              onClick={() => { setMessages([]); setGeneratedOutput(''); setPendingAction(null); }}
+              onClick={() => { setMessages([]); setPendingAction(null); }}
             >
               <XIcon className="icon-xs" /> مسح
             </button>
-          </div>
-          <div className="ai-chat-thread">
-            {messages.map(msg => (
-              <MessageBubble
-                key={msg.id}
-                msg={msg}
-                onApplyDescription={msg.role === 'assistant' ? handleApplyDescription : null}
-                product={product}
-              />
-            ))}
-            {isLoading && messages.length > 0 && (
-              <div className="ai-message ai-message-ai">
-                <div className="ai-message-avatar">
-                  <SparklesIcon className="icon-xs" />
-                </div>
-                <div className="ai-message-bubble ai-message-thinking">
-                  <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
+          )}
         </div>
-      )}
 
-      {/* Quick Prompts */}
-      {messages.length > 0 && (
-        <div className="ai-quick-prompts">
-          {[
-            'قصّر الوصف',
-            'اجعله أكثر تسويقاً',
-            'أضف قسم FAQ',
-            'أضف نقاط مزايا',
-            'غيّر الأسلوب إلى رسمي',
-          ].map(prompt => (
-            <button
-              key={prompt}
-              className="ai-quick-btn"
-              onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
-            >
-              {prompt}
-            </button>
+        <div className="ai-chat-thread">
+          {messages.length === 0 && (
+            <div className="ai-chat-thread-empty">
+              <SparklesIcon className="icon-sm" />
+              <p>ابدأ بتوليد وصف أو اطرح سؤالاً عن المنتج</p>
+            </div>
+          )}
+          {messages.map(msg => (
+            <MessageBubble
+              key={msg.id}
+              msg={msg}
+              onApplyDescription={msg.role === 'assistant' ? handleApplyDescription : null}
+              product={product}
+            />
           ))}
+          {isLoading && messages.length > 0 && (
+            <div className="ai-message ai-message-ai">
+              <div className="ai-message-avatar">
+                <SparklesIcon className="icon-xs" />
+              </div>
+              <div className="ai-message-bubble ai-message-thinking">
+                <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
         </div>
-      )}
 
-      {/* Chat Input */}
-      <div className="ai-chat-input-wrap">
-        <textarea
-          ref={inputRef}
-          className="ai-chat-input"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            messages.length === 0
-              ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
-              : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'
-          }
-          rows={2}
-          disabled={isLoading || !hasApiKey}
-          dir="rtl"
-        />
-        <button
-          className="ai-send-btn"
-          onClick={handleSend}
-          disabled={!input.trim() || isLoading || !hasApiKey}
-          title="إرسال"
-        >
-          {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
-        </button>
+        {messages.length > 0 && (
+          <div className="ai-quick-prompts">
+            {['قصّر الوصف', 'اجعله أكثر تسويقاً', 'أضف قسم FAQ', 'أضف نقاط مزايا', 'غيّر الأسلوب إلى رسمي'].map(prompt => (
+              <button
+                key={prompt}
+                className="ai-quick-btn"
+                onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="ai-chat-input-bar">
+          <textarea
+            ref={inputRef}
+            className="ai-chat-input"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              messages.length === 0
+                ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
+                : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'
+            }
+            rows={2}
+            disabled={isLoading || !hasApiKey}
+            dir="rtl"
+          />
+          <button
+            className="ai-send-btn"
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading || !hasApiKey}
+            title="إرسال"
+          >
+            {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
+          </button>
+        </div>
       </div>
     </div>
   );
