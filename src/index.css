@@ -1431,30 +1431,6 @@ body {
   background: rgba(17, 186, 101, 0.07);
 }
 
-/* Attach-as-branch button inside expanded group */
-.product-group-attach-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 8px;
-  padding: 8px 12px;
-  border: 1.5px dashed var(--border-color);
-  border-radius: var(--radius-lg);
-  background: none;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.product-group-attach-btn:hover {
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-  background: rgba(94, 79, 222, 0.05);
-}
-
 /* Branch/Attach modals */
 .branch-modal-overlay {
   position: fixed;
