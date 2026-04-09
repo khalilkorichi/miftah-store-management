@@ -246,14 +246,19 @@ function ColorPicker({ color, onChangeColor, onClear }) {
               className={`card-color-custom-btn ${isCustomColor ? 'has-custom' : ''}`}
               onClick={openCustomPicker}
               title="اختر لوناً مخصصاً"
+              style={isCustomColor ? {
+                '--custom-color': color,
+                borderColor: `${color}55`,
+                background: `${color}10`,
+              } : undefined}
             >
               {isCustomColor ? (
-                <span className="card-color-custom-preview" style={{ background: color }} />
+                <span className="card-color-custom-preview" style={{ background: color, boxShadow: `0 0 0 2px ${color}40, 0 2px 8px rgba(0,0,0,0.4)` }} />
               ) : (
                 <span className="card-color-custom-wheel" />
               )}
-              <span>{isCustomColor ? color.toUpperCase() : 'لون مخصص'}</span>
-              {isCustomColor && <CheckIcon style={{ width: 11, height: 11, marginRight: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }} />}
+              <span className={isCustomColor ? 'card-color-hex-label' : ''}>{isCustomColor ? color.toUpperCase() : 'لون مخصص'}</span>
+              {isCustomColor && <CheckIcon style={{ width: 12, height: 12, marginInlineStart: 'auto', flexShrink: 0, color: 'var(--custom-color)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />}
             </button>
           </div>
           {color && (
