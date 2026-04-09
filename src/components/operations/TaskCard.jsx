@@ -14,15 +14,19 @@ export const CATEGORIES = {
 };
 
 export const PRIORITIES = {
-  normal: { label: 'عادية', color: '#9ca3b8' },
-  medium: { label: 'متوسطة', color: '#FFC530' },
-  high: { label: 'عالية', color: '#F7784A' },
-  urgent: { label: 'عاجلة', color: '#F94B60' },
+  normal: { label: 'عادية', color: '#9ca3b8', weight: 0 },
+  medium: { label: 'متوسطة', color: '#FFC530', weight: 1 },
+  high: { label: 'عالية', color: '#F7784A', weight: 2 },
+  urgent: { label: 'عاجلة', color: '#F94B60', weight: 3 },
 };
 
-function isOverdue(dueDate, status) {
-  if (!dueDate || status === 'done') return false;
-  return new Date(dueDate) < new Date(new Date().toDateString());
+export function getDaysInfo(dueDate, status) {
+  if (!dueDate || status === 'done') return null;
+  const today = new Date(new Date().toDateString());
+  const due = new Date(dueDate);
+  const diffMs = due.getTime() - today.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  return { diffDays, isOverdue: diffDays < 0, isToday: diffDays === 0 };
 }
 
 function formatDate(dateStr) {
@@ -38,9 +42,26 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
   const [expanded, setExpanded] = useState(false);
   const priority = PRIORITIES[task.priority] || PRIORITIES.normal;
   const category = CATEGORIES[task.category] || CATEGORIES.other;
-  const overdue = isOverdue(task.dueDate, task.status);
+  const daysInfo = getDaysInfo(task.dueDate, task.status);
+  const overdue = daysInfo?.isOverdue;
 
   const statusCycle = { pending: 'inprogress', inprogress: 'done', done: 'pending' };
+
+  function renderDaysLabel() {
+    if (!daysInfo) return null;
+    if (daysInfo.isOverdue) return (
+      <span className="task-overdue-badge">متأخرة ({Math.abs(daysInfo.diffDays)} يوم)</span>
+    );
+    if (daysInfo.isToday) return (
+      <span className="task-today-badge">اليوم</span>
+    );
+    return (
+      <span className="task-days-badge">
+        <CalendarIcon className="icon-xs" />
+        {daysInfo.diffDays === 1 ? 'غداً' : `${daysInfo.diffDays} يوم`}
+      </span>
+    );
+  }
 
   return (
     <div
@@ -70,11 +91,7 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
               <span className="task-pri-badge" style={{ '--pri-color': priority.color }}>
                 <FlagIcon className="icon-xs" /> {priority.label}
               </span>
-              {task.dueDate && (
-                <span className={`task-due-badge ${overdue ? 'task-due-overdue' : ''}`}>
-                  <CalendarIcon className="icon-xs" /> {formatDate(task.dueDate)}
-                </span>
-              )}
+              {task.dueDate && renderDaysLabel()}
               {task.priority === 'urgent' && task.status !== 'done' && (
                 <span className="task-urgent-pulse" />
               )}

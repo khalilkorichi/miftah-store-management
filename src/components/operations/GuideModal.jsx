@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  XIcon, CheckIcon, BookOpenIcon, PlusIcon, TrashIcon, GripIcon, TagIcon
+  XIcon, CheckIcon, BookOpenIcon, PlusIcon, TrashIcon, TagIcon
 } from '../Icons';
 
 function StepRow({ step, index, onChange, onDelete, onMoveUp, onMoveDown, isFirst, isLast }) {
@@ -36,6 +36,7 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
     title: guide?.title || '',
     steps: guide?.steps?.length ? guide.steps : [makeStep()],
     productTag: guide?.productTag || '',
+    planTag: guide?.planTag || '',
     customTags: guide?.customTags || '',
   });
   const [errors, setErrors] = useState({});
@@ -47,18 +48,12 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const addStep = () => {
-    setForm(f => ({ ...f, steps: [...f.steps, makeStep()] }));
-  };
+  const selectedProduct = products.find(p => String(p.id) === String(form.productTag));
+  const plansForProduct = selectedProduct?.plans || [];
 
-  const updateStep = (id, text) => {
-    setForm(f => ({ ...f, steps: f.steps.map(s => s.id === id ? { ...s, text } : s) }));
-  };
-
-  const deleteStep = (id) => {
-    setForm(f => ({ ...f, steps: f.steps.filter(s => s.id !== id) }));
-  };
-
+  const addStep = () => setForm(f => ({ ...f, steps: [...f.steps, makeStep()] }));
+  const updateStep = (id, text) => setForm(f => ({ ...f, steps: f.steps.map(s => s.id === id ? { ...s, text } : s) }));
+  const deleteStep = (id) => setForm(f => ({ ...f, steps: f.steps.filter(s => s.id !== id) }));
   const moveStep = (id, dir) => {
     setForm(f => {
       const idx = f.steps.findIndex(s => s.id === id);
@@ -74,8 +69,7 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
   const validate = () => {
     const e = {};
     if (!form.title.trim()) e.title = 'العنوان مطلوب';
-    const filledSteps = form.steps.filter(s => s.text.trim());
-    if (!filledSteps.length) e.steps = 'أضف خطوة واحدة على الأقل';
+    if (!form.steps.filter(s => s.text.trim()).length) e.steps = 'أضف خطوة واحدة على الأقل';
     return e;
   };
 
@@ -89,6 +83,7 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
       title: form.title.trim(),
       steps: form.steps.filter(s => s.text.trim()),
       productTag: form.productTag,
+      planTag: form.planTag,
       customTags: form.customTags.trim(),
       createdAt: guide?.createdAt || now,
       updatedAt: now,
@@ -134,7 +129,7 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
           <div className="ops-form-group">
             <label className="ops-form-label">
               خطوات التفعيل <span className="ops-required">*</span>
-              <span className="ops-form-hint">ترتّب الخطوات بالسهمين</span>
+              <span className="ops-form-hint">رتّب بالسهمين ▲▼</span>
             </label>
             {errors.steps && <span className="ops-form-error">{errors.steps}</span>}
             <div className="guide-steps-list">
@@ -157,32 +152,47 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
             </button>
           </div>
 
+          {/* Product + Plan tags */}
           <div className="ops-form-row">
-            {/* Product tag */}
             <div className="ops-form-group ops-form-half">
               <label className="ops-form-label"><TagIcon className="icon-xs" /> ربط بمنتج</label>
               <select
                 className="ops-form-select"
                 value={form.productTag}
-                onChange={e => setForm(f => ({ ...f, productTag: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, productTag: e.target.value, planTag: '' }))}
               >
                 <option value="">— بدون ربط —</option>
                 {products.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
               </select>
             </div>
-
-            {/* Custom tags */}
             <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">وسوم مخصصة</label>
-              <input
-                type="text"
-                className="ops-form-input"
-                placeholder="مثال: VPN, شهري, جاهز"
-                value={form.customTags}
-                onChange={e => setForm(f => ({ ...f, customTags: e.target.value }))}
-              />
-              <span className="ops-form-hint">افصل بفاصلة</span>
+              <label className="ops-form-label"><TagIcon className="icon-xs" /> ربط بخطة</label>
+              <select
+                className="ops-form-select"
+                value={form.planTag}
+                onChange={e => setForm(f => ({ ...f, planTag: e.target.value }))}
+                disabled={!form.productTag || !plansForProduct.length}
+              >
+                <option value="">— كل الخطط —</option>
+                {plansForProduct.map(plan => (
+                  <option key={plan.id} value={String(plan.id)}>
+                    {plan.durationId || `خطة ${plan.id}`}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
+
+          {/* Custom tags */}
+          <div className="ops-form-group">
+            <label className="ops-form-label">وسوم مخصصة (اختياري)</label>
+            <input
+              type="text"
+              className="ops-form-input"
+              placeholder="مثال: VPN, شهري, جاهز (افصل بفاصلة)"
+              value={form.customTags}
+              onChange={e => setForm(f => ({ ...f, customTags: e.target.value }))}
+            />
           </div>
 
           <div className="ops-modal-footer">

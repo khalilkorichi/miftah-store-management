@@ -17,16 +17,13 @@ function useCopy(text) {
 
 function buildCopyText(guide) {
   const lines = [`📋 ${guide.title}`, ''];
-  guide.steps.forEach((s, i) => {
-    lines.push(`${i + 1}. ${s.text}`);
-  });
+  guide.steps.forEach((s, i) => { lines.push(`${i + 1}. ${s.text}`); });
   return lines.join('\n');
 }
 
-export default function GuideCard({ guide, productName, onEdit, onDelete }) {
+export default function GuideCard({ guide, productName, planLabel, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
-  const copyText = buildCopyText(guide);
-  const [copied, copy] = useCopy(copyText);
+  const [copied, copy] = useCopy(buildCopyText(guide));
 
   const customTagsList = guide.customTags
     ? guide.customTags.split(',').map(t => t.trim()).filter(Boolean)
@@ -43,6 +40,11 @@ export default function GuideCard({ guide, productName, onEdit, onDelete }) {
               {productName && (
                 <span className="guide-tag guide-tag-product">
                   <TagIcon className="icon-xs" /> {productName}
+                </span>
+              )}
+              {planLabel && (
+                <span className="guide-tag guide-tag-plan">
+                  {planLabel}
                 </span>
               )}
               {customTagsList.map(tag => (

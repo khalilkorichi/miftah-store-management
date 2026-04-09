@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-  PlusIcon, FilterIcon, SearchIcon, CheckSquareIcon,
+  PlusIcon, SearchIcon, CheckSquareIcon,
   ClockIcon, CheckCircleIcon, InboxIcon
 } from '../Icons';
-import TaskCard, { CATEGORIES, PRIORITIES } from './TaskCard';
+import TaskCard, { CATEGORIES, PRIORITIES, getDaysInfo } from './TaskCard';
 import TaskModal from './TaskModal';
 
 const STATUS_COLS = [
@@ -12,26 +12,71 @@ const STATUS_COLS = [
   { id: 'done',       label: 'مكتملة',         color: '#11BA65', Icon: CheckCircleIcon },
 ];
 
+const QUICK_FILTERS = [
+  { id: 'all',     label: 'الكل' },
+  { id: 'today',   label: 'اليوم' },
+  { id: 'week',    label: 'هذا الأسبوع' },
+  { id: 'urgent',  label: 'عاجلة' },
+  { id: 'overdue', label: 'متأخرة' },
+];
+
+function taskMatchesQuickFilter(task, filterId) {
+  if (filterId === 'all') return true;
+  if (filterId === 'urgent') return task.priority === 'urgent' && task.status !== 'done';
+  if (filterId === 'overdue') {
+    const info = getDaysInfo(task.dueDate, task.status);
+    return info?.isOverdue === true;
+  }
+  if (filterId === 'today') {
+    const info = getDaysInfo(task.dueDate, task.status);
+    return info?.isToday === true;
+  }
+  if (filterId === 'week') {
+    if (!task.dueDate || task.status === 'done') return false;
+    const info = getDaysInfo(task.dueDate, task.status);
+    if (!info) return false;
+    return info.diffDays >= 0 && info.diffDays <= 7;
+  }
+  return true;
+}
+
+function sortTasks(tasks) {
+  return [...tasks].sort((a, b) => {
+    const priorityWeight = (t) => PRIORITIES[t.priority]?.weight ?? 0;
+    const pw = priorityWeight(b) - priorityWeight(a);
+    if (pw !== 0) return pw;
+    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    if (a.dueDate) return -1;
+    if (b.dueDate) return 1;
+    return 0;
+  });
+}
+
 export default function TaskManager({ tasks, setTasks }) {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [search, setSearch] = useState('');
-  const [filterPriority, setFilterPriority] = useState('all');
+  const [quickFilter, setQuickFilter] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
 
   const filtered = useMemo(() => {
     return tasks.filter(t => {
-      if (search && !t.title.toLowerCase().includes(search.toLowerCase()) &&
-          !t.description?.toLowerCase().includes(search.toLowerCase())) return false;
-      if (filterPriority !== 'all' && t.priority !== filterPriority) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!t.title.toLowerCase().includes(q) &&
+            !t.description?.toLowerCase().includes(q)) return false;
+      }
       if (filterCategory !== 'all' && t.category !== filterCategory) return false;
+      if (!taskMatchesQuickFilter(t, quickFilter)) return false;
       return true;
     });
-  }, [tasks, search, filterPriority, filterCategory]);
+  }, [tasks, search, quickFilter, filterCategory]);
 
   const tasksByStatus = useMemo(() => {
     const map = {};
-    STATUS_COLS.forEach(c => { map[c.id] = filtered.filter(t => t.status === c.id); });
+    STATUS_COLS.forEach(c => {
+      map[c.id] = sortTasks(filtered.filter(t => t.status === c.id));
+    });
     return map;
   }, [filtered]);
 
@@ -58,20 +103,26 @@ export default function TaskManager({ tasks, setTasks }) {
     ));
   };
 
-  const openEdit = (task) => {
-    setEditingTask(task);
-    setShowModal(true);
-  };
-
-  const openNew = () => {
-    setEditingTask(null);
-    setShowModal(true);
-  };
+  const openEdit = (task) => { setEditingTask(task); setShowModal(true); };
+  const openNew = () => { setEditingTask(null); setShowModal(true); };
 
   const urgentCount = tasks.filter(t => t.priority === 'urgent' && t.status !== 'done').length;
 
   return (
     <div className="task-manager">
+      {/* Quick filters */}
+      <div className="task-quick-filters">
+        {QUICK_FILTERS.map(f => (
+          <button
+            key={f.id}
+            className={`task-qf-btn ${quickFilter === f.id ? 'task-qf-active' : ''}`}
+            onClick={() => setQuickFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {/* Toolbar */}
       <div className="ops-toolbar">
         <div className="ops-search-wrap">
@@ -85,16 +136,6 @@ export default function TaskManager({ tasks, setTasks }) {
           />
         </div>
         <div className="ops-filters">
-          <select
-            className="ops-filter-select"
-            value={filterPriority}
-            onChange={e => setFilterPriority(e.target.value)}
-          >
-            <option value="all">كل الأولويات</option>
-            {Object.entries(PRIORITIES).map(([id, p]) => (
-              <option key={id} value={id}>{p.label}</option>
-            ))}
-          </select>
           <select
             className="ops-filter-select"
             value={filterCategory}

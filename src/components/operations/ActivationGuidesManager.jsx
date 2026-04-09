@@ -55,6 +55,14 @@ export default function ActivationGuidesManager({ guides, setGuides, products })
     return p?.name || null;
   };
 
+  const getPlanLabel = (productTag, planTag) => {
+    if (!productTag || !planTag) return null;
+    const p = products.find(p => String(p.id) === String(productTag));
+    if (!p) return null;
+    const plan = p.plans?.find(pl => String(pl.id) === String(planTag));
+    return plan?.durationId || null;
+  };
+
   return (
     <div className="guides-manager">
       {/* Toolbar */}
@@ -114,6 +122,7 @@ export default function ActivationGuidesManager({ guides, setGuides, products })
               key={guide.id}
               guide={guide}
               productName={getProductName(guide.productTag)}
+              planLabel={getPlanLabel(guide.productTag, guide.planTag)}
               onEdit={openEdit}
               onDelete={handleDelete}
             />

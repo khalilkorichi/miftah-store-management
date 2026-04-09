@@ -81,9 +81,19 @@ function Dashboard({
   };
   const tasksList = tasks || [];
   const guidesList = activationGuides || [];
-  const pendingTasks = tasksList.filter(t => t.status !== 'done').length;
+
+  const todayStr = new Date(new Date().toDateString()).toISOString().split('T')[0];
+  const todayTasks = tasksList.filter(t => {
+    if (t.status === 'done') return false;
+    if (!t.dueDate) return false;
+    return t.dueDate === todayStr;
+  }).length;
+
   const urgentTasks = tasksList.filter(t => t.priority === 'urgent' && t.status !== 'done').length;
   const totalGuides = guidesList.length;
+  const guideProductCount = new Set(
+    guidesList.filter(g => g.productTag).map(g => g.productTag)
+  ).size;
 
   const totalProducts = products.length;
   const totalSuppliers = suppliers.length;
@@ -287,8 +297,8 @@ function Dashboard({
         <div className="dash-stat-card stat-accent-red" onClick={() => onNavigate('tasks')}>
           <div className="dash-stat-icon"><CheckSquareIcon /></div>
           <div className="dash-stat-info">
-            <span className="dash-stat-value">{fmt(pendingTasks)}</span>
-            <span className="dash-stat-label">المهام المعلّقة</span>
+            <span className="dash-stat-value">{fmt(todayTasks)}</span>
+            <span className="dash-stat-label">مهام اليوم</span>
           </div>
           <span className="dash-stat-sub">
             {urgentTasks > 0
@@ -301,9 +311,13 @@ function Dashboard({
           <div className="dash-stat-icon"><BookOpenIcon /></div>
           <div className="dash-stat-info">
             <span className="dash-stat-value">{fmt(totalGuides)}</span>
-            <span className="dash-stat-label">أدلة التفعيل</span>
+            <span className="dash-stat-label">الأدلة المحفوظة</span>
           </div>
-          <span className="dash-stat-sub">محفوظة</span>
+          <span className="dash-stat-sub">
+            {guideProductCount > 0
+              ? <><TagIcon className="icon-xs" /> {guideProductCount} منتج مرتبط</>
+              : 'لا يوجد ربط بعد'}
+          </span>
         </div>
       </div>
 
