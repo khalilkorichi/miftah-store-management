@@ -40,9 +40,21 @@ function formatDate(dateStr) {
 }
 
 export default function WarrantyCard({
-  warranty, productName, supplier, onEdit, onDelete,
+  warranty, productName, supplier, durations, products, onEdit, onDelete,
 }) {
   const { status, diffDays } = getWarrantyStatus(warranty);
+
+  const getPlanLabel = () => {
+    if (!warranty.planId || !products) return null;
+    const product = products.find(p => String(p.id) === String(warranty.productId));
+    if (!product) return null;
+    const plan = (product.plans || []).find(pl => pl.id === warranty.planId);
+    if (!plan) return null;
+    const dur = (durations || []).find(d => d.id === plan.durationId);
+    return dur?.label || plan.durationId;
+  };
+
+  const planLabel = getPlanLabel();
   const endDate = getWarrantyEndDate(warranty);
 
   function cardClass() {
@@ -111,6 +123,9 @@ export default function WarrantyCard({
           <div className="warranty-meta-item">
             <TagIcon className="icon-xs" />
             <span>{productName || 'منتج غير معروف'}</span>
+            {planLabel && (
+              <span className="warranty-plan-badge">{planLabel}</span>
+            )}
           </div>
           {supplier && (
             <div className="warranty-meta-item">

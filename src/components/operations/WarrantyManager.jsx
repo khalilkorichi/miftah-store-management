@@ -19,7 +19,7 @@ function matchesFilter(warranty, filterId) {
   return true;
 }
 
-export default function WarrantyManager({ warranties, setWarranties, products, suppliers }) {
+export default function WarrantyManager({ warranties, setWarranties, products, suppliers, durations }) {
   const [showModal, setShowModal] = useState(false);
   const [editingWarranty, setEditingWarranty] = useState(null);
   const [search, setSearch] = useState('');
@@ -159,6 +159,8 @@ export default function WarrantyManager({ warranties, setWarranties, products, s
               warranty={w}
               productName={getProductName(w.productId)}
               supplier={getSupplier(w.supplierId)}
+              products={products}
+              durations={durations}
               onEdit={openEdit}
               onDelete={handleDelete}
             />
@@ -171,6 +173,7 @@ export default function WarrantyManager({ warranties, setWarranties, products, s
           warranty={editingWarranty}
           products={products}
           suppliers={suppliers}
+          durations={durations}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditingWarranty(null); }}
         />

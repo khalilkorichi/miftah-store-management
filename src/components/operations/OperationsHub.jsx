@@ -73,6 +73,7 @@ export default function OperationsHub({
             setWarranties={setWarrantyOrders}
             products={products}
             suppliers={suppliers}
+            durations={durations}
           />
         )}
       </div>

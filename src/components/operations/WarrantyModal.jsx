@@ -4,7 +4,7 @@ import {
   CalendarIcon, ClockIcon, MessageCircleIcon, SendIcon
 } from '../Icons';
 
-export default function WarrantyModal({ warranty, products, suppliers, onSave, onClose }) {
+export default function WarrantyModal({ warranty, products, suppliers, durations, onSave, onClose }) {
   const isEdit = !!warranty;
   const overlayRef = useRef(null);
   const firstInputRef = useRef(null);
@@ -15,6 +15,7 @@ export default function WarrantyModal({ warranty, products, suppliers, onSave, o
     customerName: warranty?.customerName || '',
     customerWhatsapp: warranty?.customerWhatsapp || '',
     productId: warranty?.productId || '',
+    planId: warranty?.planId ?? '',
     supplierId: warranty?.supplierId || '',
     purchaseDate: warranty?.purchaseDate || today,
     subscriptionStartDate: warranty?.subscriptionStartDate || today,
@@ -25,6 +26,13 @@ export default function WarrantyModal({ warranty, products, suppliers, onSave, o
   const [errors, setErrors] = useState({});
 
   const selectedSupplier = suppliers.find(s => String(s.id) === String(form.supplierId));
+  const selectedProduct = products.find(p => String(p.id) === String(form.productId));
+  const productPlans = selectedProduct?.plans || [];
+
+  const getDurationLabel = (durationId) => {
+    const dur = (durations || []).find(d => d.id === durationId);
+    return dur?.label || durationId;
+  };
 
   useEffect(() => {
     firstInputRef.current?.focus();
@@ -32,6 +40,12 @@ export default function WarrantyModal({ warranty, products, suppliers, onSave, o
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    if (!isEdit) {
+      setForm(f => ({ ...f, planId: '' }));
+    }
+  }, [form.productId]);
 
   const validate = () => {
     const e = {};
@@ -59,6 +73,7 @@ export default function WarrantyModal({ warranty, products, suppliers, onSave, o
       customerName: form.customerName.trim(),
       customerWhatsapp: form.customerWhatsapp.trim(),
       productId: form.productId,
+      planId: form.planId !== '' ? Number(form.planId) : null,
       supplierId: form.supplierId,
       purchaseDate: form.purchaseDate,
       subscriptionStartDate: form.subscriptionStartDate,
@@ -140,6 +155,29 @@ export default function WarrantyModal({ warranty, products, suppliers, onSave, o
               </select>
               {errors.productId && <span className="ops-form-error">{errors.productId}</span>}
             </div>
+            <div className="ops-form-group ops-form-half">
+              <label className="ops-form-label">
+                <CalendarIcon className="icon-xs" /> خطة المنتج
+              </label>
+              <select
+                className="ops-form-select"
+                value={form.planId}
+                onChange={e => set('planId', e.target.value)}
+                disabled={productPlans.length === 0}
+              >
+                <option value="">
+                  {productPlans.length === 0 ? '-- اختر منتجاً أولاً --' : '-- اختر الخطة (اختياري) --'}
+                </option>
+                {productPlans.map(plan => (
+                  <option key={plan.id} value={String(plan.id)}>
+                    {getDurationLabel(plan.durationId)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="ops-form-row">
             <div className="ops-form-group ops-form-half">
               <label className="ops-form-label">
                 <ShieldCheckIcon className="icon-xs" /> المورد
