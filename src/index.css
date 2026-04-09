@@ -5792,8 +5792,8 @@ body {
 .pdm-comparison-wrapper {
   overflow-x: auto;
   border: 1px solid var(--border-color);
-  border-radius: 14px;
-  margin-bottom: 24px;
+  border-radius: 12px;
+  margin-bottom: 14px;
 }
 
 .pdm-comparison-table {
@@ -5803,7 +5803,7 @@ body {
 }
 .pdm-comparison-table th,
 .pdm-comparison-table td {
-  padding: 12px 14px;
+  padding: 7px 10px;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
   border-inline-start: 1px solid var(--border-color);
@@ -5818,27 +5818,27 @@ body {
 
 .pdm-th-supplier {
   background: var(--bg-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   text-align: right;
   position: sticky;
   right: 0;
   z-index: 2;
-  min-width: 120px;
+  min-width: 100px;
 }
 .pdm-th-plan {
   background: var(--bg-primary);
-  min-width: 150px;
+  min-width: 120px;
 }
 .pdm-plan-header-cell {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 .pdm-plan-duration {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--accent-blue);
 }
@@ -5870,8 +5870,8 @@ body {
 .pdm-supplier-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 2px 0;
+  gap: 2px;
+  padding: 0;
 }
 /* Row 1: name + link btn */
 .pdm-supplier-name-row {
@@ -5880,7 +5880,7 @@ body {
   gap: 6px;
 }
 .pdm-supplier-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -5900,10 +5900,10 @@ body {
   background: none;
   border: 1px solid var(--border-color);
   color: var(--text-muted);
-  border-radius: 6px;
-  width: 24px;
-  height: 24px;
-  font-size: 12px;
+  border-radius: 5px;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5944,9 +5944,9 @@ body {
 }
 .pdm-price-btn {
   width: 100%;
-  padding: 6px;
+  padding: 3px 5px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
   font-family: var(--font-family);
@@ -5961,10 +5961,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 .pdm-price-usd {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
   color: var(--text-primary);
   font-family: 'SF Mono', 'Fira Code', monospace;
