@@ -79,6 +79,7 @@ function migrateData(data) {
       tasks: Array.isArray(data.tasks) ? data.tasks : DEFAULT_TASKS,
       activationGuides: Array.isArray(data.activationGuides) ? data.activationGuides : DEFAULT_ACTIVATION_GUIDES,
       renewalReminders: Array.isArray(data.renewalReminders) ? data.renewalReminders : [],
+      warrantyOrders: Array.isArray(data.warrantyOrders) ? data.warrantyOrders : [],
     };
   }
 
@@ -116,6 +117,7 @@ function migrateData(data) {
     tasks: Array.isArray(data.tasks) ? data.tasks : DEFAULT_TASKS,
     activationGuides: Array.isArray(data.activationGuides) ? data.activationGuides : DEFAULT_ACTIVATION_GUIDES,
     renewalReminders: Array.isArray(data.renewalReminders) ? data.renewalReminders : [],
+    warrantyOrders: Array.isArray(data.warrantyOrders) ? data.warrantyOrders : [],
   };
 }
 
@@ -187,6 +189,7 @@ function App() {
   const [tasks, setTasks] = useState(savedData?.tasks || DEFAULT_TASKS);
   const [activationGuides, setActivationGuides] = useState(savedData?.activationGuides || DEFAULT_ACTIVATION_GUIDES);
   const [renewalReminders, setRenewalReminders] = useState(savedData?.renewalReminders || []);
+  const [warrantyOrders, setWarrantyOrders] = useState(savedData?.warrantyOrders || []);
   const [appSettings, setAppSettings] = useState({
     accentColor: 'purple',
     fontSize: 'medium',
@@ -215,11 +218,11 @@ function App() {
 
   // Save data whenever it changes
   useEffect(() => {
-    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides, renewalReminders });
+    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides, renewalReminders, warrantyOrders });
     setSaveIndicator(true);
     const timer = setTimeout(() => setSaveIndicator(false), 1500);
     return () => clearTimeout(timer);
-  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides, renewalReminders]);
+  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides, renewalReminders, warrantyOrders]);
 
   // Apply dark mode class
   useEffect(() => {
@@ -1012,6 +1015,8 @@ function App() {
             setActivationGuides={setActivationGuides}
             renewalReminders={renewalReminders}
             setRenewalReminders={setRenewalReminders}
+            warrantyOrders={warrantyOrders}
+            setWarrantyOrders={setWarrantyOrders}
             products={products}
             durations={durations}
             suppliers={suppliers}

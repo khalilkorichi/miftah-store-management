@@ -1,37 +1,38 @@
 import React, { useState } from 'react';
-import { CheckSquareIcon, BookOpenIcon, ActivityIcon, CalendarIcon } from '../Icons';
+import { CheckSquareIcon, BookOpenIcon, ActivityIcon, CalendarIcon, ShieldCheckIcon } from '../Icons';
 import TaskManager from './TaskManager';
 import ActivationGuidesManager from './ActivationGuidesManager';
 import RenewalReminders from './RenewalReminders';
+import WarrantyManager from './WarrantyManager';
 
 const SUB_TABS = [
   { id: 'tasks', label: 'المهام', Icon: CheckSquareIcon },
   { id: 'guides', label: 'أدلة التفعيل', Icon: BookOpenIcon },
   { id: 'renewals', label: 'تذكيرات التجديد', Icon: CalendarIcon },
+  { id: 'warranty', label: 'الضمان', Icon: ShieldCheckIcon },
 ];
 
 export default function OperationsHub({
   tasks, setTasks,
   activationGuides, setActivationGuides,
   renewalReminders, setRenewalReminders,
+  warrantyOrders, setWarrantyOrders,
   products, durations, suppliers, exchangeRate,
 }) {
   const [activeSubTab, setActiveSubTab] = useState('tasks');
 
   return (
     <div className="ops-hub">
-      {/* Section header */}
       <div className="ops-hub-header">
         <div className="ops-hub-header-icon">
           <ActivityIcon className="icon-md" />
         </div>
         <div>
           <h1 className="ops-hub-title">قسم العمليات</h1>
-          <p className="ops-hub-subtitle">إدارة المهام اليومية وأدلة تفعيل المنتجات وتذكيرات التجديد</p>
+          <p className="ops-hub-subtitle">إدارة المهام اليومية وأدلة تفعيل المنتجات وتذكيرات التجديد وسجلات الضمان</p>
         </div>
       </div>
 
-      {/* Sub-tab bar */}
       <div className="ops-subtab-bar">
         {SUB_TABS.map(tab => (
           <button
@@ -45,7 +46,6 @@ export default function OperationsHub({
         ))}
       </div>
 
-      {/* Content */}
       <div className="ops-hub-content">
         {activeSubTab === 'tasks' && (
           <TaskManager tasks={tasks} setTasks={setTasks} />
@@ -65,6 +65,14 @@ export default function OperationsHub({
             products={products}
             suppliers={suppliers}
             exchangeRate={exchangeRate}
+          />
+        )}
+        {activeSubTab === 'warranty' && (
+          <WarrantyManager
+            warranties={warrantyOrders}
+            setWarranties={setWarrantyOrders}
+            products={products}
+            suppliers={suppliers}
           />
         )}
       </div>
