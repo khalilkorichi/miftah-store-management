@@ -229,7 +229,7 @@ function ColorPicker({ color, onChangeColor, onClear }) {
             <input
               ref={customInputRef}
               type="color"
-              value={color || '#5E4FDE'}
+              defaultValue={color || '#5E4FDE'}
               onChange={(e) => onChangeColor(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
