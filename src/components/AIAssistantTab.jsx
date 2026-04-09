@@ -50,6 +50,16 @@ export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خب
 لإضافة ميزة إلى خطة:
 [MIFTAH_ACTION]
 {"type":"addFeature","planId":"plan_xxx","text":"نص الميزة الجديدة"}
+[/MIFTAH_ACTION]
+
+لتعديل نص ميزة موجودة (استخدم featureId كما ورد في بيانات المنتج):
+[MIFTAH_ACTION]
+{"type":"editFeature","planId":"plan_xxx","featureId":"feat_yyy","text":"النص المعدّل"}
+[/MIFTAH_ACTION]
+
+لحذف ميزة من خطة:
+[MIFTAH_ACTION]
+{"type":"removeFeature","planId":"plan_xxx","featureId":"feat_yyy"}
 [/MIFTAH_ACTION]`;
 
 function buildProductContext(product, suppliers, durations, activationMethods) {
@@ -84,23 +94,23 @@ function buildProductContext(product, suppliers, durations, activationMethods) {
     product.plans.forEach(plan => {
       const dur = durations.find(d => d.id === plan.durationId);
       const durLabel = dur ? dur.label : plan.durationId;
-      lines.push(`\nالخطة: ${durLabel}`);
+      lines.push(`\nالخطة: ${durLabel} [planId: ${plan.id}]`);
 
       const prices = Object.entries(plan.prices || {})
         .map(([supId, price]) => {
           if (!price) return null;
-          const sup = suppliers.find(s => s.id === parseInt(supId));
-          return sup ? `${sup.name}: $${price}` : null;
+          const sup = suppliers.find(s => String(s.id) === String(supId));
+          return sup ? `${sup.name} [supplierId: ${sup.id}]: $${price}` : `[supplierId: ${supId}]: $${price}`;
         })
         .filter(Boolean);
       if (prices.length > 0) lines.push(`  الأسعار من الموردين: ${prices.join('، ')}`);
 
-      if (plan.officialPrice) lines.push(`  السعر الرسمي: $${plan.officialPrice}`);
+      if (plan.officialPriceUsd) lines.push(`  السعر الرسمي: $${plan.officialPriceUsd}`);
 
       const warrantyEntries = Object.entries(plan.supplierWarranty || {})
         .map(([supId, days]) => {
           if (!days) return null;
-          const sup = suppliers.find(s => s.id === parseInt(supId));
+          const sup = suppliers.find(s => String(s.id) === String(supId));
           return sup ? `${sup.name}: ${days} يوم` : null;
         })
         .filter(Boolean);
@@ -110,7 +120,7 @@ function buildProductContext(product, suppliers, durations, activationMethods) {
 
       const features = (plan.features || [])
         .filter(f => !f.isSeparator && f.text?.trim())
-        .map(f => `• ${f.text}`);
+        .map(f => `• [featureId: ${f.id}] ${f.text}`);
       if (features.length > 0) lines.push(`  المزايا:\n  ${features.join('\n  ')}`);
     });
   }
@@ -352,7 +362,7 @@ function AIAssistantTab({
 
     } else if (type === 'updatePlanPrice') {
       const updatedPlans = (product.plans || []).map(plan => {
-        if (plan.id !== pendingAction.planId) return plan;
+        if (String(plan.id) !== String(pendingAction.planId)) return plan;
         return {
           ...plan,
           prices: {
@@ -365,20 +375,46 @@ function AIAssistantTab({
 
     } else if (type === 'updateOfficialPrice') {
       const updatedPlans = (product.plans || []).map(plan => {
-        if (plan.id !== pendingAction.planId) return plan;
-        return { ...plan, officialPrice: pendingAction.price };
+        if (String(plan.id) !== String(pendingAction.planId)) return plan;
+        return { ...plan, officialPriceUsd: pendingAction.price };
       });
       updateProduct(product.id, { plans: updatedPlans });
 
     } else if (type === 'addFeature') {
       const updatedPlans = (product.plans || []).map(plan => {
-        if (plan.id !== pendingAction.planId) return plan;
+        if (String(plan.id) !== String(pendingAction.planId)) return plan;
         const newFeature = {
           id: `feat_${Date.now()}`,
           text: pendingAction.text || '',
           isSeparator: false,
         };
         return { ...plan, features: [...(plan.features || []), newFeature] };
+      });
+      updateProduct(product.id, { plans: updatedPlans });
+
+    } else if (type === 'editFeature') {
+      const updatedPlans = (product.plans || []).map(plan => {
+        if (String(plan.id) !== String(pendingAction.planId)) return plan;
+        return {
+          ...plan,
+          features: (plan.features || []).map(f =>
+            String(f.id) === String(pendingAction.featureId)
+              ? { ...f, text: pendingAction.text || f.text }
+              : f
+          ),
+        };
+      });
+      updateProduct(product.id, { plans: updatedPlans });
+
+    } else if (type === 'removeFeature') {
+      const updatedPlans = (product.plans || []).map(plan => {
+        if (String(plan.id) !== String(pendingAction.planId)) return plan;
+        return {
+          ...plan,
+          features: (plan.features || []).filter(
+            f => String(f.id) !== String(pendingAction.featureId)
+          ),
+        };
       });
       updateProduct(product.id, { plans: updatedPlans });
     }
