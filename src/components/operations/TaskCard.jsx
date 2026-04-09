@@ -22,10 +22,11 @@ export const PRIORITIES = {
 
 export function getDaysInfo(dueDate, status) {
   if (!dueDate || status === 'done') return null;
-  const today = new Date(new Date().toDateString());
-  const due = new Date(dueDate);
-  const diffMs = due.getTime() - today.getTime();
-  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  const n = new Date();
+  const todayMs = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+  const [year, month, day] = dueDate.split('-').map(Number);
+  const dueMs = Date.UTC(year, month - 1, day);
+  const diffDays = Math.round((dueMs - todayMs) / (1000 * 60 * 60 * 24));
   return { diffDays, isOverdue: diffDays < 0, isToday: diffDays === 0 };
 }
 

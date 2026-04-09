@@ -7,10 +7,13 @@ import {
 function useCopy(text) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    const promise = navigator.clipboard?.writeText(text);
+    if (promise && typeof promise.then === 'function') {
+      promise.then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {});
+    }
   };
   return [copied, copy];
 }

@@ -82,7 +82,8 @@ function Dashboard({
   const tasksList = tasks || [];
   const guidesList = activationGuides || [];
 
-  const todayStr = new Date(new Date().toDateString()).toISOString().split('T')[0];
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const todayTasks = tasksList.filter(t => {
     if (t.status === 'done') return false;
     if (!t.dueDate) return false;
