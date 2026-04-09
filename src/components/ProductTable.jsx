@@ -193,7 +193,7 @@ function ProductCard({
   onToggleProductMethod, onUpdateOfficialPrice, onUpdateWarranty, requestConfirm,
   setActivationModalProduct, setCompetitorsModalProduct, setDetailModalProduct,
   getDurationLabel, getAvailableDurations,
-  onAddBranch, parentProduct, allProducts, onUpdateProductColor
+  onAddBranch, parentProduct, allProducts, onUpdateProductColor, onAttachClick
 }) {
   const [addingPlan, setAddingPlan] = useState(false);
 
@@ -295,7 +295,12 @@ function ProductCard({
             onChangeColor={(c) => onUpdateProductColor?.(product.id, c)}
             onClear={() => onUpdateProductColor?.(product.id, null)}
           />
-          <button className="btn-card-action branch" onClick={() => onAddBranch?.(product.id)} title="إضافة فرع لهذا المنتج">
+          {!isBranch && onAttachClick && (
+            <button className="btn-card-action" onClick={(e) => { e.stopPropagation(); onAttachClick(); }} title="إرفاق منتج موجود كفرع">
+              <LinkIcon className="icon-sm" />
+            </button>
+          )}
+          <button className="btn-card-action branch" onClick={() => onAddBranch?.(product.id)} title="إضافة فرع جديد لهذا المنتج">
             <GitBranchIcon className="icon-sm" />
           </button>
           <button className="btn-card-action" onClick={() => onDuplicateProduct(product.id)} title="تكرار المنتج">
@@ -450,7 +455,7 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, 
   return (
     <div
       className={`product-group ${hasBranches ? 'product-group--has-branches' : ''} ${hovered ? 'product-group--expanded' : ''}`}
-      onMouseEnter={() => hasBranches && setHovered(true)}
+      onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {hasBranches && Array.from({ length: layerCount }).map((_, i) => (
@@ -461,6 +466,7 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, 
         index={index}
         {...sharedCardProps}
         parentProduct={null}
+        onAttachClick={() => setShowAttachModal(true)}
       />
       {hasBranches && branches.map((branch, bi) => (
         <div
@@ -490,11 +496,6 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, 
           </div>
         </div>
       ))}
-      {hovered && (
-        <button className="product-group-attach-btn" onClick={(e) => { e.stopPropagation(); setShowAttachModal(true); }}>
-          <LinkIcon className="icon-sm" /> إرفاق منتج موجود كفرع
-        </button>
-      )}
       {movingBranch && (
         <MoveBranchModal
           branch={movingBranch}
