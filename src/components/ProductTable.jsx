@@ -144,7 +144,7 @@ function ColorPicker({ color, onChangeColor, onClear }) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef(null);
   const popoverRef = useRef(null);
-  const customInputRef = useRef(null);
+  const debounceRef = useRef(null);
   const isCustomColor = color && !CARD_COLORS.includes(color);
 
   const handleToggle = (e) => {
@@ -174,6 +174,35 @@ function ColorPicker({ color, onChangeColor, onClear }) {
       window.removeEventListener('resize', onClose);
     };
   }, [open]);
+
+  const openCustomPicker = (e) => {
+    e.stopPropagation();
+    const inp = document.createElement('input');
+    inp.type = 'color';
+    inp.value = color || '#5E4FDE';
+    Object.assign(inp.style, {
+      position: 'fixed', top: '-200px', left: '-200px',
+      width: '1px', height: '1px', opacity: '0', border: 'none'
+    });
+    document.body.appendChild(inp);
+
+    const handleInput = (ev) => {
+      const val = ev.target.value;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => onChangeColor(val), 60);
+    };
+    const handleChange = () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      onChangeColor(inp.value);
+      inp.removeEventListener('input', handleInput);
+      inp.removeEventListener('change', handleChange);
+      setTimeout(() => { if (document.body.contains(inp)) document.body.removeChild(inp); }, 200);
+    };
+
+    inp.addEventListener('input', handleInput);
+    inp.addEventListener('change', handleChange);
+    inp.click();
+  };
 
   return (
     <div className="card-color-picker-wrap">
@@ -215,7 +244,7 @@ function ColorPicker({ color, onChangeColor, onClear }) {
           <div className="card-color-custom-row">
             <button
               className={`card-color-custom-btn ${isCustomColor ? 'has-custom' : ''}`}
-              onClick={() => customInputRef.current?.click()}
+              onClick={openCustomPicker}
               title="اختر لوناً مخصصاً"
             >
               {isCustomColor ? (
@@ -226,14 +255,6 @@ function ColorPicker({ color, onChangeColor, onClear }) {
               <span>{isCustomColor ? color.toUpperCase() : 'لون مخصص'}</span>
               {isCustomColor && <CheckIcon style={{ width: 11, height: 11, marginRight: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }} />}
             </button>
-            <input
-              ref={customInputRef}
-              type="color"
-              defaultValue={color || '#5E4FDE'}
-              onChange={(e) => onChangeColor(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-            />
           </div>
           {color && (
             <button className="card-color-clear" onClick={() => { onClear(); setOpen(false); }}>
