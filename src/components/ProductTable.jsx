@@ -151,7 +151,11 @@ function ColorPicker({ color, onChangeColor, onClear }) {
     e.stopPropagation();
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 8, left: rect.left });
+      const POPOVER_H = 300;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const flipUp = spaceBelow < POPOVER_H + 12;
+      const left = Math.min(rect.left, window.innerWidth - 256);
+      setPos({ top: flipUp ? rect.top - 8 : rect.bottom + 8, left: Math.max(8, left), flipUp });
     }
     setOpen(v => !v);
   };
@@ -218,47 +222,55 @@ function ColorPicker({ color, onChangeColor, onClear }) {
       {open && createPortal(
         <div
           ref={popoverRef}
-          className="card-color-popover"
+          className={`card-color-popover ${pos.flipUp ? 'flip-up' : ''}`}
           style={{ position: 'fixed', top: pos.top, left: pos.left }}
           onClick={e => e.stopPropagation()}
         >
           <div className="card-color-popover-header">
             <span>لون البطاقة</span>
             <button className="card-color-popover-close" onClick={() => setOpen(false)}>
-              <XIcon className="icon-xs" />
+              <XIcon style={{ width: 14, height: 14 }} />
             </button>
           </div>
+
           <div className="card-color-swatches">
             {CARD_COLORS.map(c => (
               <button
                 key={c}
                 className={`card-color-swatch ${color === c ? 'active' : ''}`}
-                style={{ background: c }}
+                style={{ '--sw': c, background: c }}
                 onClick={() => onChangeColor(c)}
                 title={c}
               >
-                {color === c && <CheckIcon style={{ width: 12, height: 12, color: '#fff', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.5))' }} />}
+                {color === c && <CheckIcon style={{ width: 11, height: 11, color: '#fff', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))' }} />}
               </button>
             ))}
           </div>
-          <div className="card-color-custom-row">
-            <button
-              className={`card-color-custom-btn ${isCustomColor ? 'has-custom' : ''}`}
-              onClick={openCustomPicker}
-              title="اختر لوناً مخصصاً"
-            >
-              {isCustomColor ? (
-                <span className="card-color-custom-preview" style={{ background: color }} />
-              ) : (
-                <span className="card-color-custom-wheel" />
-              )}
-              <span>{isCustomColor ? color.toUpperCase() : 'لون مخصص'}</span>
-              {isCustomColor && <CheckIcon style={{ width: 11, height: 11, marginRight: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }} />}
-            </button>
-          </div>
+
+          <div className="card-color-divider" />
+
+          <button
+            className={`card-color-custom-btn ${isCustomColor ? 'has-custom' : ''}`}
+            onClick={openCustomPicker}
+            title="اختر لوناً مخصصاً"
+          >
+            {isCustomColor ? (
+              <span className="card-color-custom-preview" style={{ background: color, boxShadow: `0 0 0 2px ${color}55` }} />
+            ) : (
+              <span className="card-color-custom-wheel" />
+            )}
+            <span className="card-color-custom-label">
+              {isCustomColor ? color.toUpperCase() : 'لون مخصص'}
+            </span>
+            {isCustomColor
+              ? <CheckIcon style={{ width: 12, height: 12, marginInlineStart: 'auto', flexShrink: 0, color: color, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }} />
+              : <span className="card-color-custom-arrow">←</span>
+            }
+          </button>
+
           {color && (
             <button className="card-color-clear" onClick={() => { onClear(); setOpen(false); }}>
-              <XIcon className="icon-xs" /> إزالة اللون
+              <XIcon style={{ width: 12, height: 12 }} /> إزالة اللون
             </button>
           )}
         </div>,
