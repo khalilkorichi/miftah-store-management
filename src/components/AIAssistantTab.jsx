@@ -25,7 +25,7 @@ export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خب
 - اذكر طريقة التفعيل وشروط الضمان إن وجدت
 - اختم بعبارة تحفيزية للشراء
 
-إذا طلب المستخدم تطبيق الوصف الناتج أو تعديل وصف المنتج أو تفاصيله مباشرة في قاعدة البيانات، أجب بشكل طبيعي ثم أضف في نهاية ردك كتلة MIFTAH_ACTION:
+إذا طلب المستخدم تطبيق أي تعديل مباشرة في قاعدة البيانات، أجب بشكل طبيعي ثم أضف كتلة MIFTAH_ACTION واحدة في نهاية ردك:
 
 لتحديث الوصف:
 [MIFTAH_ACTION]
@@ -35,6 +35,21 @@ export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خب
 لتحديث التفاصيل:
 [MIFTAH_ACTION]
 {"type":"updateDetails","details":"التفاصيل الجديدة"}
+[/MIFTAH_ACTION]
+
+لتحديث سعر خطة من مورد معين (استخدم planId و supplierId كما وردا في بيانات المنتج):
+[MIFTAH_ACTION]
+{"type":"updatePlanPrice","planId":"plan_xxx","supplierId":1,"price":19.99}
+[/MIFTAH_ACTION]
+
+لتحديث السعر الرسمي لخطة:
+[MIFTAH_ACTION]
+{"type":"updateOfficialPrice","planId":"plan_xxx","price":29.99}
+[/MIFTAH_ACTION]
+
+لإضافة ميزة إلى خطة:
+[MIFTAH_ACTION]
+{"type":"addFeature","planId":"plan_xxx","text":"نص الميزة الجديدة"}
 [/MIFTAH_ACTION]`;
 
 function buildProductContext(product, suppliers, durations, activationMethods) {
@@ -184,6 +199,7 @@ function AIAssistantTab({
   durations,
   activationMethods,
   appSettings,
+  onAppSettingsChange,
   updateProduct,
   onNavigateToSettings,
 }) {
@@ -326,17 +342,53 @@ function AIAssistantTab({
   const handleConfirmAction = () => {
     if (!pendingAction || !product) return;
     const { type } = pendingAction;
+
     if (type === 'updateDescription') {
       const html = textToHtml(pendingAction.description || '');
       updateProduct(product.id, { description: html });
+
     } else if (type === 'updateDetails') {
       updateProduct(product.id, { details: pendingAction.details || '' });
+
+    } else if (type === 'updatePlanPrice') {
+      const updatedPlans = (product.plans || []).map(plan => {
+        if (plan.id !== pendingAction.planId) return plan;
+        return {
+          ...plan,
+          prices: {
+            ...(plan.prices || {}),
+            [String(pendingAction.supplierId)]: pendingAction.price,
+          },
+        };
+      });
+      updateProduct(product.id, { plans: updatedPlans });
+
+    } else if (type === 'updateOfficialPrice') {
+      const updatedPlans = (product.plans || []).map(plan => {
+        if (plan.id !== pendingAction.planId) return plan;
+        return { ...plan, officialPrice: pendingAction.price };
+      });
+      updateProduct(product.id, { plans: updatedPlans });
+
+    } else if (type === 'addFeature') {
+      const updatedPlans = (product.plans || []).map(plan => {
+        if (plan.id !== pendingAction.planId) return plan;
+        const newFeature = {
+          id: `feat_${Date.now()}`,
+          text: pendingAction.text || '',
+          isSeparator: false,
+        };
+        return { ...plan, features: [...(plan.features || []), newFeature] };
+      });
+      updateProduct(product.id, { plans: updatedPlans });
     }
+
     setPendingAction(null);
   };
 
   const handleSavePrompt = () => {
-    if (updateProduct && product) {
+    if (onAppSettingsChange && appSettings) {
+      onAppSettingsChange({ ...appSettings, aiCustomPrompt: customPrompt });
     }
     setShowPromptEditor(false);
   };

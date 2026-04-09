@@ -1006,6 +1006,7 @@ function App() {
             exchangeRate={exchangeRate}
             activationMethods={activationMethods}
             appSettings={appSettings}
+            onAppSettingsChange={setAppSettings}
             onNavigateToSettings={() => setActiveTab('settings')}
           />
           </div>

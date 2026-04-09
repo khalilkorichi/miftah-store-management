@@ -26,8 +26,8 @@ export const DEFAULT_ACTIVATION_GUIDES = [];
 
 export const DEFAULT_AI_SETTINGS = {
   aiProvider: 'gemini',
-  geminiApiKey: 'AIzaSyCk-g1Ra3bzePWe0vKDrU3plOc9fJsOvrM',
-  openrouterApiKey: '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',
+  geminiApiKey: '',
+  openrouterApiKey: '',
   aiCustomPrompt: '',
 };
 

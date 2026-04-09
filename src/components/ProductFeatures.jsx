@@ -166,7 +166,7 @@ function BadgePicker({ currentBadge, onSelect, onClose, triggerRef }) {
   );
 }
 
-function ProductFeatures({ products, setProducts, durations, suppliers, exchangeRate, activationMethods = [], appSettings, onNavigateToSettings }) {
+function ProductFeatures({ products, setProducts, durations, suppliers, exchangeRate, activationMethods = [], appSettings, onAppSettingsChange, onNavigateToSettings }) {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [featureSearch, setFeatureSearch] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
@@ -649,6 +649,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
           durations={durations}
           activationMethods={activationMethods}
           appSettings={appSettings}
+          onAppSettingsChange={onAppSettingsChange}
           updateProduct={updateProduct}
           onNavigateToSettings={onNavigateToSettings}
         />
