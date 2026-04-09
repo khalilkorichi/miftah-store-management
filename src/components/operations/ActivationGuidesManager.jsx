@@ -13,12 +13,15 @@ export default function ActivationGuidesManager({ guides, setGuides, products, d
     return guides.filter(g => {
       if (search) {
         const q = search.toLowerCase();
-        const inTitle = g.title.toLowerCase().includes(q);
-        const inSteps = g.steps.some(s => s.text.toLowerCase().includes(q));
+        const inTitle = (g.title || '').toLowerCase().includes(q);
+        const inSteps = (g.steps || []).some(s => (s.text || '').toLowerCase().includes(q));
         const inTags = (g.customTags || '').toLowerCase().includes(q);
         if (!inTitle && !inSteps && !inTags) return false;
       }
-      if (filterProduct !== 'all' && String(g.productTag) !== String(filterProduct)) return false;
+      if (filterProduct !== 'all') {
+        const tag = g.productTag == null ? '' : String(g.productTag);
+        if (tag !== String(filterProduct)) return false;
+      }
       return true;
     });
   }, [guides, search, filterProduct]);

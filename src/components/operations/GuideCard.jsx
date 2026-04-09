@@ -19,13 +19,15 @@ function useCopy(text) {
 }
 
 function buildCopyText(guide) {
-  const lines = [`📋 ${guide.title}`, ''];
-  guide.steps.forEach((s, i) => { lines.push(`${i + 1}. ${s.text}`); });
+  const steps = Array.isArray(guide.steps) ? guide.steps : [];
+  const lines = [`📋 ${guide.title || ''}`, ''];
+  steps.forEach((s, i) => { lines.push(`${i + 1}. ${s.text || ''}`); });
   return lines.join('\n');
 }
 
 export default function GuideCard({ guide, productName, planLabel, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
+  const steps = Array.isArray(guide.steps) ? guide.steps : [];
   const [copied, copy] = useCopy(buildCopyText(guide));
 
   const customTagsList = guide.customTags
@@ -53,7 +55,7 @@ export default function GuideCard({ guide, productName, planLabel, onEdit, onDel
               {customTagsList.map(tag => (
                 <span key={tag} className="guide-tag guide-tag-custom">{tag}</span>
               ))}
-              <span className="guide-steps-count">{guide.steps.length} خطوة</span>
+              <span className="guide-steps-count">{steps.length} خطوة</span>
             </div>
           </div>
         </div>
@@ -80,7 +82,7 @@ export default function GuideCard({ guide, productName, planLabel, onEdit, onDel
       {expanded && (
         <div className="guide-card-body">
           <ol className="guide-steps-ol">
-            {guide.steps.map((step, i) => (
+            {steps.map((step, i) => (
               <li key={step.id} className="guide-step-item">
                 <span className="guide-step-num-display">{i + 1}</span>
                 <span className="guide-step-text">{step.text}</span>
