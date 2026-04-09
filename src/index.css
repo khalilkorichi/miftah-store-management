@@ -1173,6 +1173,7 @@ body {
   transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .product-card:hover {
@@ -1307,6 +1308,187 @@ body {
   font-size: 11px;
   font-weight: 700;
   margin-right: 4px;
+}
+
+/* ===== PRODUCT GROUP (stacked branches) ===== */
+.product-group {
+  position: relative;
+}
+
+.product-group-layer {
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  pointer-events: none;
+  transition: all 0.3s ease;
+  width: calc(100% - 8px);
+}
+.product-group-layer.layer-1 {
+  bottom: -6px;
+  height: 100%;
+  opacity: 0.55;
+  z-index: -1;
+}
+.product-group-layer.layer-2 {
+  bottom: -11px;
+  height: 100%;
+  opacity: 0.3;
+  z-index: -2;
+  width: calc(100% - 16px);
+}
+.product-group-layer.layer-3 {
+  bottom: -15px;
+  height: 100%;
+  opacity: 0.15;
+  z-index: -3;
+  width: calc(100% - 24px);
+}
+
+.product-group-branch-slot {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-12px);
+  transition:
+    max-height 0.35s ease,
+    opacity 0.28s ease,
+    transform 0.35s cubic-bezier(0.34, 1.1, 0.64, 1),
+    margin-top 0.3s ease;
+  margin-top: 0;
+}
+
+.product-group--expanded .product-group-branch-slot {
+  max-height: 600px;
+  overflow: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  margin-top: 8px;
+}
+
+.product-group--expanded .product-group-branch-slot:nth-child(2) { transition-delay: 0.03s; }
+.product-group--expanded .product-group-branch-slot:nth-child(3) { transition-delay: 0.08s; }
+.product-group--expanded .product-group-branch-slot:nth-child(4) { transition-delay: 0.13s; }
+.product-group--expanded .product-group-branch-slot:nth-child(5) { transition-delay: 0.18s; }
+
+.product-group--has-branches .product-card {
+  position: relative;
+  z-index: 2;
+}
+
+.product-group--has-branches:not(.product-group--expanded) {
+  padding-bottom: 14px;
+}
+
+/* ===== CARD COLOR ===== */
+.product-card--colored {
+  overflow: visible;
+}
+
+.product-card-color-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-card--colored > *:not(.product-card-color-bar) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== COLOR PICKER ===== */
+.card-color-picker-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.card-color-dot-btn {
+  background: none;
+  border: 1.5px solid var(--border-color);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+.card-color-dot-btn:hover {
+  border-color: var(--accent-blue);
+  background: rgba(94, 79, 222, 0.06);
+}
+
+.card-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dot-color, var(--border-color));
+  border: 1.5px solid rgba(0,0,0,0.12);
+  display: block;
+  transition: background 0.2s;
+}
+
+.card-color-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0,0,0,0.18));
+  padding: 10px;
+  z-index: 200;
+  width: 160px;
+}
+
+.card-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.card-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  padding: 0;
+}
+.card-color-swatch:hover {
+  transform: scale(1.15);
+}
+.card-color-swatch.active {
+  border-color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.card-color-clear {
+  margin-top: 8px;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.card-color-clear:hover {
+  color: var(--accent-red);
+  border-color: var(--accent-red);
+  background: rgba(239,68,68,0.06);
 }
 
 .account-type-badge {

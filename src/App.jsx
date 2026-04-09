@@ -50,7 +50,8 @@ function migrateData(data) {
     const productsNeedV3 = data.products.some(p =>
       !('parentId' in p) || !('supplierActivationMethods' in p) || !('supplierLinks' in p)
     );
-    if (productsNeedFeatures || productsNeedCategory || productsNeedSupplierWarranty || productsNeedV3) {
+    const productsNeedCardColor = data.products.some(p => !('cardColor' in p));
+    if (productsNeedFeatures || productsNeedCategory || productsNeedSupplierWarranty || productsNeedV3 || productsNeedCardColor) {
       data = { ...data, products: data.products.map(p => ({
         ...p,
         description: p.description || '',
@@ -59,6 +60,7 @@ function migrateData(data) {
         parentId: 'parentId' in p ? p.parentId : null,
         supplierActivationMethods: p.supplierActivationMethods || {},
         supplierLinks: p.supplierLinks || {},
+        cardColor: 'cardColor' in p ? p.cardColor : null,
         plans: (p.plans || []).map(plan => ({
           ...plan,
           supplierWarranty: plan.supplierWarranty || {},
@@ -405,6 +407,12 @@ function App() {
   const handleUpdateProductAccountType = useCallback((productId, accountType) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, accountType } : p))
+    );
+  }, []);
+
+  const handleUpdateProductColor = useCallback((productId, color) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, cardColor: color } : p))
     );
   }, []);
 
@@ -878,6 +886,7 @@ function App() {
             onUpdateSupplierActivationMethod={handleUpdateSupplierActivationMethod}
             onAddBranch={handleAddBranch}
             onUpdateSupplierPlanLink={handleUpdateSupplierPlanLink}
+            onUpdateProductColor={handleUpdateProductColor}
           />
           </div>
         )}

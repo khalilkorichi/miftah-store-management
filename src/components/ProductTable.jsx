@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import AddProductModal from './AddProductModal';
 import AddSupplierModal from './AddSupplierModal';
 import ActivationMethodsModal from './ActivationMethodsModal';
@@ -13,6 +13,12 @@ import {
   UserIcon, UsersIcon, CopyIcon, UploadIcon, ShieldCheckIcon,
   FilterIcon, GitBranchIcon, SortIcon, ClipboardIcon
 } from './Icons';
+
+const CARD_COLORS = [
+  '#5E4FDE', '#3B82F6', '#06B6D4', '#10B981',
+  '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6',
+  '#F97316', '#84CC16', '#14B8A6', '#64748B',
+];
 
 function PasteBtn({ onPaste, className = '' }) {
   const handlePaste = async () => {
@@ -130,6 +136,53 @@ function SupplierManagerPanel({ suppliers, editingSupplierField, editSupplierVal
   );
 }
 
+function ColorPicker({ color, onChangeColor, onClear }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div className="card-color-picker-wrap" ref={ref}>
+      <button
+        className="card-color-dot-btn"
+        style={{ '--dot-color': color || 'transparent' }}
+        onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
+        title="تلوين البطاقة"
+      >
+        <span className="card-color-dot" />
+      </button>
+      {open && (
+        <div className="card-color-popover" onClick={e => e.stopPropagation()}>
+          <div className="card-color-swatches">
+            {CARD_COLORS.map(c => (
+              <button
+                key={c}
+                className={`card-color-swatch ${color === c ? 'active' : ''}`}
+                style={{ background: c }}
+                onClick={() => { onChangeColor(c); setOpen(false); }}
+                title={c}
+              />
+            ))}
+          </div>
+          {color && (
+            <button className="card-color-clear" onClick={() => { onClear(); setOpen(false); }}>
+              إزالة اللون
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProductCard({
   product, index, suppliers, durations, exchangeRate, activationMethods,
   editingCell, setEditingCell, editValue, setEditValue,
@@ -139,7 +192,7 @@ function ProductCard({
   onToggleProductMethod, onUpdateOfficialPrice, onUpdateWarranty, requestConfirm,
   setActivationModalProduct, setCompetitorsModalProduct, setDetailModalProduct,
   getDurationLabel, getAvailableDurations,
-  onAddBranch, parentProduct, allProducts
+  onAddBranch, parentProduct, allProducts, onUpdateProductColor
 }) {
   const [addingPlan, setAddingPlan] = useState(false);
 
@@ -182,8 +235,17 @@ function ProductCard({
 
   const availableDurations = getAvailableDurations(product);
 
+  const cardColor = product.cardColor || null;
+  const cardStyle = cardColor ? {
+    '--card-accent': cardColor,
+    borderInlineEnd: `3px solid ${cardColor}`,
+  } : {};
+
   return (
-    <div className={`product-card ${isBranch ? 'product-card--branch' : ''}`}>
+    <div className={`product-card ${isBranch ? 'product-card--branch' : ''} ${cardColor ? 'product-card--colored' : ''}`} style={cardStyle}>
+      {cardColor && (
+        <div className="product-card-color-bar" style={{ background: `linear-gradient(135deg, ${cardColor}22 0%, transparent 60%)` }} />
+      )}
       {isBranch && parentProduct && (
         <div className="product-branch-indicator">
           <GitBranchIcon className="icon-xs" />
@@ -227,6 +289,11 @@ function ProductCard({
         </div>
 
         <div className="product-card-actions-top">
+          <ColorPicker
+            color={cardColor}
+            onChangeColor={(c) => onUpdateProductColor?.(product.id, c)}
+            onClear={() => onUpdateProductColor?.(product.id, null)}
+          />
           <button className="btn-card-action branch" onClick={() => onAddBranch?.(product.id)} title="إضافة فرع لهذا المنتج">
             <GitBranchIcon className="icon-sm" />
           </button>
@@ -297,6 +364,45 @@ function ProductCard({
   );
 }
 
+function ProductGroup({ parent, branches, index, sharedCardProps, onOpenDetail }) {
+  const [hovered, setHovered] = useState(false);
+  const hasBranches = branches.length > 0;
+  const layerCount = Math.min(branches.length, 3);
+
+  return (
+    <div
+      className={`product-group ${hasBranches ? 'product-group--has-branches' : ''} ${hovered ? 'product-group--expanded' : ''}`}
+      onMouseEnter={() => hasBranches && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {hasBranches && Array.from({ length: layerCount }).map((_, i) => (
+        <div key={i} className={`product-group-layer layer-${i + 1}`} />
+      ))}
+      <ProductCard
+        product={parent}
+        index={index}
+        {...sharedCardProps}
+        parentProduct={null}
+      />
+      {hasBranches && branches.map((branch, bi) => (
+        <div
+          key={branch.id}
+          className="product-group-branch-slot"
+          style={{ '--branch-index': bi }}
+          onClick={() => sharedCardProps.setDetailModalProduct(branch)}
+        >
+          <ProductCard
+            product={branch}
+            index={bi}
+            {...sharedCardProps}
+            parentProduct={parent}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ProductTable({
   products, suppliers, durations, exchangeRate, activationMethods = [],
   categories = [], onAddCategory, onUpdateProductCategory,
@@ -306,7 +412,7 @@ function ProductTable({
   onToggleProductMethod, onAddActivationMethodType, onDeleteActivationMethodType,
   onUpdateOfficialPrice, onUpdateWarranty, onUpdateSupplierWarranty, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
   onImportProducts,
-  onUpdateSupplierActivationMethod, onAddBranch, onUpdateSupplierPlanLink,
+  onUpdateSupplierActivationMethod, onAddBranch, onUpdateSupplierPlanLink, onUpdateProductColor,
 }) {
   const [editingCell, setEditingCell] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -340,39 +446,47 @@ function ProductTable({
     return min === Infinity ? null : min;
   };
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-    if (searchQuery.trim()) {
-      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const productGroups = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    if (filterType === 'branches') {
+      let result = products.filter(p => !!p.parentId);
+      if (q) result = result.filter(p => p.name.toLowerCase().includes(q));
+      if (filterSupplier) result = result.filter(p => p.plans?.some(plan => (plan.prices?.[parseInt(filterSupplier)] || 0) > 0));
+      if (filterCategory) result = result.filter(p => p.categoryId === filterCategory);
+      if (sortBy === 'name_asc') result.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+      else if (sortBy === 'name_desc') result.sort((a, b) => b.name.localeCompare(a.name, 'ar'));
+      else if (sortBy === 'price_asc') result.sort((a, b) => (getProductLowestPrice(a) ?? Infinity) - (getProductLowestPrice(b) ?? Infinity));
+      else if (sortBy === 'price_desc') result.sort((a, b) => (getProductLowestPrice(b) ?? -Infinity) - (getProductLowestPrice(a) ?? -Infinity));
+      return result.map(p => ({ parent: p, branches: [], isBranchMode: true }));
     }
-    if (filterType === 'main') result = result.filter(p => !p.parentId);
-    else if (filterType === 'branches') result = result.filter(p => !!p.parentId);
-    if (filterSupplier) {
-      result = result.filter(p =>
-        p.plans?.some(plan => (plan.prices?.[parseInt(filterSupplier)] || 0) > 0)
-      );
+
+    let parents = products.filter(p => !p.parentId);
+    if (filterType === 'main') {
+      // filter parents only
     }
-    if (filterCategory) {
-      result = result.filter(p => p.categoryId === filterCategory);
-    }
-    if (sortBy === 'name_asc') result.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
-    else if (sortBy === 'name_desc') result.sort((a, b) => b.name.localeCompare(a.name, 'ar'));
-    else if (sortBy === 'price_asc') {
-      result.sort((a, b) => {
-        const pa = getProductLowestPrice(a) ?? Infinity;
-        const pb = getProductLowestPrice(b) ?? Infinity;
-        return pa - pb;
-      });
-    } else if (sortBy === 'price_desc') {
-      result.sort((a, b) => {
-        const pa = getProductLowestPrice(a) ?? -Infinity;
-        const pb = getProductLowestPrice(b) ?? -Infinity;
-        return pb - pa;
+    if (filterSupplier) parents = parents.filter(p => p.plans?.some(plan => (plan.prices?.[parseInt(filterSupplier)] || 0) > 0));
+    if (filterCategory) parents = parents.filter(p => p.categoryId === filterCategory);
+    if (q) {
+      parents = parents.filter(p => {
+        const nameMatch = p.name.toLowerCase().includes(q);
+        const branchMatch = products.some(b => b.parentId === p.id && b.name.toLowerCase().includes(q));
+        return nameMatch || branchMatch;
       });
     }
-    return result;
+    if (sortBy === 'name_asc') parents.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+    else if (sortBy === 'name_desc') parents.sort((a, b) => b.name.localeCompare(a.name, 'ar'));
+    else if (sortBy === 'price_asc') parents.sort((a, b) => (getProductLowestPrice(a) ?? Infinity) - (getProductLowestPrice(b) ?? Infinity));
+    else if (sortBy === 'price_desc') parents.sort((a, b) => (getProductLowestPrice(b) ?? -Infinity) - (getProductLowestPrice(a) ?? -Infinity));
+
+    return parents.map(parent => ({
+      parent,
+      branches: products.filter(p => p.parentId === parent.id),
+      isBranchMode: false,
+    }));
   }, [products, searchQuery, filterSupplier, filterCategory, filterType, sortBy]);
 
+  const filteredProducts = productGroups;
   const activeFiltersCount = [filterSupplier, filterCategory, filterType !== 'all', sortBy !== 'default'].filter(Boolean).length;
 
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
@@ -480,7 +594,7 @@ function ProductTable({
             )}
           </div>
           <div className="filter-panel-summary">
-            {filteredProducts.length} منتج {filteredProducts.length !== products.length ? `من أصل ${products.length}` : ''}
+            {productGroups.length} منتج {productGroups.length !== products.filter(p => filterType === 'branches' ? !!p.parentId : !p.parentId).length ? `من أصل ${products.filter(p => filterType === 'branches' ? !!p.parentId : !p.parentId).length}` : ''}
           </div>
         </div>
       )}
@@ -498,47 +612,62 @@ function ProductTable({
         setShowAddSupplier={setShowAddSupplier}
       />
 
-      {filteredProducts.length > 0 ? (
+      {productGroups.length > 0 ? (
         <div className="products-grid">
-          {filteredProducts.map((product, index) => {
-            const parentProduct = product.parentId ? products.find(p => p.id === product.parentId) : null;
+          {productGroups.map(({ parent, branches, isBranchMode }, index) => {
+            const sharedCardProps = {
+              suppliers,
+              durations,
+              exchangeRate,
+              activationMethods,
+              editingCell,
+              setEditingCell,
+              editValue,
+              setEditValue,
+              editingName,
+              setEditingName,
+              editNameValue,
+              setEditNameValue,
+              onUpdatePrice,
+              onDeleteProduct,
+              onDuplicateProduct,
+              onUpdateProductName,
+              onUpdateProductAccountType,
+              onAddPlan,
+              onDeletePlan,
+              onUpdatePlanDuration,
+              onToggleProductMethod,
+              onUpdateOfficialPrice,
+              onUpdateWarranty,
+              requestConfirm,
+              setActivationModalProduct: (p) => setActivationModalProductId(p ? p.id : null),
+              setCompetitorsModalProduct,
+              setDetailModalProduct: (p) => setDetailModalProductId(p ? p.id : null),
+              getDurationLabel,
+              getAvailableDurations,
+              onAddBranch,
+              allProducts: products,
+              onUpdateProductColor,
+            };
+            if (isBranchMode) {
+              const parentProduct = products.find(p => p.id === parent.parentId) || null;
+              return (
+                <ProductCard
+                  key={parent.id}
+                  product={parent}
+                  index={index}
+                  {...sharedCardProps}
+                  parentProduct={parentProduct}
+                />
+              );
+            }
             return (
-              <ProductCard
-                key={product.id}
-                product={product}
+              <ProductGroup
+                key={parent.id}
+                parent={parent}
+                branches={branches}
                 index={index}
-                suppliers={suppliers}
-                durations={durations}
-                exchangeRate={exchangeRate}
-                activationMethods={activationMethods}
-                editingCell={editingCell}
-                setEditingCell={setEditingCell}
-                editValue={editValue}
-                setEditValue={setEditValue}
-                editingName={editingName}
-                setEditingName={setEditingName}
-                editNameValue={editNameValue}
-                setEditNameValue={setEditNameValue}
-                onUpdatePrice={onUpdatePrice}
-                onDeleteProduct={onDeleteProduct}
-                onDuplicateProduct={onDuplicateProduct}
-                onUpdateProductName={onUpdateProductName}
-                onUpdateProductAccountType={onUpdateProductAccountType}
-                onAddPlan={onAddPlan}
-                onDeletePlan={onDeletePlan}
-                onUpdatePlanDuration={onUpdatePlanDuration}
-                onToggleProductMethod={onToggleProductMethod}
-                onUpdateOfficialPrice={onUpdateOfficialPrice}
-                onUpdateWarranty={onUpdateWarranty}
-                requestConfirm={requestConfirm}
-                setActivationModalProduct={(p) => setActivationModalProductId(p ? p.id : null)}
-                setCompetitorsModalProduct={setCompetitorsModalProduct}
-                setDetailModalProduct={(p) => setDetailModalProductId(p ? p.id : null)}
-                getDurationLabel={getDurationLabel}
-                getAvailableDurations={getAvailableDurations}
-                onAddBranch={onAddBranch}
-                parentProduct={parentProduct}
-                allProducts={products}
+                sharedCardProps={sharedCardProps}
               />
             );
           })}
