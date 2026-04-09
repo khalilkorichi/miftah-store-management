@@ -17,18 +17,18 @@ const PRIORITIES = [
   { id: 'urgent', label: 'عاجلة', color: '#F94B60' },
 ];
 
-export default function TaskModal({ task, onSave, onClose }) {
+export default function TaskModal({ task, prefillData, onSave, onClose }) {
   const isEdit = !!task;
   const overlayRef = useRef(null);
   const firstInputRef = useRef(null);
 
   const [form, setForm] = useState({
-    title: task?.title || '',
-    description: task?.description || '',
-    category: task?.category || 'ops',
-    priority: task?.priority || 'normal',
-    status: task?.status || 'pending',
-    dueDate: task?.dueDate || '',
+    title: task?.title || prefillData?.title || '',
+    description: task?.description || prefillData?.description || '',
+    category: task?.category || prefillData?.category || 'ops',
+    priority: task?.priority || prefillData?.priority || 'normal',
+    status: task?.status || prefillData?.status || 'pending',
+    dueDate: task?.dueDate || prefillData?.dueDate || '',
   });
   const [errors, setErrors] = useState({});
 

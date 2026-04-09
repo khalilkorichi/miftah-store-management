@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
   PlusIcon, SearchIcon, CheckSquareIcon,
-  ClockIcon, CheckCircleIcon, InboxIcon, ListIcon, GridIcon, SparklesIcon
+  ClockIcon, CheckCircleIcon, InboxIcon, ListIcon, GridIcon, SparklesIcon,
+  EditIcon, TrashIcon
 } from '../Icons';
 import TaskCard, { CATEGORIES, PRIORITIES, getDaysInfo } from './TaskCard';
 import TaskModal from './TaskModal';
@@ -68,6 +69,7 @@ function formatShortDate(dateStr) {
 export default function TaskManager({ tasks, setTasks }) {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [prefillData, setPrefillData] = useState(null);
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -118,15 +120,13 @@ export default function TaskManager({ tasks, setTasks }) {
     ));
   };
 
-  const openEdit = (task) => { setEditingTask(task); setShowModal(true); };
-  const openNew = (prefill) => {
-    setEditingTask(prefill ? { ...prefill, id: undefined } : null);
-    setShowModal(true);
-  };
-  const openNewEmpty = () => openNew(null);
+  const openEdit = (task) => { setEditingTask(task); setPrefillData(null); setShowModal(true); };
+  const openNewEmpty = () => { setEditingTask(null); setPrefillData(null); setShowModal(true); };
 
   const handleTemplateSelect = (tplData) => {
-    openNew(tplData);
+    setEditingTask(null);
+    setPrefillData(tplData);
+    setShowModal(true);
   };
 
   const urgentCount = tasks.filter(t => t.priority === 'urgent' && t.status !== 'done').length;
@@ -313,10 +313,10 @@ export default function TaskManager({ tasks, setTasks }) {
                       </td>
                       <td className="task-list-actions">
                         <button className="task-action-btn" onClick={() => openEdit(task)} title="تعديل">
-                          ✏️
+                          <EditIcon className="icon-sm" />
                         </button>
                         <button className="task-action-btn task-delete-btn" onClick={() => handleDelete(task.id)} title="حذف">
-                          🗑️
+                          <TrashIcon className="icon-sm" />
                         </button>
                       </td>
                     </tr>
@@ -331,8 +331,9 @@ export default function TaskManager({ tasks, setTasks }) {
       {showModal && (
         <TaskModal
           task={editingTask}
+          prefillData={prefillData}
           onSave={handleSave}
-          onClose={() => { setShowModal(false); setEditingTask(null); }}
+          onClose={() => { setShowModal(false); setEditingTask(null); setPrefillData(null); }}
         />
       )}
 

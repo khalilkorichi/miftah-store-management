@@ -14028,7 +14028,6 @@ body.dark-mode .selectable-card.selected {
 .renewal-badge-today {
   background: rgba(255,197,48,0.2);
   color: #b08600;
-  [data-theme="dark"] & { color: var(--accent-gold); }
 }
 .renewal-badge-week {
   background: rgba(26,81,244,0.12);
