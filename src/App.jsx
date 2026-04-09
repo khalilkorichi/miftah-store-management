@@ -1006,6 +1006,7 @@ function App() {
             activationGuides={activationGuides}
             setActivationGuides={setActivationGuides}
             products={products}
+            durations={durations}
           />
           </div>
         )}

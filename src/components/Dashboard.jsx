@@ -92,9 +92,13 @@ function Dashboard({
 
   const urgentTasks = tasksList.filter(t => t.priority === 'urgent' && t.status !== 'done').length;
   const totalGuides = guidesList.length;
-  const guideProductCount = new Set(
-    guidesList.filter(g => g.productTag).map(g => g.productTag)
-  ).size;
+  const linkedProductIds = [...new Set(guidesList.filter(g => g.productTag).map(g => g.productTag))];
+  const guideProductCount = linkedProductIds.length;
+  const guideProductNames = linkedProductIds
+    .map(id => products.find(p => String(p.id) === String(id))?.name)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('، ');
 
   const totalProducts = products.length;
   const totalSuppliers = suppliers.length;
@@ -316,7 +320,7 @@ function Dashboard({
           </div>
           <span className="dash-stat-sub">
             {guideProductCount > 0
-              ? <><TagIcon className="icon-xs" /> {guideProductCount} منتج مرتبط</>
+              ? <><TagIcon className="icon-xs" /> {guideProductNames}{guideProductCount > 2 ? ` +${guideProductCount - 2}` : ''}</>
               : 'لا يوجد ربط بعد'}
           </span>
         </div>

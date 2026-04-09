@@ -3,7 +3,7 @@ import { PlusIcon, SearchIcon, BookOpenIcon, SparklesIcon } from '../Icons';
 import GuideCard from './GuideCard';
 import GuideModal from './GuideModal';
 
-export default function ActivationGuidesManager({ guides, setGuides, products }) {
+export default function ActivationGuidesManager({ guides, setGuides, products, durations }) {
   const [showModal, setShowModal] = useState(false);
   const [editingGuide, setEditingGuide] = useState(null);
   const [search, setSearch] = useState('');
@@ -60,7 +60,12 @@ export default function ActivationGuidesManager({ guides, setGuides, products })
     const p = products.find(p => String(p.id) === String(productTag));
     if (!p) return null;
     const plan = p.plans?.find(pl => String(pl.id) === String(planTag));
-    return plan?.durationId || null;
+    if (!plan) return null;
+    if (durations && plan.durationId) {
+      const dur = durations.find(d => d.id === plan.durationId);
+      if (dur) return dur.label;
+    }
+    return plan.durationId || null;
   };
 
   return (

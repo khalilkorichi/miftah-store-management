@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckSquareIcon, BookOpenIcon } from '../Icons';
+import { CheckSquareIcon, BookOpenIcon, ActivityIcon } from '../Icons';
 import TaskManager from './TaskManager';
 import ActivationGuidesManager from './ActivationGuidesManager';
 
@@ -8,11 +8,22 @@ const SUB_TABS = [
   { id: 'guides', label: 'أدلة التفعيل', Icon: BookOpenIcon },
 ];
 
-export default function OperationsHub({ tasks, setTasks, activationGuides, setActivationGuides, products }) {
+export default function OperationsHub({ tasks, setTasks, activationGuides, setActivationGuides, products, durations }) {
   const [activeSubTab, setActiveSubTab] = useState('tasks');
 
   return (
     <div className="ops-hub">
+      {/* Section header */}
+      <div className="ops-hub-header">
+        <div className="ops-hub-header-icon">
+          <ActivityIcon className="icon-md" />
+        </div>
+        <div>
+          <h1 className="ops-hub-title">قسم العمليات</h1>
+          <p className="ops-hub-subtitle">إدارة المهام اليومية وأدلة تفعيل المنتجات في مكان واحد</p>
+        </div>
+      </div>
+
       {/* Sub-tab bar */}
       <div className="ops-subtab-bar">
         {SUB_TABS.map(tab => (
@@ -37,6 +48,7 @@ export default function OperationsHub({ tasks, setTasks, activationGuides, setAc
             guides={activationGuides}
             setGuides={setActivationGuides}
             products={products}
+            durations={durations}
           />
         )}
       </div>
