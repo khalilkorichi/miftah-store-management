@@ -758,6 +758,8 @@ function App() {
     setSuppliers(DEFAULT_SUPPLIERS);
     setExchangeRate(DEFAULT_EXCHANGE_RATE);
     setDurations(DEFAULT_DURATIONS);
+    setTasks(DEFAULT_TASKS);
+    setActivationGuides(DEFAULT_ACTIVATION_GUIDES);
   }, []);
 
   const handleImportData = useCallback((data) => {
