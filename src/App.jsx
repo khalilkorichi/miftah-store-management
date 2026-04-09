@@ -10,7 +10,10 @@ import {
   DEFAULT_COUPONS,
   DEFAULT_PRICING_DATA,
   DEFAULT_CATEGORIES,
+  DEFAULT_TASKS,
+  DEFAULT_ACTIVATION_GUIDES,
 } from './data/initialData';
+import OperationsHub from './components/operations/OperationsHub';
 import ProductTable from './components/ProductTable';
 import ImportSallaModal from './components/ImportSallaModal';
 import ExchangeRateBar from './components/ExchangeRateBar';
@@ -23,7 +26,8 @@ import Dashboard from './components/Dashboard';
 import ProductFeatures from './components/ProductFeatures';
 import {
   PackageIcon, DollarSignIcon, GiftIcon, BarChartIcon, SettingsIcon,
-  SunIcon, MoonIcon, CheckCircleIcon, HomeIcon, FileTextIcon, ExternalLinkIcon
+  SunIcon, MoonIcon, CheckCircleIcon, HomeIcon, FileTextIcon, ExternalLinkIcon,
+  CheckSquareIcon,
 } from './components/Icons';
 
 const STORAGE_KEY = 'miftah_store_data';
@@ -36,6 +40,7 @@ const TAB_LIST = [
   { id: 'bundles', label: 'الحزم والمجموعات', icon: GiftIcon },
   { id: 'features', label: 'وصف المنتجات', icon: FileTextIcon },
   { id: 'reports', label: 'التقارير', icon: BarChartIcon },
+  { id: 'tasks', label: 'العمليات', icon: CheckSquareIcon },
   { id: 'settings', label: 'الإعدادات', icon: SettingsIcon },
 ];
 
@@ -170,6 +175,8 @@ function App() {
   const [categories, setCategories] = useState(savedData?.categories || DEFAULT_CATEGORIES);
   const [finalPrices, setFinalPrices] = useState(savedData?.finalPrices || {});
   const [customLogo, setCustomLogo] = useState(savedData?.customLogo || null);
+  const [tasks, setTasks] = useState(savedData?.tasks || DEFAULT_TASKS);
+  const [activationGuides, setActivationGuides] = useState(savedData?.activationGuides || DEFAULT_ACTIVATION_GUIDES);
   const [appSettings, setAppSettings] = useState({
     accentColor: 'purple',
     fontSize: 'medium',
@@ -186,7 +193,7 @@ function App() {
   // Custom hook logic for hash-based routing
   const getInitialTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'features', 'reports', 'settings'];
+    const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'features', 'reports', 'tasks', 'settings'];
     return validTabs.includes(hash) ? hash : 'dashboard';
   };
   
@@ -198,11 +205,11 @@ function App() {
 
   // Save data whenever it changes
   useEffect(() => {
-    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices });
+    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides });
     setSaveIndicator(true);
     const timer = setTimeout(() => setSaveIndicator(false), 1500);
     return () => clearTimeout(timer);
-  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices]);
+  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides]);
 
   // Apply dark mode class
   useEffect(() => {
@@ -234,7 +241,7 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'features', 'reports', 'settings'];
+      const validTabs = ['dashboard', 'products', 'pricing', 'bundles', 'features', 'reports', 'tasks', 'settings'];
       if (validTabs.includes(hash)) {
         setPageTransition(true);
         setTimeout(() => {
@@ -875,6 +882,8 @@ function App() {
             activationMethods={activationMethods}
             onNavigate={handleTabChange}
             appSettings={appSettings}
+            tasks={tasks}
+            activationGuides={activationGuides}
           />
           </div>
         )}
@@ -977,6 +986,17 @@ function App() {
             suppliers={suppliers}
             exchangeRate={exchangeRate}
             activationMethods={activationMethods}
+          />
+          </div>
+        )}
+        {activeTab === 'tasks' && (
+          <div role="tabpanel" id="panel-tasks" aria-labelledby="tab-tasks">
+          <OperationsHub
+            tasks={tasks}
+            setTasks={setTasks}
+            activationGuides={activationGuides}
+            setActivationGuides={setActivationGuides}
+            products={products}
           />
           </div>
         )}

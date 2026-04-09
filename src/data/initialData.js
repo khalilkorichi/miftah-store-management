@@ -21,6 +21,9 @@ export const DEFAULT_BUNDLES = [];
 export const DEFAULT_COUPONS = [];
 export const DEFAULT_PRICING_DATA = {}; // { productId: { primarySupplierId: number, strategy: string, margin: number, competitivePrices: [], psmData: {} } }
 
+export const DEFAULT_TASKS = [];
+export const DEFAULT_ACTIVATION_GUIDES = [];
+
 
 export const DEFAULT_ACTIVATION_METHODS = [
   {

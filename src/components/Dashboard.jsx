@@ -4,7 +4,7 @@ import {
   TrendingUpIcon, TrendingDownIcon, AlertTriangleIcon, CheckCircleIcon,
   PlusIcon, TagIcon, StarIcon, ActivityIcon, PercentIcon,
   SettingsIcon, LayersIcon, ArrowLeftIcon, ZapIcon, AwardIcon,
-  ExternalLinkIcon, GlobeIcon, CalendarIcon
+  ExternalLinkIcon, GlobeIcon, CalendarIcon, CheckSquareIcon, BookOpenIcon, ClockIcon
 } from './Icons';
 
 const MOTIVATIONAL_QUOTES = [
@@ -34,7 +34,7 @@ const fmtPct = (val) => {
 function Dashboard({
   products, suppliers, durations, exchangeRate, bundles,
   costs, pricingData, coupons, activationMethods,
-  onNavigate, appSettings
+  onNavigate, appSettings, tasks, activationGuides
 }) {
   const todayQuote = useMemo(() => {
     const idx = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
@@ -79,6 +79,12 @@ function Dashboard({
       return '--:--:--';
     }
   };
+  const tasksList = tasks || [];
+  const guidesList = activationGuides || [];
+  const pendingTasks = tasksList.filter(t => t.status !== 'done').length;
+  const urgentTasks = tasksList.filter(t => t.priority === 'urgent' && t.status !== 'done').length;
+  const totalGuides = guidesList.length;
+
   const totalProducts = products.length;
   const totalSuppliers = suppliers.length;
   const totalBundles = bundles.length;
@@ -276,6 +282,28 @@ function Dashboard({
           <span className="dash-stat-sub">
             {avgMargin >= 20 ? <><TrendingUpIcon className="icon-xs" /> جيد</> : <><TrendingDownIcon className="icon-xs" /> يحتاج تحسين</>}
           </span>
+        </div>
+
+        <div className="dash-stat-card stat-accent-red" onClick={() => onNavigate('tasks')}>
+          <div className="dash-stat-icon"><CheckSquareIcon /></div>
+          <div className="dash-stat-info">
+            <span className="dash-stat-value">{fmt(pendingTasks)}</span>
+            <span className="dash-stat-label">المهام المعلّقة</span>
+          </div>
+          <span className="dash-stat-sub">
+            {urgentTasks > 0
+              ? <><ClockIcon className="icon-xs" /> {urgentTasks} عاجلة</>
+              : <><CheckCircleIcon className="icon-xs" /> لا توجد عاجلة</>}
+          </span>
+        </div>
+
+        <div className="dash-stat-card stat-accent-teal" onClick={() => onNavigate('tasks')}>
+          <div className="dash-stat-icon"><BookOpenIcon /></div>
+          <div className="dash-stat-info">
+            <span className="dash-stat-value">{fmt(totalGuides)}</span>
+            <span className="dash-stat-label">أدلة التفعيل</span>
+          </div>
+          <span className="dash-stat-sub">محفوظة</span>
         </div>
       </div>
 
