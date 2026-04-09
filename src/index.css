@@ -14323,7 +14323,101 @@ body.dark-mode .selectable-card.selected {
 }
 
 /* Warranty Modal */
-.warranty-modal { max-width: 580px; }
+.warranty-modal { max-width: 620px; }
+
+.warranty-modal-form {
+  padding: 0 !important;
+  gap: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+.warranty-modal-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px;
+  max-height: 64vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.warranty-modal-form > .ops-modal-footer {
+  padding: 14px 24px;
+  margin-top: 0;
+}
+
+.warranty-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.warranty-section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.warranty-section-title .icon { color: var(--accent-purple); }
+
+.warranty-autofill-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(17,186,101,0.08);
+  border: 1px solid rgba(17,186,101,0.25);
+  color: var(--accent-green);
+  font-size: 13px;
+  font-weight: 600;
+}
+.warranty-autofill-banner .icon { color: var(--accent-green); flex-shrink: 0; }
+
+.warranty-supplier-contact-col { justify-content: flex-end; }
+
+.warranty-supplier-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.warranty-days-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.warranty-days-input { flex: 1; }
+.warranty-days-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.warranty-type-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-style: italic;
+}
+.warranty-type-hint .icon { flex-shrink: 0; }
+.warranty-type-hint-green { color: var(--accent-green); font-style: normal; font-weight: 600; }
 
 .warranty-type-toggle {
   display: flex;

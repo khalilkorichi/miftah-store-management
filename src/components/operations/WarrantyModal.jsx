@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   XIcon, CheckIcon, ShieldCheckIcon, UserIcon, TagIcon,
-  CalendarIcon, ClockIcon, MessageCircleIcon, SendIcon
+  CalendarIcon, ClockIcon, MessageCircleIcon, SendIcon, InfoIcon
 } from '../Icons';
 
 export default function WarrantyModal({ warranty, products, suppliers, durations, onSave, onClose }) {
@@ -24,10 +24,12 @@ export default function WarrantyModal({ warranty, products, suppliers, durations
     warrantyDays: warranty?.warrantyDays ?? '',
   });
   const [errors, setErrors] = useState({});
+  const [autoFilledWarranty, setAutoFilledWarranty] = useState(null);
 
   const selectedSupplier = suppliers.find(s => String(s.id) === String(form.supplierId));
   const selectedProduct = products.find(p => String(p.id) === String(form.productId));
   const productPlans = selectedProduct?.plans || [];
+  const selectedPlan = productPlans.find(pl => String(pl.id) === String(form.planId));
 
   const getDurationLabel = (durationId) => {
     const dur = (durations || []).find(d => d.id === durationId);
@@ -44,8 +46,23 @@ export default function WarrantyModal({ warranty, products, suppliers, durations
   useEffect(() => {
     if (!isEdit) {
       setForm(f => ({ ...f, planId: '' }));
+      setAutoFilledWarranty(null);
     }
   }, [form.productId]);
+
+  useEffect(() => {
+    if (!selectedPlan) {
+      setAutoFilledWarranty(null);
+      return;
+    }
+    const days = selectedPlan.warrantyDays;
+    if (days && days > 0) {
+      setForm(f => ({ ...f, warrantyType: 'days', warrantyDays: String(days) }));
+      setAutoFilledWarranty(days);
+    } else {
+      setAutoFilledWarranty(null);
+    }
+  }, [form.planId]);
 
   const validate = () => {
     const e = {};
@@ -86,7 +103,10 @@ export default function WarrantyModal({ warranty, products, suppliers, durations
     onClose();
   };
 
-  const set = (key, val) => { setForm(f => ({ ...f, [key]: val })); setErrors(v => ({ ...v, [key]: '' })); };
+  const set = (key, val) => {
+    setForm(f => ({ ...f, [key]: val }));
+    setErrors(v => ({ ...v, [key]: '' }));
+  };
 
   return (
     <div
@@ -107,201 +127,262 @@ export default function WarrantyModal({ warranty, products, suppliers, durations
           </button>
         </div>
 
-        <form className="ops-modal-body" onSubmit={handleSubmit} noValidate>
-          <div className="ops-form-row">
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <UserIcon className="icon-xs" /> اسم العميل <span className="ops-required">*</span>
-              </label>
-              <input
-                ref={firstInputRef}
-                type="text"
-                className={`ops-form-input ${errors.customerName ? 'input-error' : ''}`}
-                placeholder="مثال: أحمد محمد"
-                value={form.customerName}
-                onChange={e => set('customerName', e.target.value)}
-              />
-              {errors.customerName && <span className="ops-form-error">{errors.customerName}</span>}
+        <form className="ops-modal-body warranty-modal-form" onSubmit={handleSubmit} noValidate>
+          <div className="warranty-modal-scroll">
+
+          {/* ── Section 1: Customer ── */}
+          <div className="warranty-section">
+            <div className="warranty-section-title">
+              <UserIcon className="icon-xs" />
+              <span>معلومات العميل</span>
             </div>
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <MessageCircleIcon className="icon-xs" /> رقم واتساب العميل
-              </label>
-              <input
-                type="text"
-                className="ops-form-input"
-                placeholder="مثال: 966501234567"
-                value={form.customerWhatsapp}
-                onChange={e => set('customerWhatsapp', e.target.value)}
-                dir="ltr"
-              />
+            <div className="ops-form-row">
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  الاسم <span className="ops-required">*</span>
+                </label>
+                <input
+                  ref={firstInputRef}
+                  type="text"
+                  className={`ops-form-input ${errors.customerName ? 'input-error' : ''}`}
+                  placeholder="مثال: أحمد محمد"
+                  value={form.customerName}
+                  onChange={e => set('customerName', e.target.value)}
+                />
+                {errors.customerName && <span className="ops-form-error">{errors.customerName}</span>}
+              </div>
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  <MessageCircleIcon className="icon-xs" /> واتساب العميل
+                </label>
+                <input
+                  type="text"
+                  className="ops-form-input"
+                  placeholder="مثال: 966501234567"
+                  value={form.customerWhatsapp}
+                  onChange={e => set('customerWhatsapp', e.target.value)}
+                  dir="ltr"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="ops-form-row">
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <TagIcon className="icon-xs" /> المنتج <span className="ops-required">*</span>
-              </label>
-              <select
-                className={`ops-form-select ${errors.productId ? 'input-error' : ''}`}
-                value={form.productId}
-                onChange={e => set('productId', e.target.value)}
-              >
-                <option value="">-- اختر منتجاً --</option>
-                {products.map(p => (
-                  <option key={p.id} value={String(p.id)}>{p.name}</option>
-                ))}
-              </select>
-              {errors.productId && <span className="ops-form-error">{errors.productId}</span>}
+          {/* ── Section 2: Product & Supplier ── */}
+          <div className="warranty-section">
+            <div className="warranty-section-title">
+              <TagIcon className="icon-xs" />
+              <span>المنتج والمورد</span>
             </div>
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <CalendarIcon className="icon-xs" /> خطة المنتج
-              </label>
-              <select
-                className="ops-form-select"
-                value={form.planId}
-                onChange={e => set('planId', e.target.value)}
-                disabled={productPlans.length === 0}
-              >
-                <option value="">
-                  {productPlans.length === 0 ? '-- اختر منتجاً أولاً --' : '-- اختر الخطة (اختياري) --'}
-                </option>
-                {productPlans.map(plan => (
-                  <option key={plan.id} value={String(plan.id)}>
-                    {getDurationLabel(plan.durationId)}
+            <div className="ops-form-row">
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  المنتج <span className="ops-required">*</span>
+                </label>
+                <select
+                  className={`ops-form-select ${errors.productId ? 'input-error' : ''}`}
+                  value={form.productId}
+                  onChange={e => set('productId', e.target.value)}
+                >
+                  <option value="">-- اختر منتجاً --</option>
+                  {products.map(p => (
+                    <option key={p.id} value={String(p.id)}>{p.name}</option>
+                  ))}
+                </select>
+                {errors.productId && <span className="ops-form-error">{errors.productId}</span>}
+              </div>
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  <CalendarIcon className="icon-xs" /> خطة المنتج
+                </label>
+                <select
+                  className="ops-form-select"
+                  value={form.planId}
+                  onChange={e => set('planId', e.target.value)}
+                  disabled={productPlans.length === 0}
+                >
+                  <option value="">
+                    {productPlans.length === 0 ? '-- اختر منتجاً أولاً --' : '-- اختر الخطة (اختياري) --'}
                   </option>
-                ))}
-              </select>
+                  {productPlans.map(plan => (
+                    <option key={plan.id} value={String(plan.id)}>
+                      {getDurationLabel(plan.durationId)}
+                      {plan.warrantyDays > 0 ? ` — ضمان ${plan.warrantyDays} يوم` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div className="ops-form-row">
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <ShieldCheckIcon className="icon-xs" /> المورد
-              </label>
-              <select
-                className="ops-form-select"
-                value={form.supplierId}
-                onChange={e => set('supplierId', e.target.value)}
-              >
-                <option value="">-- اختر مورداً (اختياري) --</option>
-                {suppliers.map(s => (
-                  <option key={s.id} value={String(s.id)}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+            {autoFilledWarranty && (
+              <div className="warranty-autofill-banner">
+                <ShieldCheckIcon className="icon-xs" />
+                <span>تم تعيين الضمان تلقائياً من بيانات المنتج: <strong>{autoFilledWarranty} يوم</strong></span>
+              </div>
+            )}
 
-          {selectedSupplier && (selectedSupplier.whatsapp || selectedSupplier.telegram) && (
-            <div className="warranty-supplier-info">
-              <span className="warranty-supplier-info-label">معلومات تواصل المورد:</span>
-              {selectedSupplier.whatsapp && (
-                <a
-                  href={`https://wa.me/${selectedSupplier.whatsapp.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="warranty-contact-pill warranty-contact-wa"
+            <div className="ops-form-row">
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  <ShieldCheckIcon className="icon-xs" /> المورد
+                </label>
+                <select
+                  className="ops-form-select"
+                  value={form.supplierId}
+                  onChange={e => set('supplierId', e.target.value)}
                 >
-                  <MessageCircleIcon className="icon-xs" />
-                  واتساب
-                </a>
+                  <option value="">-- اختر مورداً (اختياري) --</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={String(s.id)}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              {selectedSupplier && (selectedSupplier.whatsapp || selectedSupplier.telegram) && (
+                <div className="ops-form-group ops-form-half warranty-supplier-contact-col">
+                  <label className="ops-form-label">تواصل مع المورد</label>
+                  <div className="warranty-supplier-contact-row">
+                    {selectedSupplier.whatsapp && (
+                      <a
+                        href={`https://wa.me/${selectedSupplier.whatsapp.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="warranty-contact-pill warranty-contact-wa"
+                      >
+                        <MessageCircleIcon className="icon-xs" />
+                        واتساب
+                      </a>
+                    )}
+                    {selectedSupplier.telegram && (
+                      <a
+                        href={`https://t.me/${selectedSupplier.telegram.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="warranty-contact-pill warranty-contact-tg"
+                      >
+                        <SendIcon className="icon-xs" />
+                        تيليجرام
+                      </a>
+                    )}
+                  </div>
+                </div>
               )}
-              {selectedSupplier.telegram && (
-                <a
-                  href={`https://t.me/${selectedSupplier.telegram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="warranty-contact-pill warranty-contact-tg"
-                >
-                  <SendIcon className="icon-xs" />
-                  تيليجرام
-                </a>
-              )}
-            </div>
-          )}
-
-          <div className="ops-form-row">
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <CalendarIcon className="icon-xs" /> تاريخ الشراء <span className="ops-required">*</span>
-              </label>
-              <input
-                type="date"
-                className={`ops-form-input ${errors.purchaseDate ? 'input-error' : ''}`}
-                value={form.purchaseDate}
-                onChange={e => set('purchaseDate', e.target.value)}
-              />
-              {errors.purchaseDate && <span className="ops-form-error">{errors.purchaseDate}</span>}
-            </div>
-            <div className="ops-form-group ops-form-half">
-              <label className="ops-form-label">
-                <CalendarIcon className="icon-xs" /> تاريخ بداية الاشتراك <span className="ops-required">*</span>
-              </label>
-              <input
-                type="date"
-                className={`ops-form-input ${errors.subscriptionStartDate ? 'input-error' : ''}`}
-                value={form.subscriptionStartDate}
-                onChange={e => set('subscriptionStartDate', e.target.value)}
-              />
-              {errors.subscriptionStartDate && <span className="ops-form-error">{errors.subscriptionStartDate}</span>}
             </div>
           </div>
 
-          <div className="ops-form-group">
-            <label className="ops-form-label">
-              <ShieldCheckIcon className="icon-xs" /> نوع الضمان <span className="ops-required">*</span>
-            </label>
-            <div className="warranty-type-toggle">
-              <button
-                type="button"
-                className={`warranty-type-btn ${form.warrantyType === 'subscription' ? 'warranty-type-active' : ''}`}
-                onClick={() => set('warrantyType', 'subscription')}
-              >
-                طوال مدة الاشتراك
-              </button>
-              <button
-                type="button"
-                className={`warranty-type-btn ${form.warrantyType === 'days' ? 'warranty-type-active' : ''}`}
-                onClick={() => set('warrantyType', 'days')}
-              >
-                مدة محددة بالأيام
-              </button>
+          {/* ── Section 3: Dates ── */}
+          <div className="warranty-section">
+            <div className="warranty-section-title">
+              <CalendarIcon className="icon-xs" />
+              <span>تواريخ الاشتراك</span>
+            </div>
+            <div className="ops-form-row">
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  تاريخ الشراء <span className="ops-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className={`ops-form-input ${errors.purchaseDate ? 'input-error' : ''}`}
+                  value={form.purchaseDate}
+                  onChange={e => set('purchaseDate', e.target.value)}
+                />
+                {errors.purchaseDate && <span className="ops-form-error">{errors.purchaseDate}</span>}
+              </div>
+              <div className="ops-form-group ops-form-half">
+                <label className="ops-form-label">
+                  تاريخ بداية الاشتراك <span className="ops-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className={`ops-form-input ${errors.subscriptionStartDate ? 'input-error' : ''}`}
+                  value={form.subscriptionStartDate}
+                  onChange={e => set('subscriptionStartDate', e.target.value)}
+                />
+                {errors.subscriptionStartDate && <span className="ops-form-error">{errors.subscriptionStartDate}</span>}
+              </div>
             </div>
           </div>
 
-          {form.warrantyType === 'subscription' ? (
+          {/* ── Section 4: Warranty Config ── */}
+          <div className="warranty-section">
+            <div className="warranty-section-title">
+              <ShieldCheckIcon className="icon-xs" />
+              <span>إعدادات الضمان</span>
+            </div>
             <div className="ops-form-group">
               <label className="ops-form-label">
-                <CalendarIcon className="icon-xs" /> تاريخ نهاية الاشتراك <span className="ops-required">*</span>
+                نوع الضمان <span className="ops-required">*</span>
               </label>
-              <input
-                type="date"
-                className={`ops-form-input ${errors.subscriptionEndDate ? 'input-error' : ''}`}
-                value={form.subscriptionEndDate}
-                onChange={e => set('subscriptionEndDate', e.target.value)}
-              />
-              {errors.subscriptionEndDate && <span className="ops-form-error">{errors.subscriptionEndDate}</span>}
+              <div className="warranty-type-toggle">
+                <button
+                  type="button"
+                  className={`warranty-type-btn ${form.warrantyType === 'subscription' ? 'warranty-type-active' : ''}`}
+                  onClick={() => set('warrantyType', 'subscription')}
+                >
+                  طوال مدة الاشتراك
+                </button>
+                <button
+                  type="button"
+                  className={`warranty-type-btn ${form.warrantyType === 'days' ? 'warranty-type-active' : ''}`}
+                  onClick={() => set('warrantyType', 'days')}
+                >
+                  مدة محددة بالأيام
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="ops-form-group">
-              <label className="ops-form-label">
-                <ClockIcon className="icon-xs" /> عدد أيام الضمان <span className="ops-required">*</span>
-              </label>
-              <input
-                type="number"
-                className={`ops-form-input ${errors.warrantyDays ? 'input-error' : ''}`}
-                placeholder="مثال: 30"
-                value={form.warrantyDays}
-                onChange={e => set('warrantyDays', e.target.value)}
-                min="1"
-                dir="ltr"
-              />
-              {errors.warrantyDays && <span className="ops-form-error">{errors.warrantyDays}</span>}
-            </div>
-          )}
+
+            {form.warrantyType === 'subscription' ? (
+              <div className="ops-form-group">
+                <label className="ops-form-label">
+                  تاريخ نهاية الاشتراك <span className="ops-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className={`ops-form-input ${errors.subscriptionEndDate ? 'input-error' : ''}`}
+                  value={form.subscriptionEndDate}
+                  onChange={e => set('subscriptionEndDate', e.target.value)}
+                />
+                {errors.subscriptionEndDate && <span className="ops-form-error">{errors.subscriptionEndDate}</span>}
+                <p className="warranty-type-hint">
+                  <InfoIcon className="icon-xs" />
+                  ينتهي الضمان تلقائياً عند انتهاء الاشتراك
+                </p>
+              </div>
+            ) : (
+              <div className="ops-form-group">
+                <label className="ops-form-label">
+                  عدد أيام الضمان <span className="ops-required">*</span>
+                </label>
+                <div className="warranty-days-input-wrap">
+                  <input
+                    type="number"
+                    className={`ops-form-input warranty-days-input ${errors.warrantyDays ? 'input-error' : ''}`}
+                    placeholder="مثال: 30"
+                    value={form.warrantyDays}
+                    onChange={e => { set('warrantyDays', e.target.value); setAutoFilledWarranty(null); }}
+                    min="1"
+                    dir="ltr"
+                  />
+                  <span className="warranty-days-unit">يوم</span>
+                </div>
+                {errors.warrantyDays && <span className="ops-form-error">{errors.warrantyDays}</span>}
+                {form.purchaseDate && form.warrantyDays > 0 && (() => {
+                  try {
+                    const [y, m, d] = form.purchaseDate.split('-').map(Number);
+                    const end = new Date(Date.UTC(y, m - 1, d + Number(form.warrantyDays)));
+                    const label = end.toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+                    return (
+                      <p className="warranty-type-hint warranty-type-hint-green">
+                        <ShieldCheckIcon className="icon-xs" />
+                        ينتهي الضمان بتاريخ: <strong>{label}</strong>
+                      </p>
+                    );
+                  } catch { return null; }
+                })()}
+              </div>
+            )}
+          </div>
+
+          </div>
 
           <div className="ops-modal-footer">
             <button type="button" className="ops-btn ops-btn-ghost" onClick={onClose}>إلغاء</button>
