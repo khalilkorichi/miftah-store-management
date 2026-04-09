@@ -17,9 +17,10 @@ import {
 } from './Icons';
 
 const CARD_COLORS = [
-  '#5E4FDE', '#3B82F6', '#06B6D4', '#10B981',
-  '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6',
-  '#F97316', '#84CC16', '#14B8A6', '#64748B',
+  '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#22C55E',
+  '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1',
+  '#5E4FDE', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E',
+  '#64748B', '#475569', '#334155', '#1E293B', '#F8FAFC', '#94A3B8',
 ];
 
 function PasteBtn({ onPaste, className = '' }) {
@@ -143,6 +144,8 @@ function ColorPicker({ color, onChangeColor, onClear }) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef(null);
   const popoverRef = useRef(null);
+  const customInputRef = useRef(null);
+  const isCustomColor = color && !CARD_COLORS.includes(color);
 
   const handleToggle = (e) => {
     e.stopPropagation();
@@ -208,6 +211,29 @@ function ColorPicker({ color, onChangeColor, onClear }) {
                 {color === c && <CheckIcon style={{ width: 12, height: 12, color: '#fff', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.5))' }} />}
               </button>
             ))}
+          </div>
+          <div className="card-color-custom-row">
+            <button
+              className={`card-color-custom-btn ${isCustomColor ? 'has-custom' : ''}`}
+              onClick={() => customInputRef.current?.click()}
+              title="اختر لوناً مخصصاً"
+            >
+              {isCustomColor ? (
+                <span className="card-color-custom-preview" style={{ background: color }} />
+              ) : (
+                <span className="card-color-custom-wheel" />
+              )}
+              <span>{isCustomColor ? color.toUpperCase() : 'لون مخصص'}</span>
+              {isCustomColor && <CheckIcon style={{ width: 11, height: 11, marginRight: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.4))' }} />}
+            </button>
+            <input
+              ref={customInputRef}
+              type="color"
+              value={color || '#5E4FDE'}
+              onChange={(e) => onChangeColor(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+            />
           </div>
           {color && (
             <button className="card-color-clear" onClick={() => { onClear(); setOpen(false); }}>
