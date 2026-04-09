@@ -15736,3 +15736,252 @@ body.dark-mode .selectable-card.selected {
 .ai-message-content .md-body .md-h3 { font-size: 0.95rem; }
 .ai-message-content .md-body .md-code-block-wrap { font-size: 12px; }
 .ai-message-content .md-p { margin-bottom: 8px; }
+
+/* ════════════════════════════════════════════════════════════════
+   AI FLOATING INPUT — trigger pill + overlay + modal panel
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Trigger pill (collapsed state) ── */
+.ai-input-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  padding: 11px 16px;
+  cursor: pointer;
+  text-align: right;
+  font-family: var(--font-family);
+  transition: border-color .18s, box-shadow .18s, background .18s;
+  color: var(--text-muted);
+}
+.ai-input-trigger:hover:not(:disabled) {
+  border-color: rgba(139,92,246,.5);
+  box-shadow: 0 0 0 3px rgba(139,92,246,.08);
+  background: var(--bg-secondary);
+}
+.ai-input-trigger.is-open,
+.ai-input-trigger:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139,92,246,.12);
+  outline: none;
+}
+.ai-input-trigger:disabled { opacity: 0.5; cursor: not-allowed; }
+.ai-input-trigger-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+.ai-input-trigger-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.55;
+  white-space: nowrap;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-family: inherit;
+}
+
+/* ── Overlay backdrop ── */
+.ai-input-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: ai-overlay-in .15s ease;
+}
+@keyframes ai-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Floating panel ── */
+.ai-input-float {
+  width: 100%;
+  max-width: 580px;
+  background: var(--bg-card);
+  border: 1.5px solid rgba(139,92,246,.3);
+  border-radius: 20px;
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.28),
+    0 0 0 1px rgba(139,92,246,.08),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  overflow: hidden;
+  animation: ai-float-in .2s cubic-bezier(.34,1.56,.64,1);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+@keyframes ai-float-in {
+  from { opacity: 0; transform: scale(.94) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+
+/* ── Modal header ── */
+.ai-input-float-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--bg-secondary) 60%, rgba(139,92,246,.06));
+}
+.ai-input-float-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ai-input-float-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(139,92,246,.2), rgba(59,130,246,.12));
+  border: 1px solid rgba(139,92,246,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b5cf6;
+  flex-shrink: 0;
+}
+.ai-input-float-title-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ai-input-float-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ai-input-float-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.ai-input-float-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.ai-input-float-close:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+/* ── Textarea ── */
+.ai-input-float-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.65;
+  padding: 16px 18px;
+  resize: none;
+  outline: none;
+  direction: rtl;
+  text-align: right;
+  box-sizing: border-box;
+}
+.ai-input-float-textarea:focus { border-bottom-color: rgba(139,92,246,.45); }
+.ai-input-float-textarea::placeholder { color: var(--text-muted); opacity: .6; }
+
+/* ── Quick prompts grid ── */
+.ai-input-float-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.ai-input-float-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: right;
+  font-family: var(--font-family);
+  transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ai-input-float-chip:hover {
+  border-color: rgba(139,92,246,.45);
+  background: rgba(139,92,246,.07);
+  color: #8b5cf6;
+  box-shadow: 0 2px 8px rgba(139,92,246,.1);
+}
+.ai-chip-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* ── Footer ── */
+.ai-input-float-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  gap: 12px;
+}
+.ai-input-float-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: .6;
+  direction: rtl;
+}
+.ai-input-float-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border-radius: 11px;
+  border: none;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: opacity .15s, box-shadow .15s;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(139,92,246,.35);
+}
+.ai-input-float-send:hover:not(:disabled) {
+  opacity: .9;
+  box-shadow: 0 6px 20px rgba(139,92,246,.45);
+}
+.ai-input-float-send:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }

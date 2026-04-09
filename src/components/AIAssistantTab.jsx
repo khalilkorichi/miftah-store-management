@@ -232,6 +232,7 @@ function AIAssistantTab({
   const [copiedOutput, setCopiedOutput] = useState(false);
   const [appliedOutput, setAppliedOutput] = useState(false);
   const [error, setError] = useState('');
+  const [inputOpen, setInputOpen] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -673,53 +674,105 @@ function AIAssistantTab({
         </div>
       )}
 
-      {/* Quick Prompts */}
-      {messages.length > 0 && (
-        <div className="ai-quick-prompts">
-          {[
-            'قصّر الوصف',
-            'اجعله أكثر تسويقاً',
-            'أضف قسم FAQ',
-            'أضف نقاط مزايا',
-            'غيّر الأسلوب إلى رسمي',
-          ].map(prompt => (
-            <button
-              key={prompt}
-              className="ai-quick-btn"
-              onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
-            >
-              {prompt}
-            </button>
-          ))}
+      {/* Chat Input Trigger */}
+      <button
+        className={`ai-input-trigger${inputOpen ? ' is-open' : ''}`}
+        onClick={() => { if (!isLoading && hasApiKey) setInputOpen(true); }}
+        disabled={isLoading || !hasApiKey}
+      >
+        <SparklesIcon className="icon-xs" />
+        <span className="ai-input-trigger-text">
+          {input
+            ? input
+            : messages.length === 0
+              ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
+              : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'}
+        </span>
+        <span className="ai-input-trigger-hint">انقر للكتابة</span>
+      </button>
+
+      {/* Floating Input Modal */}
+      {inputOpen && (
+        <div className="ai-input-overlay" onClick={() => setInputOpen(false)}>
+          <div className="ai-input-float" onClick={e => e.stopPropagation()}>
+
+            {/* Modal Header */}
+            <div className="ai-input-float-header">
+              <div className="ai-input-float-title">
+                <span className="ai-input-float-icon"><SparklesIcon className="icon-sm" /></span>
+                <div className="ai-input-float-title-text">
+                  <span className="ai-input-float-name">المساعد الذكي</span>
+                  <span className="ai-input-float-sub">{providerLabel} · {activeModel}</span>
+                </div>
+              </div>
+              <button className="ai-input-float-close" onClick={() => setInputOpen(false)}>
+                <XIcon className="icon-xs" />
+              </button>
+            </div>
+
+            {/* Textarea */}
+            <textarea
+              ref={inputRef}
+              className="ai-input-float-textarea"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (input.trim() && !isLoading && hasApiKey) {
+                    handleSend();
+                    setInputOpen(false);
+                  }
+                } else if (e.key === 'Escape') {
+                  setInputOpen(false);
+                }
+              }}
+              placeholder={messages.length === 0
+                ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
+                : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'}
+              rows={3}
+              disabled={isLoading}
+              dir="rtl"
+              autoFocus
+            />
+
+            {/* Quick Prompts Grid */}
+            <div className="ai-input-float-grid">
+              {[
+                { label: 'قصّر الوصف', icon: '✂️' },
+                { label: 'اجعله أكثر تسويقاً', icon: '🚀' },
+                { label: 'أضف قسم FAQ', icon: '❓' },
+                { label: 'أضف نقاط مزايا', icon: '✅' },
+                { label: 'غيّر الأسلوب إلى رسمي', icon: '📝' },
+                { label: 'ترجم إلى الإنجليزية', icon: '🌐' },
+              ].map(({ label, icon }) => (
+                <button
+                  key={label}
+                  className="ai-input-float-chip"
+                  onClick={() => { setInput(label); inputRef.current?.focus(); }}
+                >
+                  <span className="ai-chip-icon">{icon}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="ai-input-float-footer">
+              <span className="ai-input-float-hint">Enter للإرسال · Shift+Enter سطر جديد · Esc إغلاق</span>
+              <button
+                className="ai-input-float-send"
+                onClick={() => { handleSend(); setInputOpen(false); }}
+                disabled={!input.trim() || isLoading || !hasApiKey}
+              >
+                {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
+                إرسال
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
-
-      {/* Chat Input */}
-      <div className="ai-chat-input-wrap">
-        <textarea
-          ref={inputRef}
-          className="ai-chat-input"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            messages.length === 0
-              ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
-              : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'
-          }
-          rows={2}
-          disabled={isLoading || !hasApiKey}
-          dir="rtl"
-        />
-        <button
-          className="ai-send-btn"
-          onClick={handleSend}
-          disabled={!input.trim() || isLoading || !hasApiKey}
-          title="إرسال"
-        >
-          {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
-        </button>
-      </div>
     </div>
   );
 }
