@@ -611,6 +611,35 @@ function App() {
   }, []);
 
   // === Branch Management ===
+  const handleMoveBranch = useCallback((branchId, newParentId) => {
+    setProducts((prev) => {
+      const branch = prev.find((p) => p.id === branchId);
+      const newParent = prev.find((p) => p.id === newParentId);
+      if (!branch || !newParent) return prev;
+      toast(`تم نقل "${branch.name}" إلى "${newParent.name}"`, 'success');
+      return prev.map((p) => p.id === branchId ? { ...p, parentId: newParentId } : p);
+    });
+  }, [toast]);
+
+  const handleDetachBranch = useCallback((branchId) => {
+    setProducts((prev) => {
+      const branch = prev.find((p) => p.id === branchId);
+      if (!branch) return prev;
+      toast(`تم تحويل "${branch.name}" إلى منتج مستقل`, 'success');
+      return prev.map((p) => p.id === branchId ? { ...p, parentId: null } : p);
+    });
+  }, [toast]);
+
+  const handleAttachAsBranch = useCallback((productId, newParentId) => {
+    setProducts((prev) => {
+      const product = prev.find((p) => p.id === productId);
+      const parent = prev.find((p) => p.id === newParentId);
+      if (!product || !parent) return prev;
+      toast(`تم إرفاق "${product.name}" كفرع لـ "${parent.name}"`, 'success');
+      return prev.map((p) => p.id === productId ? { ...p, parentId: newParentId } : p);
+    });
+  }, [toast]);
+
   const handleAddBranch = useCallback((parentId) => {
     setProducts((prev) => {
       const parent = prev.find((p) => p.id === parentId);
@@ -887,6 +916,9 @@ function App() {
             onAddBranch={handleAddBranch}
             onUpdateSupplierPlanLink={handleUpdateSupplierPlanLink}
             onUpdateProductColor={handleUpdateProductColor}
+            onMoveBranch={handleMoveBranch}
+            onDetachBranch={handleDetachBranch}
+            onAttachAsBranch={handleAttachAsBranch}
           />
           </div>
         )}

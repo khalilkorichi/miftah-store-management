@@ -1313,38 +1313,54 @@ body {
 /* ===== PRODUCT GROUP (stacked branches) ===== */
 .product-group {
   position: relative;
+  isolation: isolate; /* contain z-index so layers don't bleed into adjacent grid cells */
 }
 
 .product-group-layer {
   position: absolute;
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
+  left: 4px;
+  right: 4px;
+  top: 4px;
   border-radius: var(--radius-lg);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   pointer-events: none;
-  transition: all 0.3s ease;
-  width: calc(100% - 8px);
+  transition: opacity 0.3s ease, bottom 0.3s ease;
 }
 .product-group-layer.layer-1 {
   bottom: -6px;
-  height: 100%;
+  z-index: 2;
   opacity: 0.55;
-  z-index: -1;
 }
 .product-group-layer.layer-2 {
   bottom: -11px;
-  height: 100%;
+  left: 8px;
+  right: 8px;
+  z-index: 1;
   opacity: 0.3;
-  z-index: -2;
-  width: calc(100% - 16px);
 }
 .product-group-layer.layer-3 {
   bottom: -15px;
-  height: 100%;
+  left: 12px;
+  right: 12px;
+  z-index: 0;
   opacity: 0.15;
-  z-index: -3;
-  width: calc(100% - 24px);
+}
+
+/* Main card sits above all layers */
+.product-group--has-branches > .product-card {
+  position: relative;
+  z-index: 3;
+}
+
+.product-group--has-branches:not(.product-group--expanded) {
+  padding-bottom: 14px;
+}
+
+/* When expanded, hide the stack layers */
+.product-group--expanded .product-group-layer {
+  opacity: 0;
+  bottom: 0;
 }
 
 .product-group-branch-slot {
@@ -1362,7 +1378,7 @@ body {
 }
 
 .product-group--expanded .product-group-branch-slot {
-  max-height: 600px;
+  max-height: 700px;
   overflow: visible;
   opacity: 1;
   pointer-events: auto;
@@ -1370,18 +1386,188 @@ body {
   margin-top: 8px;
 }
 
-.product-group--expanded .product-group-branch-slot:nth-child(2) { transition-delay: 0.03s; }
-.product-group--expanded .product-group-branch-slot:nth-child(3) { transition-delay: 0.08s; }
-.product-group--expanded .product-group-branch-slot:nth-child(4) { transition-delay: 0.13s; }
-.product-group--expanded .product-group-branch-slot:nth-child(5) { transition-delay: 0.18s; }
+.product-group--expanded .product-group-branch-slot:nth-child(3) { transition-delay: 0.03s; }
+.product-group--expanded .product-group-branch-slot:nth-child(4) { transition-delay: 0.08s; }
+.product-group--expanded .product-group-branch-slot:nth-child(5) { transition-delay: 0.13s; }
+.product-group--expanded .product-group-branch-slot:nth-child(6) { transition-delay: 0.18s; }
 
-.product-group--has-branches .product-card {
-  position: relative;
-  z-index: 2;
+/* Branch quick-action bar */
+.branch-actions-bar {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px 4px;
+  border-top: 1px dashed var(--border-color);
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.product-group--has-branches:not(.product-group--expanded) {
-  padding-bottom: 14px;
+.branch-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-muted);
+  transition: all 0.18s;
+}
+.branch-action-btn:hover {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  background: rgba(94, 79, 222, 0.07);
+}
+.branch-action-btn.danger:hover {
+  color: var(--accent-red);
+  border-color: var(--accent-red);
+  background: rgba(239, 68, 68, 0.07);
+}
+.branch-action-btn.success:hover {
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+  background: rgba(17, 186, 101, 0.07);
+}
+
+/* Attach-as-branch button inside expanded group */
+.product-group-attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.product-group-attach-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(94, 79, 222, 0.05);
+}
+
+/* Branch/Attach modals */
+.branch-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.branch-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  width: 380px;
+  max-width: 95vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+}
+
+.branch-modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.branch-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 40vh;
+  padding-right: 4px;
+}
+
+.branch-modal-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.15s;
+  background: none;
+  text-align: start;
+  width: 100%;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.branch-modal-option:hover {
+  border-color: var(--accent-blue);
+  background: rgba(94, 79, 222, 0.07);
+  color: var(--accent-blue);
+}
+.branch-modal-option.selected {
+  border-color: var(--accent-blue);
+  background: rgba(94, 79, 222, 0.12);
+  color: var(--accent-blue);
+}
+
+.branch-modal-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 16px;
+}
+
+.branch-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.branch-modal-cancel {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.branch-modal-cancel:hover {
+  background: var(--bg-hover);
+}
+
+.branch-modal-confirm {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--gradient-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.branch-modal-confirm:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* ===== CARD COLOR ===== */

@@ -11,7 +11,8 @@ import {
   TagIcon, ChevronDownIcon, ChevronLeftIcon, TrashIcon, PlusCircleIcon,
   EyeIcon, StarIcon, PackageIcon, SearchIcon, PlusIcon, SettingsIcon,
   UserIcon, UsersIcon, CopyIcon, UploadIcon, ShieldCheckIcon,
-  FilterIcon, GitBranchIcon, SortIcon, ClipboardIcon
+  FilterIcon, GitBranchIcon, SortIcon, ClipboardIcon,
+  ArrowUpIcon, LinkIcon
 } from './Icons';
 
 const CARD_COLORS = [
@@ -364,10 +365,87 @@ function ProductCard({
   );
 }
 
-function ProductGroup({ parent, branches, index, sharedCardProps, onOpenDetail }) {
+function MoveBranchModal({ branch, allProducts, currentParentId, onConfirm, onClose }) {
+  const [selectedId, setSelectedId] = useState(null);
+  const options = allProducts.filter(p => !p.parentId && p.id !== currentParentId && p.id !== branch?.id);
+  return (
+    <div className="branch-modal-overlay" onClick={onClose}>
+      <div className="branch-modal" onClick={e => e.stopPropagation()}>
+        <h3 className="branch-modal-title">
+          <GitBranchIcon className="icon-sm" /> نقل الفرع إلى منتج آخر
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+          اختر المنتج الأساسي الذي تريد نقل <strong>{branch?.name}</strong> إليه:
+        </p>
+        <div className="branch-modal-list">
+          {options.length === 0 ? (
+            <div className="branch-modal-empty">لا توجد منتجات أساسية أخرى</div>
+          ) : options.map(p => (
+            <button
+              key={p.id}
+              className={`branch-modal-option ${selectedId === p.id ? 'selected' : ''}`}
+              onClick={() => setSelectedId(p.id)}
+            >
+              <PackageIcon className="icon-sm" style={{ flexShrink: 0 }} />
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <div className="branch-modal-actions">
+          <button className="branch-modal-cancel" onClick={onClose}>إلغاء</button>
+          <button className="branch-modal-confirm" disabled={!selectedId} onClick={() => { if (selectedId) { onConfirm(branch.id, selectedId); onClose(); } }}>
+            نقل الفرع
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AttachProductModal({ parent, allProducts, onConfirm, onClose }) {
+  const [selectedId, setSelectedId] = useState(null);
+  const options = allProducts.filter(p => !p.parentId && p.id !== parent?.id);
+  return (
+    <div className="branch-modal-overlay" onClick={onClose}>
+      <div className="branch-modal" onClick={e => e.stopPropagation()}>
+        <h3 className="branch-modal-title">
+          <LinkIcon className="icon-sm" /> إرفاق منتج كفرع
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+          اختر منتجاً مستقلاً لإرفاقه كفرع لـ <strong>{parent?.name}</strong>:
+        </p>
+        <div className="branch-modal-list">
+          {options.length === 0 ? (
+            <div className="branch-modal-empty">لا توجد منتجات مستقلة أخرى</div>
+          ) : options.map(p => (
+            <button
+              key={p.id}
+              className={`branch-modal-option ${selectedId === p.id ? 'selected' : ''}`}
+              onClick={() => setSelectedId(p.id)}
+            >
+              <PackageIcon className="icon-sm" style={{ flexShrink: 0 }} />
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <div className="branch-modal-actions">
+          <button className="branch-modal-cancel" onClick={onClose}>إلغاء</button>
+          <button className="branch-modal-confirm" disabled={!selectedId} onClick={() => { if (selectedId) { onConfirm(selectedId, parent.id); onClose(); } }}>
+            إرفاق كفرع
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, onDetachBranch, onAttachAsBranch }) {
   const [hovered, setHovered] = useState(false);
+  const [movingBranch, setMovingBranch] = useState(null);
+  const [showAttachModal, setShowAttachModal] = useState(false);
   const hasBranches = branches.length > 0;
   const layerCount = Math.min(branches.length, 3);
+  const { allProducts, requestConfirm, setDetailModalProduct } = sharedCardProps;
 
   return (
     <div
@@ -389,7 +467,6 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onOpenDetail }
           key={branch.id}
           className="product-group-branch-slot"
           style={{ '--branch-index': bi }}
-          onClick={() => sharedCardProps.setDetailModalProduct(branch)}
         >
           <ProductCard
             product={branch}
@@ -397,8 +474,44 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onOpenDetail }
             {...sharedCardProps}
             parentProduct={parent}
           />
+          <div className="branch-actions-bar" onClick={e => e.stopPropagation()}>
+            <button className="branch-action-btn" onClick={() => setDetailModalProduct(branch)} title="عرض التفاصيل">
+              <EyeIcon className="icon-xs" /> التفاصيل
+            </button>
+            <button className="branch-action-btn" onClick={() => setMovingBranch(branch)} title="نقل إلى منتج آخر">
+              <GitBranchIcon className="icon-xs" /> نقل
+            </button>
+            <button className="branch-action-btn success" onClick={() => requestConfirm('تحويل إلى منتج مستقل', `هل تريد فصل "${branch.name}" وتحويله إلى منتج مستقل؟`, () => onDetachBranch(branch.id))} title="تحويل إلى منتج مستقل">
+              <ArrowUpIcon className="icon-xs" /> استقلال
+            </button>
+            <button className="branch-action-btn danger" onClick={() => requestConfirm('حذف الفرع', `هل أنت متأكد من حذف الفرع "${branch.name}"؟`, () => sharedCardProps.onDeleteProduct(branch.id))} title="حذف الفرع">
+              <TrashIcon className="icon-xs" /> حذف
+            </button>
+          </div>
         </div>
       ))}
+      {hovered && (
+        <button className="product-group-attach-btn" onClick={(e) => { e.stopPropagation(); setShowAttachModal(true); }}>
+          <LinkIcon className="icon-sm" /> إرفاق منتج موجود كفرع
+        </button>
+      )}
+      {movingBranch && (
+        <MoveBranchModal
+          branch={movingBranch}
+          allProducts={allProducts}
+          currentParentId={parent.id}
+          onConfirm={onMoveBranch}
+          onClose={() => setMovingBranch(null)}
+        />
+      )}
+      {showAttachModal && (
+        <AttachProductModal
+          parent={parent}
+          allProducts={allProducts}
+          onConfirm={onAttachAsBranch}
+          onClose={() => setShowAttachModal(false)}
+        />
+      )}
     </div>
   );
 }
@@ -413,6 +526,7 @@ function ProductTable({
   onUpdateOfficialPrice, onUpdateWarranty, onUpdateSupplierWarranty, onAddCompetitor, onUpdateCompetitor, onDeleteCompetitor,
   onImportProducts,
   onUpdateSupplierActivationMethod, onAddBranch, onUpdateSupplierPlanLink, onUpdateProductColor,
+  onMoveBranch, onDetachBranch, onAttachAsBranch,
 }) {
   const [editingCell, setEditingCell] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -668,6 +782,9 @@ function ProductTable({
                 branches={branches}
                 index={index}
                 sharedCardProps={sharedCardProps}
+                onMoveBranch={onMoveBranch}
+                onDetachBranch={onDetachBranch}
+                onAttachAsBranch={onAttachAsBranch}
               />
             );
           })}
