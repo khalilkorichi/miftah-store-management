@@ -471,7 +471,7 @@ function SettingsPage({
                     <select
                       className="settings-input settings-select"
                       dir="ltr"
-                      value={appSettings?.geminiModel || 'gemini-2.0-flash'}
+                      value={appSettings?.geminiModel || 'gemini-2.5-flash'}
                       onChange={e => updateSetting('geminiModel', e.target.value)}
                     >
                       {GEMINI_MODELS.map(m => (
@@ -513,7 +513,7 @@ function SettingsPage({
                     <select
                       className="settings-input settings-select"
                       dir="ltr"
-                      value={appSettings?.openrouterModel || 'google/gemini-flash-1.5'}
+                      value={appSettings?.openrouterModel || 'anthropic/claude-sonnet-4.6'}
                       onChange={e => updateSetting('openrouterModel', e.target.value)}
                     >
                       {OPENROUTER_MODELS.map(m => (
@@ -565,7 +565,7 @@ function SettingsPage({
                     <select
                       className="settings-input settings-select"
                       dir="ltr"
-                      value={appSettings?.agentrouterModel || 'openai/gpt-4o-mini'}
+                      value={appSettings?.agentrouterModel || 'gpt-4o'}
                       onChange={e => updateSetting('agentrouterModel', e.target.value)}
                     >
                       {AGENTROUTER_MODELS.map(m => (

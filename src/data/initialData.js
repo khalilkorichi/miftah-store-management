@@ -27,11 +27,11 @@ export const DEFAULT_ACTIVATION_GUIDES = [];
 export const DEFAULT_AI_SETTINGS = {
   aiProvider: 'gemini',
   geminiApiKey: '',
-  geminiModel: 'gemini-2.0-flash',
+  geminiModel: 'gemini-2.5-flash',
   openrouterApiKey: '',
-  openrouterModel: 'google/gemini-flash-1.5',
+  openrouterModel: 'anthropic/claude-sonnet-4.6',
   agentrouterApiKey: '',
-  agentrouterModel: 'openai/gpt-4o-mini',
+  agentrouterModel: 'gpt-4o',
   aiCustomPrompt: '',
 };
 

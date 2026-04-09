@@ -466,9 +466,9 @@ function AIAssistantTab({
     'Google Gemini';
 
   const activeModel =
-    appSettings?.aiProvider === 'openrouter' ? (appSettings?.openrouterModel || 'google/gemini-flash-1.5') :
-    appSettings?.aiProvider === 'agentrouter' ? (appSettings?.agentrouterModel || 'openai/gpt-4o-mini') :
-    (appSettings?.geminiModel || 'gemini-2.0-flash');
+    appSettings?.aiProvider === 'openrouter' ? (appSettings?.openrouterModel || 'anthropic/claude-sonnet-4.6') :
+    appSettings?.aiProvider === 'agentrouter' ? (appSettings?.agentrouterModel || 'gpt-4o') :
+    (appSettings?.geminiModel || 'gemini-2.5-flash');
 
   return (
     <div className="ai-tab-wrap">
