@@ -444,13 +444,11 @@ function AttachProductModal({ parent, allProducts, onConfirm, onClose }) {
   );
 }
 
-function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, onDetachBranch, onAttachAsBranch }) {
+function ProductGroup({ parent, branches, index, sharedCardProps, onDetachBranch, onOpenMoveModal, onOpenAttachModal }) {
   const [hovered, setHovered] = useState(false);
-  const [movingBranch, setMovingBranch] = useState(null);
-  const [showAttachModal, setShowAttachModal] = useState(false);
   const hasBranches = branches.length > 0;
   const layerCount = Math.min(branches.length, 3);
-  const { allProducts, requestConfirm, setDetailModalProduct } = sharedCardProps;
+  const { requestConfirm, setDetailModalProduct } = sharedCardProps;
 
   return (
     <div
@@ -466,7 +464,7 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, 
         index={index}
         {...sharedCardProps}
         parentProduct={null}
-        onAttachClick={() => setShowAttachModal(true)}
+        onAttachClick={() => onOpenAttachModal(parent)}
       />
       {hasBranches && branches.map((branch, bi) => (
         <div
@@ -484,7 +482,7 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, 
             <button className="branch-action-btn" onClick={() => setDetailModalProduct(branch)} title="عرض التفاصيل">
               <EyeIcon className="icon-xs" /> التفاصيل
             </button>
-            <button className="branch-action-btn" onClick={() => setMovingBranch(branch)} title="نقل إلى منتج آخر">
+            <button className="branch-action-btn" onClick={() => onOpenMoveModal(branch, parent.id)} title="نقل إلى منتج آخر">
               <GitBranchIcon className="icon-xs" /> نقل
             </button>
             <button className="branch-action-btn success" onClick={() => requestConfirm('تحويل إلى منتج مستقل', `هل تريد فصل "${branch.name}" وتحويله إلى منتج مستقل؟`, () => onDetachBranch(branch.id))} title="تحويل إلى منتج مستقل">
@@ -496,23 +494,6 @@ function ProductGroup({ parent, branches, index, sharedCardProps, onMoveBranch, 
           </div>
         </div>
       ))}
-      {movingBranch && (
-        <MoveBranchModal
-          branch={movingBranch}
-          allProducts={allProducts}
-          currentParentId={parent.id}
-          onConfirm={onMoveBranch}
-          onClose={() => setMovingBranch(null)}
-        />
-      )}
-      {showAttachModal && (
-        <AttachProductModal
-          parent={parent}
-          allProducts={allProducts}
-          onConfirm={onAttachAsBranch}
-          onClose={() => setShowAttachModal(false)}
-        />
-      )}
     </div>
   );
 }
@@ -547,6 +528,8 @@ function ProductTable({
   const [filterCategory, setFilterCategory] = useState('');
   const [filterType, setFilterType] = useState('all'); // all | main | branches
   const [sortBy, setSortBy] = useState('default'); // default | name_asc | name_desc | price_asc | price_desc
+  const [movingBranchCtx, setMovingBranchCtx] = useState(null); // { branch, parentId }
+  const [attachParentCtx, setAttachParentCtx] = useState(null); // parent product
 
   const detailModalProduct = detailModalProductId ? products.find(p => p.id === detailModalProductId) || null : null;
   const activationModalProduct = activationModalProductId ? products.find(p => p.id === activationModalProductId) || null : null;
@@ -783,9 +766,9 @@ function ProductTable({
                 branches={branches}
                 index={index}
                 sharedCardProps={sharedCardProps}
-                onMoveBranch={onMoveBranch}
                 onDetachBranch={onDetachBranch}
-                onAttachAsBranch={onAttachAsBranch}
+                onOpenMoveModal={(branch, parentId) => setMovingBranchCtx({ branch, parentId })}
+                onOpenAttachModal={(parent) => setAttachParentCtx(parent)}
               />
             );
           })}
@@ -832,6 +815,23 @@ function ProductTable({
         onAddCategory={onAddCategory}
         onUpdateCategory={onUpdateProductCategory}
       />
+      {movingBranchCtx && (
+        <MoveBranchModal
+          branch={movingBranchCtx.branch}
+          allProducts={products}
+          currentParentId={movingBranchCtx.parentId}
+          onConfirm={onMoveBranch}
+          onClose={() => setMovingBranchCtx(null)}
+        />
+      )}
+      {attachParentCtx && (
+        <AttachProductModal
+          parent={attachParentCtx}
+          allProducts={products}
+          onConfirm={onAttachAsBranch}
+          onClose={() => setAttachParentCtx(null)}
+        />
+      )}
     </div>
   );
 }
