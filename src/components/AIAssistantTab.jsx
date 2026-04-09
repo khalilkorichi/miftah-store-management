@@ -249,7 +249,9 @@ function AIAssistantTab({
   }, [appSettings?.aiCustomPrompt]);
 
   const hasApiKey = Boolean(
-    (appSettings?.aiProvider === 'openrouter' ? appSettings?.openrouterApiKey : appSettings?.geminiApiKey)
+    appSettings?.aiProvider === 'openrouter' ? appSettings?.openrouterApiKey :
+    appSettings?.aiProvider === 'agentrouter' ? appSettings?.agentrouterApiKey :
+    appSettings?.geminiApiKey
   );
 
   const getSystemPrompt = useCallback(() => {
@@ -458,7 +460,15 @@ function AIAssistantTab({
     );
   }
 
-  const providerLabel = appSettings?.aiProvider === 'openrouter' ? 'OpenRouter' : 'Google Gemini';
+  const providerLabel =
+    appSettings?.aiProvider === 'openrouter' ? 'OpenRouter' :
+    appSettings?.aiProvider === 'agentrouter' ? 'AgentRouter' :
+    'Google Gemini';
+
+  const activeModel =
+    appSettings?.aiProvider === 'openrouter' ? (appSettings?.openrouterModel || 'google/gemini-flash-1.5') :
+    appSettings?.aiProvider === 'agentrouter' ? (appSettings?.agentrouterModel || 'openai/gpt-4o-mini') :
+    (appSettings?.geminiModel || 'gemini-2.0-flash');
 
   return (
     <div className="ai-tab-wrap">
@@ -471,6 +481,7 @@ function AIAssistantTab({
           <div>
             <span className="ai-tab-header-title">مساعد الذكاء الاصطناعي</span>
             <span className="ai-tab-header-badge">{providerLabel}</span>
+            <span className="ai-tab-header-model">{activeModel}</span>
           </div>
         </div>
         <button

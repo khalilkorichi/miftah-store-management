@@ -4,8 +4,9 @@ import {
   MoonIcon, SunIcon, DatabaseIcon, UploadIcon, 
   DownloadIcon, RefreshIcon, InfoIcon, XIcon, PlusIcon,
   AlertTriangleIcon, CheckCircleIcon, PackageIcon, ImageIcon,
-  ExternalLinkIcon, SparklesIcon, KeyIcon, EyeIcon,
+  ExternalLinkIcon, SparklesIcon, KeyIcon, EyeIcon, ChevronDownIcon,
 } from './Icons';
+import { GEMINI_MODELS, OPENROUTER_MODELS, AGENTROUTER_MODELS } from '../utils/aiProvider';
 
 function SettingsPage({
   exchangeRate,
@@ -32,6 +33,7 @@ function SettingsPage({
   const [rateSaved, setRateSaved] = useState(false);
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [showOpenrouterKey, setShowOpenrouterKey] = useState(false);
+  const [showAgentrouterKey, setShowAgentrouterKey] = useState(false);
   const fileInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -418,14 +420,16 @@ function SettingsPage({
           <h3>إعدادات الذكاء الاصطناعي</h3>
           <p className="settings-desc">اختر مزود الذكاء الاصطناعي وأدخل مفتاح API لتفعيل مساعد توليد الأوصاف</p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Provider */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+            {/* ── Provider Selector ── */}
             <div>
               <label className="settings-label">مزود الذكاء الاصطناعي</label>
               <div className="settings-option-row" style={{ marginTop: '8px' }}>
                 {[
-                  { id: 'gemini', label: 'Google Gemini' },
-                  { id: 'openrouter', label: 'OpenRouter' },
+                  { id: 'gemini',       label: 'Google Gemini' },
+                  { id: 'openrouter',   label: 'OpenRouter' },
+                  { id: 'agentrouter',  label: 'AgentRouter' },
                 ].map(opt => (
                   <button
                     key={opt.id}
@@ -438,57 +442,141 @@ function SettingsPage({
               </div>
             </div>
 
-            {/* Gemini Key */}
-            <div>
-              <label className="settings-label">
-                <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
-                مفتاح Gemini API
-              </label>
-              <div className="settings-api-key-row">
-                <input
-                  type={showGeminiKey ? 'text' : 'password'}
-                  className="settings-input"
-                  style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
-                  dir="ltr"
-                  value={appSettings?.geminiApiKey || ''}
-                  onChange={e => updateSetting('geminiApiKey', e.target.value)}
-                  placeholder="AIzaSy..."
-                />
-                <button
-                  className="settings-key-toggle"
-                  onClick={() => setShowGeminiKey(v => !v)}
-                  title={showGeminiKey ? 'إخفاء' : 'إظهار'}
-                >
-                  <EyeIcon className="icon-xs" />
-                </button>
-              </div>
-            </div>
+            {/* ── Google Gemini Block ── */}
+            {appSettings?.aiProvider === 'gemini' && (
+              <>
+                <div>
+                  <label className="settings-label">
+                    <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
+                    مفتاح Gemini API
+                  </label>
+                  <div className="settings-api-key-row">
+                    <input
+                      type={showGeminiKey ? 'text' : 'password'}
+                      className="settings-input"
+                      style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
+                      dir="ltr"
+                      value={appSettings?.geminiApiKey || ''}
+                      onChange={e => updateSetting('geminiApiKey', e.target.value)}
+                      placeholder="AIzaSy..."
+                    />
+                    <button className="settings-key-toggle" onClick={() => setShowGeminiKey(v => !v)}>
+                      <EyeIcon className="icon-xs" />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="settings-label">نموذج Gemini</label>
+                  <div className="settings-select-wrap" style={{ marginTop: '6px' }}>
+                    <select
+                      className="settings-input settings-select"
+                      dir="ltr"
+                      value={appSettings?.geminiModel || 'gemini-2.0-flash'}
+                      onChange={e => updateSetting('geminiModel', e.target.value)}
+                    >
+                      {GEMINI_MODELS.map(m => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="settings-select-icon icon-xs" />
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* OpenRouter Key */}
-            <div>
-              <label className="settings-label">
-                <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
-                مفتاح OpenRouter API
-              </label>
-              <div className="settings-api-key-row">
-                <input
-                  type={showOpenrouterKey ? 'text' : 'password'}
-                  className="settings-input"
-                  style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
-                  dir="ltr"
-                  value={appSettings?.openrouterApiKey || ''}
-                  onChange={e => updateSetting('openrouterApiKey', e.target.value)}
-                  placeholder="sk-or-v1-..."
-                />
-                <button
-                  className="settings-key-toggle"
-                  onClick={() => setShowOpenrouterKey(v => !v)}
-                  title={showOpenrouterKey ? 'إخفاء' : 'إظهار'}
-                >
-                  <EyeIcon className="icon-xs" />
-                </button>
-              </div>
-            </div>
+            {/* ── OpenRouter Block ── */}
+            {appSettings?.aiProvider === 'openrouter' && (
+              <>
+                <div>
+                  <label className="settings-label">
+                    <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
+                    مفتاح OpenRouter API
+                  </label>
+                  <div className="settings-api-key-row">
+                    <input
+                      type={showOpenrouterKey ? 'text' : 'password'}
+                      className="settings-input"
+                      style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
+                      dir="ltr"
+                      value={appSettings?.openrouterApiKey || ''}
+                      onChange={e => updateSetting('openrouterApiKey', e.target.value)}
+                      placeholder="sk-or-v1-..."
+                    />
+                    <button className="settings-key-toggle" onClick={() => setShowOpenrouterKey(v => !v)}>
+                      <EyeIcon className="icon-xs" />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="settings-label">نموذج OpenRouter</label>
+                  <div className="settings-select-wrap" style={{ marginTop: '6px' }}>
+                    <select
+                      className="settings-input settings-select"
+                      dir="ltr"
+                      value={appSettings?.openrouterModel || 'google/gemini-flash-1.5'}
+                      onChange={e => updateSetting('openrouterModel', e.target.value)}
+                    >
+                      {OPENROUTER_MODELS.map(m => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="settings-select-icon icon-xs" />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ── AgentRouter Block ── */}
+            {appSettings?.aiProvider === 'agentrouter' && (
+              <>
+                <div className="ai-provider-info-banner">
+                  <span>🤖</span>
+                  <span>
+                    AgentRouter بوابة موحدة مجانية تتيح الوصول لنماذج OpenAI وAnthropic وDeepSeek.
+                    احصل على مفتاحك من{' '}
+                    <a href="https://agentrouter.org/console/token" target="_blank" rel="noreferrer">
+                      agentrouter.org
+                    </a>
+                  </span>
+                </div>
+                <div>
+                  <label className="settings-label">
+                    <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
+                    مفتاح AgentRouter API
+                  </label>
+                  <div className="settings-api-key-row">
+                    <input
+                      type={showAgentrouterKey ? 'text' : 'password'}
+                      className="settings-input"
+                      style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
+                      dir="ltr"
+                      value={appSettings?.agentrouterApiKey || ''}
+                      onChange={e => updateSetting('agentrouterApiKey', e.target.value)}
+                      placeholder="sk-..."
+                    />
+                    <button className="settings-key-toggle" onClick={() => setShowAgentrouterKey(v => !v)}>
+                      <EyeIcon className="icon-xs" />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="settings-label">نموذج AgentRouter</label>
+                  <div className="settings-select-wrap" style={{ marginTop: '6px' }}>
+                    <select
+                      className="settings-input settings-select"
+                      dir="ltr"
+                      value={appSettings?.agentrouterModel || 'openai/gpt-4o-mini'}
+                      onChange={e => updateSetting('agentrouterModel', e.target.value)}
+                    >
+                      {AGENTROUTER_MODELS.map(m => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="settings-select-icon icon-xs" />
+                  </div>
+                </div>
+              </>
+            )}
 
             <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
               المفاتيح مُخزَّنة محلياً في متصفحك فقط ولا تُرسَل لأي خادم خارجي.
