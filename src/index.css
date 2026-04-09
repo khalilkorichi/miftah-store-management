@@ -523,11 +523,22 @@ body {
 }
 
 .btn-edit-rate {
-  background: none;
-  border: none;
+  background: rgba(94, 79, 222, 0.1);
+  border: 1px solid rgba(94, 79, 222, 0.2);
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  padding: 2px;
+  padding: 5px 6px;
+  color: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s;
+  flex-shrink: 0;
+}
+.btn-edit-rate:hover {
+  background: rgba(94, 79, 222, 0.22);
+  border-color: var(--accent-blue);
+  transform: scale(1.1);
 }
 
 .exchange-edit {
