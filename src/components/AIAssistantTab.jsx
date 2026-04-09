@@ -5,6 +5,7 @@ import {
   ChevronDownIcon, PackageIcon,
 } from './Icons';
 import { callAI } from '../utils/aiProvider';
+import MarkdownRenderer from './MarkdownRenderer';
 
 export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خبير في التسويق الرقمي وكتابة المحتوى للمتاجر الإلكترونية في المنطقة العربية.
 
@@ -171,9 +172,10 @@ function MessageBubble({ msg, onApplyDescription, product }) {
       )}
       <div className="ai-message-bubble">
         <div className="ai-message-content">
-          {(msg.displayContent || msg.content).split('\n').map((line, i) =>
-            line.trim() ? <p key={i}>{line}</p> : <br key={i} />
-          )}
+          {isAI
+            ? <MarkdownRenderer content={msg.displayContent || msg.content} />
+            : <p className="md-p">{msg.displayContent || msg.content}</p>
+          }
         </div>
         {isAI && (
           <div className="ai-message-actions">
@@ -588,9 +590,7 @@ function AIAssistantTab({
             </div>
           </div>
           <div className="ai-output-body">
-            {generatedOutput.split('\n').map((line, i) =>
-              line.trim() ? <p key={i}>{line}</p> : <br key={i} />
-            )}
+            <MarkdownRenderer content={generatedOutput} />
           </div>
         </div>
       )}
