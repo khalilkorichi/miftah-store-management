@@ -18,7 +18,7 @@ export default function ActivationGuidesManager({ guides, setGuides, products, d
         const inTags = (g.customTags || '').toLowerCase().includes(q);
         if (!inTitle && !inSteps && !inTags) return false;
       }
-      if (filterProduct !== 'all' && g.productTag !== filterProduct) return false;
+      if (filterProduct !== 'all' && String(g.productTag) !== String(filterProduct)) return false;
       return true;
     });
   }, [guides, search, filterProduct]);
@@ -139,6 +139,7 @@ export default function ActivationGuidesManager({ guides, setGuides, products, d
         <GuideModal
           guide={editingGuide}
           products={products}
+          durations={durations}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditingGuide(null); }}
         />

@@ -25,7 +25,7 @@ function StepRow({ step, index, onChange, onDelete, onMoveUp, onMoveDown, isFirs
   );
 }
 
-export default function GuideModal({ guide, products, onSave, onClose }) {
+export default function GuideModal({ guide, products, durations, onSave, onClose }) {
   const isEdit = !!guide;
   const overlayRef = useRef(null);
   const firstInputRef = useRef(null);
@@ -174,11 +174,15 @@ export default function GuideModal({ guide, products, onSave, onClose }) {
                 disabled={!form.productTag || !plansForProduct.length}
               >
                 <option value="">— كل الخطط —</option>
-                {plansForProduct.map(plan => (
-                  <option key={plan.id} value={String(plan.id)}>
-                    {plan.durationId || `خطة ${plan.id}`}
-                  </option>
-                ))}
+                {plansForProduct.map(plan => {
+                  let label = `خطة ${plan.id}`;
+                  if (plan.durationId && durations) {
+                    const dur = durations.find(d => d.id === plan.durationId);
+                    if (dur) label = dur.label;
+                    else label = plan.durationId;
+                  }
+                  return <option key={plan.id} value={String(plan.id)}>{label}</option>;
+                })}
               </select>
             </div>
           </div>
