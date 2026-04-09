@@ -181,10 +181,15 @@ function MessageBubble({ msg, onApplyDescription, product }) {
               {copied ? <CheckCircleIcon className="icon-xs" /> : <CopyIcon className="icon-xs" />}
               {copied ? 'تم النسخ' : 'نسخ'}
             </button>
-            {onApplyDescription && product && msg.action?.type === 'updateDescription' && (
+            {onApplyDescription && product && (
+              msg.action?.type === 'updateDescription' ||
+              (!msg.action && (msg.displayContent || msg.content || '').length > 150)
+            ) && (
               <button
                 className="ai-msg-btn ai-msg-btn-apply"
-                onClick={() => onApplyDescription(msg.action.description || msg.displayContent || msg.content)}
+                onClick={() => onApplyDescription(
+                  msg.action?.description || msg.displayContent || msg.content
+                )}
                 title="تطبيق هذا الوصف على المنتج"
               >
                 <CheckCircleIcon className="icon-xs" />
