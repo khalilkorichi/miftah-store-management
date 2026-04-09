@@ -7,9 +7,10 @@ import {
   BoldIcon, ItalicIcon, MinusIcon,
   ChevronDownIcon, TagIcon, XIcon,
   UnderlineIcon, AlignRightIcon, AlignCenterIcon, AlignLeftIcon, AlignJustifyIcon, EraserIcon,
-  UndoIcon, RedoIcon
+  UndoIcon, RedoIcon, SparklesIcon
 } from './Icons';
 import { FEATURE_ICONS, FEATURE_BADGES, PRODUCT_TEMPLATES } from '../data/productTemplates';
+import AIAssistantTab from './AIAssistantTab';
 
 
 function useClickOutside(ref, handler, excludeRef) {
@@ -165,13 +166,14 @@ function BadgePicker({ currentBadge, onSelect, onClose, triggerRef }) {
   );
 }
 
-function ProductFeatures({ products, setProducts, durations, suppliers, exchangeRate, activationMethods = [] }) {
+function ProductFeatures({ products, setProducts, durations, suppliers, exchangeRate, activationMethods = [], appSettings, onNavigateToSettings }) {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [featureSearch, setFeatureSearch] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
   const [showIconPicker, setShowIconPicker] = useState(null);
   const [showBadgePicker, setShowBadgePicker] = useState(null);
   const [copyFromPlan, setCopyFromPlan] = useState(null);
+  const [activeSubTab, setActiveSubTab] = useState('editor');
   const featureInputRefs = useRef({});
   const iconBtnRefs = useRef({});
   const badgeBtnRefs = useRef({});
@@ -621,13 +623,44 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
         </select>
       </div>
 
-      {!product ? (
+      {/* Sub-tab switcher */}
+      <div className="pf-subtab-bar">
+        <button
+          className={`pf-subtab-btn ${activeSubTab === 'editor' ? 'pf-subtab-active' : ''}`}
+          onClick={() => setActiveSubTab('editor')}
+        >
+          <FileTextIcon className="icon-xs" />
+          محرر الوصف
+        </button>
+        <button
+          className={`pf-subtab-btn ${activeSubTab === 'ai' ? 'pf-subtab-active' : ''}`}
+          onClick={() => setActiveSubTab('ai')}
+        >
+          <SparklesIcon className="icon-xs" />
+          مساعد الذكاء الاصطناعي
+        </button>
+      </div>
+
+      {/* AI Assistant Tab */}
+      {activeSubTab === 'ai' && (
+        <AIAssistantTab
+          product={product}
+          suppliers={suppliers}
+          durations={durations}
+          activationMethods={activationMethods}
+          appSettings={appSettings}
+          updateProduct={updateProduct}
+          onNavigateToSettings={onNavigateToSettings}
+        />
+      )}
+
+      {activeSubTab === 'editor' && !product ? (
         <div className="pf-empty-state">
           <div className="pf-empty-icon"><FileTextIcon className="icon-xl" /></div>
           <h3>يرجى اختيار منتج للبدء</h3>
           <p>اختر منتجاً من القائمة أعلاه لإضافة الوصف والمزايا لخططه</p>
         </div>
-      ) : (
+      ) : activeSubTab === 'editor' ? (
         <div className="pf-editor-area">
           <div className="pf-editor-header">
             <div className="pf-editor-title-row">
@@ -1245,7 +1278,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
             })}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

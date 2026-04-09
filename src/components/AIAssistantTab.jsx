@@ -1,0 +1,606 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  SparklesIcon, SendIcon, RefreshIcon, CopyIcon, CheckCircleIcon,
+  SettingsIcon, XIcon, ZapIcon, AlertTriangleIcon, KeyIcon,
+  ChevronDownIcon, PackageIcon,
+} from './Icons';
+import { callAI } from '../utils/aiProvider';
+
+export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خبير في التسويق الرقمي وكتابة المحتوى للمتاجر الإلكترونية في المنطقة العربية.
+
+مهمتك الأساسية: مساعدة مدير متجر رقمي (على منصة سلة) على:
+1. توليد أوصاف تسويقية احترافية وجاهزة للنشر للمنتجات الرقمية
+2. تحسين وتعديل الأوصاف الموجودة
+3. الإجابة على أسئلة المستخدم حول المنتج
+
+قواعد الكتابة:
+- اكتب بالعربية الفصحى السهلة والمفهومة
+- الأسلوب: تسويقي، مقنع، واضح، يعكس القيمة للعميل
+- تجنب المبالغة والادعاءات الكاذبة
+- استخدم البيانات المقدمة عن المنتج فقط
+
+عند توليد وصف للمتجر:
+- ابدأ بجملة تعريفية قوية تبرز قيمة المنتج
+- أبرز المزايا والخطط المتاحة
+- اذكر طريقة التفعيل وشروط الضمان إن وجدت
+- اختم بعبارة تحفيزية للشراء
+
+إذا طلب المستخدم تطبيق الوصف الناتج أو تعديل وصف المنتج أو تفاصيله مباشرة في قاعدة البيانات، أجب بشكل طبيعي ثم أضف في نهاية ردك كتلة MIFTAH_ACTION:
+
+لتحديث الوصف:
+[MIFTAH_ACTION]
+{"type":"updateDescription","description":"النص الجديد هنا"}
+[/MIFTAH_ACTION]
+
+لتحديث التفاصيل:
+[MIFTAH_ACTION]
+{"type":"updateDetails","details":"التفاصيل الجديدة"}
+[/MIFTAH_ACTION]`;
+
+function buildProductContext(product, suppliers, durations, activationMethods) {
+  if (!product) return '';
+  const lines = ['=== بيانات المنتج الحالي ==='];
+
+  lines.push(`الاسم: ${product.name}`);
+
+  if (product.accountType) {
+    lines.push(`نوع الحساب: ${product.accountType === 'individual' ? 'فردي' : 'عائلي/مشترك'}`);
+  }
+
+  if (product.details?.trim()) {
+    lines.push(`التفاصيل: ${product.details}`);
+  }
+
+  if (product.description) {
+    const stripped = product.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (stripped) lines.push(`الوصف الحالي: ${stripped}`);
+  }
+
+  if (product.activationMethods?.length > 0) {
+    const methods = product.activationMethods.map(mId => {
+      const m = activationMethods.find(am => am.id === mId);
+      return m ? `${m.icon} ${m.label}` : mId;
+    });
+    lines.push(`طرق التفعيل: ${methods.join('، ')}`);
+  }
+
+  if (product.plans?.length > 0) {
+    lines.push('\n=== الخطط والأسعار ===');
+    product.plans.forEach(plan => {
+      const dur = durations.find(d => d.id === plan.durationId);
+      const durLabel = dur ? dur.label : plan.durationId;
+      lines.push(`\nالخطة: ${durLabel}`);
+
+      const prices = Object.entries(plan.prices || {})
+        .map(([supId, price]) => {
+          if (!price) return null;
+          const sup = suppliers.find(s => s.id === parseInt(supId));
+          return sup ? `${sup.name}: $${price}` : null;
+        })
+        .filter(Boolean);
+      if (prices.length > 0) lines.push(`  الأسعار من الموردين: ${prices.join('، ')}`);
+
+      if (plan.officialPrice) lines.push(`  السعر الرسمي: $${plan.officialPrice}`);
+
+      const warrantyEntries = Object.entries(plan.supplierWarranty || {})
+        .map(([supId, days]) => {
+          if (!days) return null;
+          const sup = suppliers.find(s => s.id === parseInt(supId));
+          return sup ? `${sup.name}: ${days} يوم` : null;
+        })
+        .filter(Boolean);
+      if (warrantyEntries.length > 0) lines.push(`  الضمان: ${warrantyEntries.join('، ')}`);
+
+      if (plan.warrantyDays > 0) lines.push(`  ضمان الخطة: ${plan.warrantyDays} يوم`);
+
+      const features = (plan.features || [])
+        .filter(f => !f.isSeparator && f.text?.trim())
+        .map(f => `• ${f.text}`);
+      if (features.length > 0) lines.push(`  المزايا:\n  ${features.join('\n  ')}`);
+    });
+  }
+
+  return lines.join('\n');
+}
+
+function parseActionFromText(text) {
+  const match = text.match(/\[MIFTAH_ACTION\]\s*([\s\S]*?)\s*\[\/MIFTAH_ACTION\]/);
+  if (!match) return { clean: text, action: null };
+
+  const clean = text.replace(/\[MIFTAH_ACTION\][\s\S]*?\[\/MIFTAH_ACTION\]/, '').trim();
+  try {
+    const action = JSON.parse(match[1].trim());
+    return { clean, action };
+  } catch {
+    return { clean: text, action: null };
+  }
+}
+
+function textToHtml(text) {
+  if (!text) return '';
+  return text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line)
+    .map(line => `<p>${line}</p>`)
+    .join('');
+}
+
+function MessageBubble({ msg, onApplyDescription, product }) {
+  const [copied, setCopied] = useState(false);
+  const isAI = msg.role === 'assistant';
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(msg.displayContent || msg.content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className={`ai-message ${isAI ? 'ai-message-ai' : 'ai-message-user'}`}>
+      {isAI && (
+        <div className="ai-message-avatar">
+          <SparklesIcon className="icon-xs" />
+        </div>
+      )}
+      <div className="ai-message-bubble">
+        <div className="ai-message-content">
+          {(msg.displayContent || msg.content).split('\n').map((line, i) =>
+            line.trim() ? <p key={i}>{line}</p> : <br key={i} />
+          )}
+        </div>
+        {isAI && (
+          <div className="ai-message-actions">
+            <button className="ai-msg-btn" onClick={handleCopy} title="نسخ">
+              {copied ? <CheckCircleIcon className="icon-xs" /> : <CopyIcon className="icon-xs" />}
+              {copied ? 'تم النسخ' : 'نسخ'}
+            </button>
+            {onApplyDescription && product && (
+              <button
+                className="ai-msg-btn ai-msg-btn-apply"
+                onClick={() => onApplyDescription(msg.displayContent || msg.content)}
+                title="تطبيق هذا الوصف على المنتج"
+              >
+                <CheckCircleIcon className="icon-xs" />
+                تطبيق على المنتج
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      {!isAI && (
+        <div className="ai-message-avatar ai-message-avatar-user">
+          <span>أنت</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AIAssistantTab({
+  product,
+  suppliers,
+  durations,
+  activationMethods,
+  appSettings,
+  updateProduct,
+  onNavigateToSettings,
+}) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedOutput, setGeneratedOutput] = useState('');
+  const [showPromptEditor, setShowPromptEditor] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(
+    appSettings?.aiCustomPrompt || DEFAULT_AI_PROMPT
+  );
+  const [pendingAction, setPendingAction] = useState(null);
+  const [copiedOutput, setCopiedOutput] = useState(false);
+  const [appliedOutput, setAppliedOutput] = useState(false);
+  const [error, setError] = useState('');
+  const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setMessages([]);
+    setGeneratedOutput('');
+    setError('');
+    setPendingAction(null);
+  }, [product?.id]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+    setCustomPrompt(appSettings?.aiCustomPrompt || DEFAULT_AI_PROMPT);
+  }, [appSettings?.aiCustomPrompt]);
+
+  const hasApiKey = Boolean(
+    (appSettings?.aiProvider === 'openrouter' ? appSettings?.openrouterApiKey : appSettings?.geminiApiKey)
+  );
+
+  const getSystemPrompt = useCallback(() => {
+    const ctx = buildProductContext(product, suppliers, durations, activationMethods);
+    return `${customPrompt}\n\n${ctx}`;
+  }, [product, suppliers, durations, activationMethods, customPrompt]);
+
+  const handleGenerate = async () => {
+    if (!product || isLoading) return;
+    setIsLoading(true);
+    setError('');
+    setGeneratedOutput('');
+
+    const userMsg = {
+      role: 'user',
+      content: `اكتب وصفاً تسويقياً احترافياً وجاهزاً للنشر في متجر سلة لمنتج "${product.name}". الوصف يجب أن يكون مقنعاً وشاملاً لجميع الخطط والمزايا المتاحة.`,
+    };
+
+    try {
+      const result = await callAI({
+        systemPrompt: getSystemPrompt(),
+        messages: [userMsg],
+        appSettings,
+      });
+
+      const { clean, action } = parseActionFromText(result);
+      setGeneratedOutput(clean);
+      if (action) setPendingAction(action);
+
+      setMessages([
+        { ...userMsg, id: `u_${Date.now()}` },
+        { role: 'assistant', content: clean, displayContent: clean, id: `a_${Date.now()}` },
+      ]);
+    } catch (e) {
+      if (e.message === 'NO_KEY') {
+        setError('لم يتم تعيين مفتاح API. يرجى إضافته من صفحة الإعدادات.');
+      } else {
+        setError(`حدث خطأ: ${e.message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || isLoading || !product) return;
+
+    const userMsg = { role: 'user', content: text, id: `u_${Date.now()}` };
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
+    setInput('');
+    setIsLoading(true);
+    setError('');
+
+    const apiMessages = nextMessages.map(m => ({ role: m.role, content: m.content }));
+
+    try {
+      const result = await callAI({
+        systemPrompt: getSystemPrompt(),
+        messages: apiMessages,
+        appSettings,
+      });
+
+      const { clean, action } = parseActionFromText(result);
+      if (action) setPendingAction(action);
+
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: clean, displayContent: clean, id: `a_${Date.now()}` },
+      ]);
+    } catch (e) {
+      if (e.message === 'NO_KEY') {
+        setError('لم يتم تعيين مفتاح API. يرجى إضافته من صفحة الإعدادات.');
+      } else {
+        setError(`حدث خطأ: ${e.message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleApplyDescription = (text) => {
+    if (!product) return;
+    const html = textToHtml(text);
+    updateProduct(product.id, { description: html });
+    setAppliedOutput(true);
+    setTimeout(() => setAppliedOutput(false), 2500);
+  };
+
+  const handleCopyOutput = () => {
+    navigator.clipboard.writeText(generatedOutput).then(() => {
+      setCopiedOutput(true);
+      setTimeout(() => setCopiedOutput(false), 2000);
+    });
+  };
+
+  const handleConfirmAction = () => {
+    if (!pendingAction || !product) return;
+    const { type } = pendingAction;
+    if (type === 'updateDescription') {
+      const html = textToHtml(pendingAction.description || '');
+      updateProduct(product.id, { description: html });
+    } else if (type === 'updateDetails') {
+      updateProduct(product.id, { details: pendingAction.details || '' });
+    }
+    setPendingAction(null);
+  };
+
+  const handleSavePrompt = () => {
+    if (updateProduct && product) {
+    }
+    setShowPromptEditor(false);
+  };
+
+  if (!product) {
+    return (
+      <div className="ai-tab-empty">
+        <div className="ai-tab-empty-icon">
+          <SparklesIcon className="icon-xl" />
+        </div>
+        <h3>اختر منتجاً للبدء</h3>
+        <p>حدد منتجاً من القائمة أعلاه لبدء توليد وصف احترافي بالذكاء الاصطناعي</p>
+      </div>
+    );
+  }
+
+  const providerLabel = appSettings?.aiProvider === 'openrouter' ? 'OpenRouter' : 'Google Gemini';
+
+  return (
+    <div className="ai-tab-wrap">
+      {/* Header */}
+      <div className="ai-tab-header">
+        <div className="ai-tab-header-left">
+          <div className="ai-tab-header-icon">
+            <SparklesIcon className="icon-sm" />
+          </div>
+          <div>
+            <span className="ai-tab-header-title">مساعد الذكاء الاصطناعي</span>
+            <span className="ai-tab-header-badge">{providerLabel}</span>
+          </div>
+        </div>
+        <button
+          className={`ai-settings-cog ${showPromptEditor ? 'active' : ''}`}
+          onClick={() => setShowPromptEditor(v => !v)}
+          title="إعدادات البرومبت"
+        >
+          <SettingsIcon className="icon-sm" />
+        </button>
+      </div>
+
+      {/* Prompt Editor Panel */}
+      {showPromptEditor && (
+        <div className="ai-prompt-panel">
+          <div className="ai-prompt-panel-header">
+            <h4>تخصيص البرومبت</h4>
+            <div className="ai-prompt-panel-actions">
+              <button
+                className="ai-prompt-reset-btn"
+                onClick={() => setCustomPrompt(DEFAULT_AI_PROMPT)}
+                title="إعادة تعيين إلى الافتراضي"
+              >
+                <RefreshIcon className="icon-xs" /> إعادة تعيين
+              </button>
+              <button className="ai-prompt-close-btn" onClick={() => setShowPromptEditor(false)}>
+                <XIcon className="icon-xs" />
+              </button>
+            </div>
+          </div>
+          <p className="ai-prompt-note">
+            يمكنك تخصيص التعليمات الأساسية للذكاء الاصطناعي. بيانات المنتج تُضاف تلقائياً.
+          </p>
+          <textarea
+            className="ai-prompt-textarea"
+            value={customPrompt}
+            onChange={e => setCustomPrompt(e.target.value)}
+            rows={12}
+            dir="rtl"
+          />
+          <div className="ai-prompt-panel-footer">
+            <button className="ai-prompt-cancel-btn" onClick={() => setShowPromptEditor(false)}>إلغاء</button>
+            <button className="ai-prompt-save-btn" onClick={handleSavePrompt}>
+              <CheckCircleIcon className="icon-xs" /> حفظ
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* No API Key Warning */}
+      {!hasApiKey && (
+        <div className="ai-nokey-banner">
+          <KeyIcon className="icon-sm" />
+          <span>لم يتم تعيين مفتاح API للذكاء الاصطناعي.</span>
+          <button className="ai-nokey-btn" onClick={onNavigateToSettings}>
+            الذهاب إلى الإعدادات
+          </button>
+        </div>
+      )}
+
+      {/* Generate Section */}
+      <div className="ai-generate-section">
+        <div className="ai-generate-info">
+          <PackageIcon className="icon-xs" />
+          <span>المنتج الحالي: <strong>{product.name}</strong></span>
+        </div>
+        <button
+          className="ai-generate-btn"
+          onClick={handleGenerate}
+          disabled={isLoading || !hasApiKey}
+        >
+          {isLoading && messages.length === 0 ? (
+            <>
+              <span className="ai-spinner" />
+              جاري التوليد...
+            </>
+          ) : (
+            <>
+              <ZapIcon className="icon-sm" />
+              توليد وصف للمنتج
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Generated Output */}
+      {generatedOutput && (
+        <div className="ai-output-card">
+          <div className="ai-output-header">
+            <span className="ai-output-label">
+              <SparklesIcon className="icon-xs" /> الوصف المُولَّد
+            </span>
+            <div className="ai-output-actions">
+              <button className="ai-output-btn" onClick={handleCopyOutput}>
+                {copiedOutput ? <CheckCircleIcon className="icon-xs" /> : <CopyIcon className="icon-xs" />}
+                {copiedOutput ? 'تم النسخ' : 'نسخ'}
+              </button>
+              <button
+                className={`ai-output-btn ai-output-apply-btn ${appliedOutput ? 'applied' : ''}`}
+                onClick={() => handleApplyDescription(generatedOutput)}
+              >
+                <CheckCircleIcon className="icon-xs" />
+                {appliedOutput ? 'تم التطبيق ✓' : 'تطبيق على المنتج'}
+              </button>
+            </div>
+          </div>
+          <div className="ai-output-body">
+            {generatedOutput.split('\n').map((line, i) =>
+              line.trim() ? <p key={i}>{line}</p> : <br key={i} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Action Confirmation */}
+      {pendingAction && (
+        <div className="ai-action-card">
+          <div className="ai-action-card-icon">
+            <AlertTriangleIcon className="icon-sm" />
+          </div>
+          <div className="ai-action-card-body">
+            <strong>الذكاء الاصطناعي يطلب تعديلاً</strong>
+            <p>
+              {pendingAction.type === 'updateDescription' && 'تحديث وصف المنتج بالنص الجديد'}
+              {pendingAction.type === 'updateDetails' && 'تحديث تفاصيل المنتج'}
+            </p>
+          </div>
+          <div className="ai-action-card-btns">
+            <button className="ai-action-confirm" onClick={handleConfirmAction}>
+              <CheckCircleIcon className="icon-xs" /> موافق
+            </button>
+            <button className="ai-action-cancel" onClick={() => setPendingAction(null)}>
+              <XIcon className="icon-xs" /> رفض
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="ai-error-banner">
+          <AlertTriangleIcon className="icon-sm" />
+          <span>{error}</span>
+          {error.includes('مفتاح API') && (
+            <button className="ai-nokey-btn" onClick={onNavigateToSettings}>
+              الإعدادات
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Chat Thread */}
+      {messages.length > 0 && (
+        <div className="ai-chat-section">
+          <div className="ai-chat-header">
+            <span>المحادثة</span>
+            <button
+              className="ai-chat-clear-btn"
+              onClick={() => { setMessages([]); setGeneratedOutput(''); setPendingAction(null); }}
+            >
+              <XIcon className="icon-xs" /> مسح
+            </button>
+          </div>
+          <div className="ai-chat-thread">
+            {messages.map(msg => (
+              <MessageBubble
+                key={msg.id}
+                msg={msg}
+                onApplyDescription={msg.role === 'assistant' ? handleApplyDescription : null}
+                product={product}
+              />
+            ))}
+            {isLoading && messages.length > 0 && (
+              <div className="ai-message ai-message-ai">
+                <div className="ai-message-avatar">
+                  <SparklesIcon className="icon-xs" />
+                </div>
+                <div className="ai-message-bubble ai-message-thinking">
+                  <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+        </div>
+      )}
+
+      {/* Quick Prompts */}
+      {messages.length > 0 && (
+        <div className="ai-quick-prompts">
+          {[
+            'قصّر الوصف',
+            'اجعله أكثر تسويقاً',
+            'أضف قسم FAQ',
+            'أضف نقاط مزايا',
+            'غيّر الأسلوب إلى رسمي',
+          ].map(prompt => (
+            <button
+              key={prompt}
+              className="ai-quick-btn"
+              onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Chat Input */}
+      <div className="ai-chat-input-wrap">
+        <textarea
+          ref={inputRef}
+          className="ai-chat-input"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={
+            messages.length === 0
+              ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
+              : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'
+          }
+          rows={2}
+          disabled={isLoading || !hasApiKey}
+          dir="rtl"
+        />
+        <button
+          className="ai-send-btn"
+          onClick={handleSend}
+          disabled={!input.trim() || isLoading || !hasApiKey}
+          title="إرسال"
+        >
+          {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default AIAssistantTab;

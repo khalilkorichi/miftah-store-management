@@ -4,7 +4,7 @@ import {
   MoonIcon, SunIcon, DatabaseIcon, UploadIcon, 
   DownloadIcon, RefreshIcon, InfoIcon, XIcon, PlusIcon,
   AlertTriangleIcon, CheckCircleIcon, PackageIcon, ImageIcon,
-  ExternalLinkIcon
+  ExternalLinkIcon, SparklesIcon, KeyIcon, EyeIcon,
 } from './Icons';
 
 function SettingsPage({
@@ -30,6 +30,8 @@ function SettingsPage({
   const [newDurationLabel, setNewDurationLabel] = useState('');
   const [newDurationMonths, setNewDurationMonths] = useState('');
   const [rateSaved, setRateSaved] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showOpenrouterKey, setShowOpenrouterKey] = useState(false);
   const fileInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -405,6 +407,92 @@ function SettingsPage({
             <button className="btn-add-duration" onClick={handleAddDuration}>
               <PlusIcon className="icon-sm" /> إضافة
             </button>
+          </div>
+        </div>
+
+        {/* ── AI Settings Card ── */}
+        <div className="settings-card settings-card-wide">
+          <div className="settings-card-icon-wrap settings-card-purple">
+            <SparklesIcon className="icon-md" />
+          </div>
+          <h3>إعدادات الذكاء الاصطناعي</h3>
+          <p className="settings-desc">اختر مزود الذكاء الاصطناعي وأدخل مفتاح API لتفعيل مساعد توليد الأوصاف</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Provider */}
+            <div>
+              <label className="settings-label">مزود الذكاء الاصطناعي</label>
+              <div className="settings-option-row" style={{ marginTop: '8px' }}>
+                {[
+                  { id: 'gemini', label: 'Google Gemini' },
+                  { id: 'openrouter', label: 'OpenRouter' },
+                ].map(opt => (
+                  <button
+                    key={opt.id}
+                    className={`settings-option-btn ${appSettings?.aiProvider === opt.id ? 'active' : ''}`}
+                    onClick={() => updateSetting('aiProvider', opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Gemini Key */}
+            <div>
+              <label className="settings-label">
+                <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
+                مفتاح Gemini API
+              </label>
+              <div className="settings-api-key-row">
+                <input
+                  type={showGeminiKey ? 'text' : 'password'}
+                  className="settings-input"
+                  style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
+                  dir="ltr"
+                  value={appSettings?.geminiApiKey || ''}
+                  onChange={e => updateSetting('geminiApiKey', e.target.value)}
+                  placeholder="AIzaSy..."
+                />
+                <button
+                  className="settings-key-toggle"
+                  onClick={() => setShowGeminiKey(v => !v)}
+                  title={showGeminiKey ? 'إخفاء' : 'إظهار'}
+                >
+                  <EyeIcon className="icon-xs" />
+                </button>
+              </div>
+            </div>
+
+            {/* OpenRouter Key */}
+            <div>
+              <label className="settings-label">
+                <KeyIcon className="icon-xs" style={{ marginLeft: '4px' }} />
+                مفتاح OpenRouter API
+              </label>
+              <div className="settings-api-key-row">
+                <input
+                  type={showOpenrouterKey ? 'text' : 'password'}
+                  className="settings-input"
+                  style={{ flex: 1, direction: 'ltr', textAlign: 'left' }}
+                  dir="ltr"
+                  value={appSettings?.openrouterApiKey || ''}
+                  onChange={e => updateSetting('openrouterApiKey', e.target.value)}
+                  placeholder="sk-or-v1-..."
+                />
+                <button
+                  className="settings-key-toggle"
+                  onClick={() => setShowOpenrouterKey(v => !v)}
+                  title={showOpenrouterKey ? 'إخفاء' : 'إظهار'}
+                >
+                  <EyeIcon className="icon-xs" />
+                </button>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+              المفاتيح مُخزَّنة محلياً في متصفحك فقط ولا تُرسَل لأي خادم خارجي.
+            </p>
           </div>
         </div>
 

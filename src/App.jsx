@@ -12,6 +12,7 @@ import {
   DEFAULT_CATEGORIES,
   DEFAULT_TASKS,
   DEFAULT_ACTIVATION_GUIDES,
+  DEFAULT_AI_SETTINGS,
 } from './data/initialData';
 import OperationsHub from './components/operations/OperationsHub';
 import ProductTable from './components/ProductTable';
@@ -200,6 +201,7 @@ function App() {
       { id: 'dz', label: 'الجزائر', tz: 'Africa/Algiers', flag: '🇩🇿', enabled: true },
       { id: 'sa', label: 'السعودية', tz: 'Asia/Riyadh', flag: '🇸🇦', enabled: true },
     ],
+    ...DEFAULT_AI_SETTINGS,
     ...(savedData?.appSettings || {}),
   });
   
@@ -1003,6 +1005,8 @@ function App() {
             suppliers={suppliers}
             exchangeRate={exchangeRate}
             activationMethods={activationMethods}
+            appSettings={appSettings}
+            onNavigateToSettings={() => setActiveTab('settings')}
           />
           </div>
         )}
