@@ -15221,3 +15221,333 @@ body.dark-mode .selectable-card.selected {
   white-space: nowrap;
   vertical-align: middle;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   PROFESSIONAL UI ENHANCEMENTS — Product Description Page
+   (overrides; appended after existing rules for cascade priority)
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Sub-tab bar: pill pill with gradient active indicator ── */
+.pf-subtab-bar {
+  gap: 6px;
+  padding: 6px;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+.pf-subtab-btn {
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 14px;
+  gap: 8px;
+  letter-spacing: 0.1px;
+  transition: all 0.22s cubic-bezier(.4,0,.2,1);
+  color: var(--text-muted);
+}
+.pf-subtab-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+}
+.pf-subtab-active {
+  background: linear-gradient(135deg, #7c3aed, #3b82f6) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.35), 0 1px 4px rgba(0,0,0,0.12) !important;
+}
+.pf-subtab-active svg { color: #fff !important; opacity: 0.95; }
+
+/* ── Stats grid: tighter gradient background ── */
+.pf-stat-card {
+  padding: 18px 20px;
+  border-radius: 18px;
+  border-width: 1.5px;
+}
+.pf-stat-blue  { background: linear-gradient(135deg, var(--bg-card) 60%, rgba(26,81,244,0.05)); }
+.pf-stat-green { background: linear-gradient(135deg, var(--bg-card) 60%, rgba(14,168,92,0.05)); }
+.pf-stat-purple{ background: linear-gradient(135deg, var(--bg-card) 60%, rgba(94,79,222,0.05)); }
+.pf-stat-value { font-size: 2rem; }
+
+/* ── Selector card: refined ── */
+.pf-selector-card {
+  border-radius: 18px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, var(--bg-card) 60%, rgba(94,79,222,0.03));
+}
+.pf-product-select {
+  border-radius: 13px;
+  padding: 12px 18px;
+  font-size: 0.92rem;
+}
+
+/* ── Editor header: polished ── */
+.pf-editor-header {
+  border-radius: 18px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, var(--bg-card) 60%, rgba(94,79,222,0.04));
+  border-width: 1.5px;
+}
+.pf-editor-title-row h2 { font-size: 1.3rem; }
+
+/* ── Description card: clean border + shadow ── */
+.pf-desc-card {
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  padding: 24px 28px;
+}
+.pf-toolbar {
+  border-radius: 12px 12px 0 0;
+  padding: 9px 14px;
+}
+.pf-desc-editor {
+  border-radius: 0 0 13px 13px;
+  padding: 18px 20px;
+  font-size: 0.94rem;
+  min-height: 160px;
+}
+
+/* ── Plan cards: accented top border by position ── */
+.pf-plans-grid { gap: 22px; }
+.pf-plan-card {
+  border-radius: 18px;
+  border-width: 1.5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s;
+}
+.pf-plan-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(94,79,222,0.13);
+  border-color: rgba(94,79,222,0.35);
+}
+/* accent top stripe per card using nth-child */
+.pf-plans-grid .pf-plan-card:nth-child(1) { border-top: 3px solid var(--accent-blue); }
+.pf-plans-grid .pf-plan-card:nth-child(2) { border-top: 3px solid var(--accent-green); }
+.pf-plans-grid .pf-plan-card:nth-child(3) { border-top: 3px solid var(--accent-purple); }
+.pf-plans-grid .pf-plan-card:nth-child(4) { border-top: 3px solid var(--accent-orange); }
+.pf-plan-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(94,79,222,0.03) 100%);
+}
+.pf-plan-name { font-size: 1.05rem; }
+.pf-features-list {
+  padding: 16px 18px;
+  gap: 8px;
+}
+.pf-feature-row {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+}
+.pf-feature-row:hover {
+  box-shadow: 0 3px 12px rgba(94,79,222,0.1);
+  transform: translateX(-2px);
+}
+
+/* ── AI Tab: professional header ── */
+.ai-tab-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--bg-card) 55%, rgba(139,92,246,0.06) 100%);
+  border: 1.5px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.ai-tab-header-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(99,179,237,0.16));
+  border: 1.5px solid rgba(139,92,246,0.3);
+  box-shadow: 0 2px 10px rgba(139,92,246,0.2);
+  color: #8b5cf6;
+}
+.ai-tab-header-title { font-size: 16px; }
+.ai-tab-header-badge {
+  padding: 3px 10px;
+  font-size: 11.5px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(99,179,237,0.12), rgba(139,92,246,0.1));
+  border: 1px solid rgba(139,92,246,0.22);
+  color: #8b5cf6;
+}
+
+/* ── Generate section: card-style with gradient button ── */
+.ai-generate-section {
+  border-radius: 18px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, var(--bg-card) 60%, rgba(139,92,246,0.04));
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.ai-generate-btn {
+  padding: 11px 24px;
+  font-size: 14px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #7c3aed, #3b82f6);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+}
+.ai-generate-btn:not(:disabled):hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124,58,237,0.4);
+}
+.ai-generate-btn:not(:disabled):active { transform: translateY(0); }
+
+/* ── Output card: polished ── */
+.ai-output-card {
+  border-radius: 18px;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.ai-output-header {
+  padding: 13px 18px;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(135deg, var(--bg-secondary) 60%, rgba(139,92,246,0.06));
+}
+.ai-output-body {
+  padding: 20px 22px;
+  font-size: 14.5px;
+  line-height: 1.85;
+}
+.ai-output-btn {
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+}
+
+/* ── Chat section: card-style ── */
+.ai-chat-section {
+  border-radius: 18px;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.ai-chat-header {
+  border-radius: 18px 18px 0 0;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, var(--bg-secondary) 60%, rgba(139,92,246,0.05));
+  font-size: 13.5px;
+}
+.ai-chat-input-wrap {
+  border-top: 1.5px solid var(--border-color);
+  padding: 14px 16px;
+  gap: 10px;
+}
+.ai-chat-input {
+  border-radius: 13px;
+  padding: 11px 14px;
+  font-size: 14px;
+}
+
+/* ── Message bubbles: more polished ── */
+.ai-chat-thread {
+  gap: 14px;
+}
+/* user bubble: right-aligned with accent */
+.ai-msg-user .ai-msg-bubble {
+  background: linear-gradient(135deg, rgba(139,92,246,0.14), rgba(59,130,246,0.1));
+  border: 1.5px solid rgba(139,92,246,0.22);
+  border-radius: 16px 4px 16px 16px;
+}
+/* assistant bubble: clean card */
+.ai-msg-ai .ai-msg-bubble {
+  border-radius: 4px 16px 16px 16px;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* ── Action confirm card: polished ── */
+.ai-action-card {
+  border-radius: 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(99,179,237,0.07), rgba(139,92,246,0.05));
+  border: 1.5px solid rgba(99,179,237,0.3);
+}
+.ai-action-confirm {
+  border-radius: 10px;
+  padding: 7px 16px;
+  border: 1.5px solid var(--accent-green);
+  background: rgba(16,185,129,0.09);
+}
+.ai-action-confirm:hover { background: rgba(16,185,129,0.18); }
+.ai-action-cancel { border-radius: 10px; padding: 7px 14px; }
+
+/* ── No-key banner: more premium ── */
+.ai-nokey-banner {
+  border-radius: 16px;
+  padding: 14px 18px;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(249,115,22,0.06));
+  border: 1.5px solid rgba(245,158,11,0.28);
+}
+.ai-nokey-btn {
+  border-radius: 10px;
+  padding: 6px 14px;
+}
+
+/* ── Error banner ── */
+.ai-error-banner {
+  border-radius: 16px;
+  padding: 14px 18px;
+  gap: 12px;
+}
+
+/* ── Prompt panel: clean card ── */
+.ai-prompt-panel {
+  border-radius: 18px;
+  padding: 18px 20px;
+  gap: 12px;
+  background: linear-gradient(135deg, var(--bg-card) 70%, rgba(139,92,246,0.03));
+  border: 1.5px solid var(--border-color);
+}
+.ai-prompt-save-btn {
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 13.5px;
+  background: linear-gradient(135deg, #7c3aed, #3b82f6);
+  box-shadow: 0 2px 8px rgba(124,58,237,0.25);
+}
+
+/* ── Provider info banner in Settings (AgentRouter) ── */
+.ai-provider-info-banner {
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+/* ── Product info card: polished ── */
+.pf-product-info-card {
+  border-radius: 18px;
+  border: 1.5px solid var(--border-color);
+  margin-bottom: 24px;
+}
+.pf-product-info-header {
+  border-radius: 18px 18px 0 0;
+  padding: 13px 22px;
+}
+
+/* ── Search bar: cleaner ── */
+.pf-search-bar {
+  border-radius: 13px;
+  padding: 11px 18px;
+}
+
+/* ── Templates panel ── */
+.pf-templates-panel {
+  border-radius: 18px;
+  padding: 22px 26px;
+}
+
+/* ── Copy panel ── */
+.pf-copy-panel {
+  border-radius: 0;
+  padding: 13px 20px;
+}
+
+/* ── Settings select: enhanced dropdown ── */
+.settings-select {
+  border-radius: 11px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
