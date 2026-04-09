@@ -2721,12 +2721,13 @@ body {
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-  margin-top: 4px;
   padding: 3px 8px;
   background: var(--bg-secondary);
   border-radius: 20px;
-  align-self: flex-start;
   border: 1px solid var(--border-color);
+  position: absolute;
+  top: 10px;
+  left: 12px;
 }
 
 .dashboard-body {
