@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import AddProductModal from './AddProductModal';
 import AddSupplierModal from './AddSupplierModal';
 import ActivationMethodsModal from './ActivationMethodsModal';
@@ -12,7 +13,7 @@ import {
   EyeIcon, StarIcon, PackageIcon, SearchIcon, PlusIcon, SettingsIcon,
   UserIcon, UsersIcon, CopyIcon, UploadIcon, ShieldCheckIcon,
   FilterIcon, GitBranchIcon, SortIcon, ClipboardIcon,
-  ArrowUpIcon, LinkIcon
+  ArrowUpIcon, LinkIcon, CheckIcon
 } from './Icons';
 
 const CARD_COLORS = [
@@ -139,46 +140,82 @@ function SupplierManagerPanel({ suppliers, editingSupplierField, editSupplierVal
 
 function ColorPicker({ color, onChangeColor, onClear }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 8, left: rect.left });
+    }
+    setOpen(v => !v);
+  };
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    const onDown = (e) => {
+      if (
+        popoverRef.current && !popoverRef.current.contains(e.target) &&
+        btnRef.current && !btnRef.current.contains(e.target)
+      ) setOpen(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const onClose = () => setOpen(false);
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('scroll', onClose, true);
+    window.addEventListener('resize', onClose);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('scroll', onClose, true);
+      window.removeEventListener('resize', onClose);
+    };
   }, [open]);
 
   return (
-    <div className="card-color-picker-wrap" ref={ref}>
+    <div className="card-color-picker-wrap">
       <button
-        className="card-color-dot-btn"
-        style={{ '--dot-color': color || 'transparent' }}
-        onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
+        ref={btnRef}
+        className={`card-color-dot-btn ${color ? 'has-color' : ''} ${open ? 'is-open' : ''}`}
+        style={color ? { '--dot-color': color, borderColor: `${color}88` } : undefined}
+        onClick={handleToggle}
         title="تلوين البطاقة"
       >
-        <span className="card-color-dot" />
+        <span className="card-color-dot" style={color ? { background: color, boxShadow: `0 0 0 2px ${color}33` } : undefined} />
       </button>
-      {open && (
-        <div className="card-color-popover" onClick={e => e.stopPropagation()}>
+      {open && createPortal(
+        <div
+          ref={popoverRef}
+          className="card-color-popover"
+          style={{ position: 'fixed', top: pos.top, left: pos.left }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="card-color-popover-header">
+            <span>لون البطاقة</span>
+            <button className="card-color-popover-close" onClick={() => setOpen(false)}>
+              <XIcon className="icon-xs" />
+            </button>
+          </div>
           <div className="card-color-swatches">
             {CARD_COLORS.map(c => (
               <button
                 key={c}
                 className={`card-color-swatch ${color === c ? 'active' : ''}`}
                 style={{ background: c }}
-                onClick={() => { onChangeColor(c); setOpen(false); }}
+                onClick={() => onChangeColor(c)}
                 title={c}
-              />
+              >
+                {color === c && <CheckIcon style={{ width: 12, height: 12, color: '#fff', filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.5))' }} />}
+              </button>
             ))}
           </div>
           {color && (
             <button className="card-color-clear" onClick={() => { onClear(); setOpen(false); }}>
-              إزالة اللون
+              <XIcon className="icon-xs" /> إزالة اللون
             </button>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

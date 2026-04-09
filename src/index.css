@@ -1591,71 +1591,120 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
   padding: 0;
+  flex-shrink: 0;
 }
 .card-color-dot-btn:hover {
   border-color: var(--accent-blue);
   background: rgba(94, 79, 222, 0.06);
+}
+.card-color-dot-btn.has-color {
+  background: rgba(0,0,0,0.06);
+}
+.card-color-dot-btn.is-open {
+  box-shadow: 0 0 0 3px rgba(94,79,222,0.18);
+  border-color: var(--accent-blue) !important;
 }
 
 .card-color-dot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--dot-color, var(--border-color));
-  border: 1.5px solid rgba(0,0,0,0.12);
+  background: var(--border-color);
   display: block;
-  transition: background 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
 }
 
+/* Popover — rendered via portal with position:fixed in JS */
 .card-color-popover {
-  position: absolute;
-  top: calc(100% + 6px);
-  inset-inline-end: 0;
-  background: var(--bg-card);
+  background: var(--bg-secondary, #1a1d24);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0,0,0,0.18));
-  padding: 10px;
-  z-index: 200;
-  width: 160px;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04);
+  padding: 14px;
+  z-index: 9999;
+  width: 186px;
+  animation: color-picker-appear 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes color-picker-appear {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-color-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card-color-popover-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.card-color-popover-close:hover {
+  color: var(--text-primary);
+  background: var(--border-color);
 }
 
 .card-color-swatches {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 7px;
 }
 
 .card-color-swatch {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 2.5px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .card-color-swatch:hover {
-  transform: scale(1.15);
+  transform: scale(1.18);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 .card-color-swatch.active {
-  border-color: var(--text-primary);
-  transform: scale(1.1);
+  border-color: #fff;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
 }
 
 .card-color-clear {
-  margin-top: 8px;
+  margin-top: 10px;
   width: 100%;
   background: none;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-muted);
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 5px 8px;
   cursor: pointer;
   transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 .card-color-clear:hover {
   color: var(--accent-red);
