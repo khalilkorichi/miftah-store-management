@@ -359,59 +359,71 @@ function AIAssistantTab({
     const { type } = pendingAction;
 
     if (type === 'updateDescription') {
-      const html = textToHtml(pendingAction.description || '');
+      const desc = typeof pendingAction.description === 'string' ? pendingAction.description : '';
+      if (!desc.trim()) { setPendingAction(null); return; }
+      const html = textToHtml(desc);
       updateProduct(product.id, { description: html });
 
     } else if (type === 'updateDetails') {
-      updateProduct(product.id, { details: pendingAction.details || '' });
+      const details = typeof pendingAction.details === 'string' ? pendingAction.details : '';
+      updateProduct(product.id, { details });
 
     } else if (type === 'updatePlanPrice') {
+      const price = parseFloat(pendingAction.price);
+      const supplierId = pendingAction.supplierId;
+      if (!pendingAction.planId || isNaN(price) || price < 0 || supplierId == null) {
+        setPendingAction(null); return;
+      }
       const updatedPlans = (product.plans || []).map(plan => {
         if (String(plan.id) !== String(pendingAction.planId)) return plan;
         return {
           ...plan,
-          prices: {
-            ...(plan.prices || {}),
-            [String(pendingAction.supplierId)]: pendingAction.price,
-          },
+          prices: { ...(plan.prices || {}), [String(supplierId)]: price },
         };
       });
       updateProduct(product.id, { plans: updatedPlans });
 
     } else if (type === 'updateOfficialPrice') {
+      const price = parseFloat(pendingAction.price);
+      if (!pendingAction.planId || isNaN(price) || price < 0) {
+        setPendingAction(null); return;
+      }
       const updatedPlans = (product.plans || []).map(plan => {
         if (String(plan.id) !== String(pendingAction.planId)) return plan;
-        return { ...plan, officialPriceUsd: pendingAction.price };
+        return { ...plan, officialPriceUsd: price };
       });
       updateProduct(product.id, { plans: updatedPlans });
 
     } else if (type === 'addFeature') {
+      const text = typeof pendingAction.text === 'string' ? pendingAction.text.trim() : '';
+      if (!pendingAction.planId || !text) { setPendingAction(null); return; }
       const updatedPlans = (product.plans || []).map(plan => {
         if (String(plan.id) !== String(pendingAction.planId)) return plan;
-        const newFeature = {
-          id: `feat_${Date.now()}`,
-          text: pendingAction.text || '',
-          isSeparator: false,
-        };
+        const newFeature = { id: `feat_${Date.now()}`, text, isSeparator: false };
         return { ...plan, features: [...(plan.features || []), newFeature] };
       });
       updateProduct(product.id, { plans: updatedPlans });
 
     } else if (type === 'editFeature') {
+      const text = typeof pendingAction.text === 'string' ? pendingAction.text.trim() : '';
+      if (!pendingAction.planId || !pendingAction.featureId || !text) {
+        setPendingAction(null); return;
+      }
       const updatedPlans = (product.plans || []).map(plan => {
         if (String(plan.id) !== String(pendingAction.planId)) return plan;
         return {
           ...plan,
           features: (plan.features || []).map(f =>
-            String(f.id) === String(pendingAction.featureId)
-              ? { ...f, text: pendingAction.text || f.text }
-              : f
+            String(f.id) === String(pendingAction.featureId) ? { ...f, text } : f
           ),
         };
       });
       updateProduct(product.id, { plans: updatedPlans });
 
     } else if (type === 'removeFeature') {
+      if (!pendingAction.planId || !pendingAction.featureId) {
+        setPendingAction(null); return;
+      }
       const updatedPlans = (product.plans || []).map(plan => {
         if (String(plan.id) !== String(pendingAction.planId)) return plan;
         return {
