@@ -73,7 +73,12 @@ function migrateData(data) {
         })),
       })) };
     }
-    return data;
+    // Always seed new top-level fields for any existing payload
+    return {
+      ...data,
+      tasks: Array.isArray(data.tasks) ? data.tasks : DEFAULT_TASKS,
+      activationGuides: Array.isArray(data.activationGuides) ? data.activationGuides : DEFAULT_ACTIVATION_GUIDES,
+    };
   }
 
   const migratedProducts = data.products.map((product) => {
@@ -107,6 +112,8 @@ function migrateData(data) {
     bundles: data.bundles || DEFAULT_BUNDLES,
     coupons: data.coupons || DEFAULT_COUPONS,
     pricingData: data.pricingData || DEFAULT_PRICING_DATA,
+    tasks: Array.isArray(data.tasks) ? data.tasks : DEFAULT_TASKS,
+    activationGuides: Array.isArray(data.activationGuides) ? data.activationGuides : DEFAULT_ACTIVATION_GUIDES,
   };
 }
 
@@ -763,10 +770,12 @@ function App() {
     if (migrated.bundles) setBundles(migrated.bundles);
     if (migrated.coupons) setCoupons(migrated.coupons);
     if (migrated.pricingData) setPricingData(migrated.pricingData);
+    if (Array.isArray(migrated.tasks)) setTasks(migrated.tasks);
+    if (Array.isArray(migrated.activationGuides)) setActivationGuides(migrated.activationGuides);
   }, []);
 
   const handleExportJson = useCallback(() => {
-    const data = { products, suppliers, exchangeRate, durations, activationMethods, costs, bundles, coupons, pricingData };
+    const data = { products, suppliers, exchangeRate, durations, activationMethods, costs, bundles, coupons, pricingData, tasks, activationGuides };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -774,7 +783,7 @@ function App() {
     a.download = 'miftah_store_data.json';
     a.click();
     URL.revokeObjectURL(url);
-  }, [products, suppliers, exchangeRate, durations]);
+  }, [products, suppliers, exchangeRate, durations, tasks, activationGuides]);
 
   return (
     <div className="app-container" dir="rtl">
