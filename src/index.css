@@ -11011,61 +11011,80 @@ body.dark-mode .selectable-card.selected {
   align-items: flex-start;
 }
 .pf-product-info-row--warranty .pf-product-info-label {
-  padding-top: 14px;
+  padding-top: 10px;
 }
 .pf-product-info-row--warranty .pf-product-info-value-cell {
-  padding-top: 12px;
-  padding-bottom: 16px;
+  padding-top: 8px;
+  padding-bottom: 10px;
   display: block;
 }
-.pf-warranty-table-wrap {
-  overflow-x: auto;
-  border-radius: 10px;
+
+/* ── Warranty compact cards ── */
+.pf-warranty-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.pf-wc-card {
   border: 1px solid var(--border-color);
-}
-.pf-warranty-table {
-  border-collapse: collapse;
-  font-size: 12px;
-  width: 100%;
-  min-width: 260px;
-}
-.pf-warranty-table thead tr {
+  border-radius: 10px;
   background: var(--bg-secondary);
+  padding: 8px 11px;
+  min-width: 110px;
+  transition: border-color .15s, box-shadow .15s;
 }
-.pf-warranty-table th {
-  padding: 8px 14px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-align: center;
+.pf-wc-card:hover {
+  border-color: rgba(139,92,246,.35);
+  box-shadow: 0 2px 10px rgba(139,92,246,.08);
+}
+.pf-wc-sup {
   font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-bottom: 6px;
+  margin-bottom: 5px;
   border-bottom: 1px solid var(--border-color);
-  letter-spacing: .3px;
-  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
-.pf-warranty-table th:first-child { text-align: right; }
-.pf-warranty-table tbody tr {
+.pf-wc-plans {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pf-wc-plan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  cursor: pointer;
   transition: background .12s;
 }
-.pf-warranty-table tbody tr:not(:last-child) td {
-  border-bottom: 1px solid var(--border-color);
+.pf-wc-plan-row:hover:not(.is-editing) {
+  background: var(--hover-bg);
 }
-.pf-warranty-table tbody tr:hover { background: var(--bg-secondary); }
-.pf-warranty-sup-name {
-  padding: 9px 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 12px;
+.pf-wc-dur {
+  font-size: 10px;
+  color: var(--text-muted);
   white-space: nowrap;
 }
-.pf-warranty-cell {
-  padding: 9px 14px;
-  text-align: center;
+.pf-wc-days {
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
-  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  white-space: nowrap;
 }
-.pf-warranty-cell.has-warranty {
+.pf-wc-days.has-warranty {
   color: #11BA65;
-  font-weight: 700;
+}
+.pf-wc-plan-row.is-editing {
+  cursor: default;
+  padding: 4px 5px;
 }
 
 /* ── Editable chip (has remove button) ── */

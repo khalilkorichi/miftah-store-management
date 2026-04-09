@@ -820,57 +820,48 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                 <span className="pf-product-info-label">الضمان</span>
                 <div className="pf-product-info-value-cell">
                   {product.plans.length > 0 ? (
-                    <div className="pf-warranty-table-wrap">
-                      <table className="pf-warranty-table">
-                        <thead>
-                          <tr>
-                            <th>المورد</th>
-                            {product.plans.map(plan => (
-                              <th key={plan.id}>{getDurationLabel(plan.durationId)}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {suppliers.map(sup => (
-                            <tr key={sup.id}>
-                              <td className="pf-warranty-sup-name">{sup.name}</td>
-                              {product.plans.map(plan => {
-                                const days = (plan.supplierWarranty || {})[sup.id] || 0;
-                                const isEditing = editingWarranty?.planId === plan.id && editingWarranty?.supplierId === sup.id;
-                                return (
-                                  <td
-                                    key={plan.id}
-                                    className={`pf-warranty-cell pf-warranty-cell--editable ${days > 0 ? 'has-warranty' : ''}`}
-                                    onClick={() => { if (!isEditing) { setEditingWarranty({ planId: plan.id, supplierId: sup.id }); setWarrantyInput(days > 0 ? String(days) : ''); } }}
-                                  >
-                                    {isEditing ? (
-                                      <div className="pf-warranty-edit-wrap" onClick={e => e.stopPropagation()}>
-                                        <input
-                                          className="pf-warranty-input"
-                                          type="number"
-                                          min="0"
-                                          value={warrantyInput}
-                                          autoFocus
-                                          onChange={e => setWarrantyInput(e.target.value)}
-                                          onKeyDown={e => { if (e.key === 'Enter') saveWarrantyLocal(plan.id, sup.id, warrantyInput); if (e.key === 'Escape') setEditingWarranty(null); }}
-                                        />
-                                        <div className="pf-warranty-presets">
-                                          {[{ label: 'شهر', days: 30 }, { label: '6 أشهر', days: 180 }, { label: 'سنة', days: 365 }].map(p => (
-                                            <button key={p.days} className="pf-warranty-preset-btn" onClick={() => saveWarrantyLocal(plan.id, sup.id, p.days)}>{p.label}</button>
-                                          ))}
-                                          <button className="pf-warranty-preset-btn pf-warranty-preset-btn--clear" onClick={() => saveWarrantyLocal(plan.id, sup.id, 0)}>✕</button>
-                                        </div>
+                    <div className="pf-warranty-cards">
+                      {suppliers.map(sup => (
+                        <div key={sup.id} className="pf-wc-card">
+                          <div className="pf-wc-sup">{sup.name}</div>
+                          <div className="pf-wc-plans">
+                            {product.plans.map(plan => {
+                              const days = (plan.supplierWarranty || {})[sup.id] || 0;
+                              const isEditing = editingWarranty?.planId === plan.id && editingWarranty?.supplierId === sup.id;
+                              return (
+                                <div
+                                  key={plan.id}
+                                  className={`pf-wc-plan-row${isEditing ? ' is-editing' : ''}`}
+                                  onClick={() => { if (!isEditing) { setEditingWarranty({ planId: plan.id, supplierId: sup.id }); setWarrantyInput(days > 0 ? String(days) : ''); } }}
+                                >
+                                  <span className="pf-wc-dur">{getDurationLabel(plan.durationId)}</span>
+                                  {isEditing ? (
+                                    <div className="pf-warranty-edit-wrap" onClick={e => e.stopPropagation()}>
+                                      <input
+                                        className="pf-warranty-input"
+                                        type="number"
+                                        min="0"
+                                        value={warrantyInput}
+                                        autoFocus
+                                        onChange={e => setWarrantyInput(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') saveWarrantyLocal(plan.id, sup.id, warrantyInput); if (e.key === 'Escape') setEditingWarranty(null); }}
+                                      />
+                                      <div className="pf-warranty-presets">
+                                        {[{ label: 'شهر', days: 30 }, { label: '6 أشهر', days: 180 }, { label: 'سنة', days: 365 }].map(p => (
+                                          <button key={p.days} className="pf-warranty-preset-btn" onClick={() => saveWarrantyLocal(plan.id, sup.id, p.days)}>{p.label}</button>
+                                        ))}
+                                        <button className="pf-warranty-preset-btn pf-warranty-preset-btn--clear" onClick={() => saveWarrantyLocal(plan.id, sup.id, 0)}>✕</button>
                                       </div>
-                                    ) : (
-                                      <span className="pf-warranty-cell-value">{days > 0 ? `${days} يوم` : '—'}</span>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                                    </div>
+                                  ) : (
+                                    <span className={`pf-wc-days${days > 0 ? ' has-warranty' : ''}`}>{days > 0 ? `${days} ي` : '—'}</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : <span className="pf-info-empty">لا توجد خطط</span>}
                 </div>
