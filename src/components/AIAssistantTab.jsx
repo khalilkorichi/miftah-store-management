@@ -184,7 +184,7 @@ function MessageBubble({ msg, onApplyDescription, product }) {
             {onApplyDescription && product && msg.action?.type === 'updateDescription' && (
               <button
                 className="ai-msg-btn ai-msg-btn-apply"
-                onClick={() => onApplyDescription(msg.displayContent || msg.content)}
+                onClick={() => onApplyDescription(msg.action.description || msg.displayContent || msg.content)}
                 title="تطبيق هذا الوصف على المنتج"
               >
                 <CheckCircleIcon className="icon-xs" />
