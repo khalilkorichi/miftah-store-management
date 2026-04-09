@@ -1,16 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import {
   PlusIcon, SearchIcon, CheckSquareIcon,
-  ClockIcon, CheckCircleIcon, InboxIcon
+  ClockIcon, CheckCircleIcon, InboxIcon, ListIcon, GridIcon, SparklesIcon
 } from '../Icons';
 import TaskCard, { CATEGORIES, PRIORITIES, getDaysInfo } from './TaskCard';
 import TaskModal from './TaskModal';
+import TaskStatsBar from './TaskStatsBar';
+import TaskTemplatesModal from './TaskTemplatesModal';
 
 const STATUS_COLS = [
   { id: 'pending',    label: 'معلّقة',        color: '#9ca3b8', Icon: InboxIcon },
   { id: 'inprogress', label: 'قيد التنفيذ',   color: '#FFC530', Icon: ClockIcon },
   { id: 'done',       label: 'مكتملة',         color: '#11BA65', Icon: CheckCircleIcon },
 ];
+
+const STATUS_LABELS = { pending: 'معلّقة', inprogress: 'قيد التنفيذ', done: 'مكتملة' };
 
 const QUICK_FILTERS = [
   { id: 'all',     label: 'الكل' },
@@ -52,12 +56,23 @@ function sortTasks(tasks) {
   });
 }
 
+function formatShortDate(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('ar-SA', {
+      month: 'short', day: 'numeric',
+    });
+  } catch { return dateStr; }
+}
+
 export default function TaskManager({ tasks, setTasks }) {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [viewMode, setViewMode] = useState('kanban');
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const filtered = useMemo(() => {
     return tasks.filter(t => {
@@ -104,12 +119,22 @@ export default function TaskManager({ tasks, setTasks }) {
   };
 
   const openEdit = (task) => { setEditingTask(task); setShowModal(true); };
-  const openNew = () => { setEditingTask(null); setShowModal(true); };
+  const openNew = (prefill) => {
+    setEditingTask(prefill ? { ...prefill, id: undefined } : null);
+    setShowModal(true);
+  };
+  const openNewEmpty = () => openNew(null);
+
+  const handleTemplateSelect = (tplData) => {
+    openNew(tplData);
+  };
 
   const urgentCount = tasks.filter(t => t.priority === 'urgent' && t.status !== 'done').length;
 
   return (
     <div className="task-manager">
+      <TaskStatsBar tasks={tasks} />
+
       {/* Quick filters */}
       <div className="task-quick-filters">
         {QUICK_FILTERS.map(f => (
@@ -147,7 +172,34 @@ export default function TaskManager({ tasks, setTasks }) {
             ))}
           </select>
         </div>
-        <button className="ops-btn ops-btn-primary ops-add-btn" onClick={openNew}>
+
+        {/* View toggle */}
+        <div className="task-view-toggle">
+          <button
+            className={`task-view-btn ${viewMode === 'kanban' ? 'task-view-active' : ''}`}
+            onClick={() => setViewMode('kanban')}
+            title="عرض كانبان"
+          >
+            <GridIcon className="icon-sm" />
+          </button>
+          <button
+            className={`task-view-btn ${viewMode === 'list' ? 'task-view-active' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="عرض قائمة"
+          >
+            <ListIcon className="icon-sm" />
+          </button>
+        </div>
+
+        <button
+          className="ops-btn ops-btn-secondary"
+          onClick={() => setShowTemplates(true)}
+          title="قوالب المهام"
+        >
+          <SparklesIcon className="icon-sm" /> قوالب
+        </button>
+
+        <button className="ops-btn ops-btn-primary ops-add-btn" onClick={openNewEmpty}>
           <PlusIcon className="icon-sm" /> مهمة جديدة
         </button>
       </div>
@@ -159,42 +211,135 @@ export default function TaskManager({ tasks, setTasks }) {
         </div>
       )}
 
-      {/* Kanban Columns */}
-      <div className="task-kanban">
-        {STATUS_COLS.map(col => (
-          <div key={col.id} className={`task-col task-col-${col.id}`}>
-            <div className="task-col-header" style={{ '--col-color': col.color }}>
-              <col.Icon className="icon-sm" />
-              <span className="task-col-label">{col.label}</span>
-              <span className="task-col-count">{tasksByStatus[col.id].length}</span>
+      {/* Kanban View */}
+      {viewMode === 'kanban' && (
+        <div className="task-kanban">
+          {STATUS_COLS.map(col => (
+            <div key={col.id} className={`task-col task-col-${col.id}`}>
+              <div className="task-col-header" style={{ '--col-color': col.color }}>
+                <col.Icon className="icon-sm" />
+                <span className="task-col-label">{col.label}</span>
+                <span className="task-col-count">{tasksByStatus[col.id].length}</span>
+              </div>
+              <div className="task-col-body">
+                {tasksByStatus[col.id].length === 0 ? (
+                  <div className="task-col-empty">
+                    <CheckSquareIcon className="icon-lg" />
+                    <span>لا توجد مهام</span>
+                  </div>
+                ) : (
+                  tasksByStatus[col.id].map(task => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onEdit={openEdit}
+                      onDelete={handleDelete}
+                      onStatusChange={handleStatusChange}
+                    />
+                  ))
+                )}
+              </div>
             </div>
-            <div className="task-col-body">
-              {tasksByStatus[col.id].length === 0 ? (
-                <div className="task-col-empty">
-                  <CheckSquareIcon className="icon-lg" />
-                  <span>لا توجد مهام</span>
-                </div>
-              ) : (
-                tasksByStatus[col.id].map(task => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                    onStatusChange={handleStatusChange}
-                  />
-                ))
-              )}
+          ))}
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="task-list-view">
+          {sortTasks(filtered).length === 0 ? (
+            <div className="ops-empty-state">
+              <CheckSquareIcon className="icon-xl" />
+              <h3>لا توجد مهام</h3>
+              <p>أضف مهمة جديدة أو جرّب تغيير الفلتر</p>
             </div>
-          </div>
-        ))}
-      </div>
+          ) : (
+            <table className="task-list-table">
+              <thead>
+                <tr>
+                  <th>المهمة</th>
+                  <th>الأولوية</th>
+                  <th>الحالة</th>
+                  <th>التصنيف</th>
+                  <th>تاريخ الاستحقاق</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortTasks(filtered).map(task => {
+                  const pri = PRIORITIES[task.priority];
+                  const cat = CATEGORIES[task.category];
+                  const daysInfo = getDaysInfo(task.dueDate, task.status);
+                  return (
+                    <tr key={task.id} className={`task-list-row task-list-row-${task.status}`}>
+                      <td className="task-list-title">
+                        <span className="task-list-title-text">{task.title}</span>
+                        {task.description && (
+                          <span className="task-list-desc">{task.description}</span>
+                        )}
+                      </td>
+                      <td>
+                        {pri && (
+                          <span className="task-list-badge" style={{ '--badge-bg': pri.color + '25', '--badge-color': pri.color }}>
+                            {pri.label}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          className="task-list-status-sel"
+                          value={task.status}
+                          onChange={e => handleStatusChange(task.id, e.target.value)}
+                        >
+                          {STATUS_COLS.map(s => (
+                            <option key={s.id} value={s.id}>{STATUS_LABELS[s.id]}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        {cat && (
+                          <span className="task-list-badge" style={{ '--badge-bg': cat.color + '22', '--badge-color': cat.color }}>
+                            {cat.icon} {cat.label}
+                          </span>
+                        )}
+                      </td>
+                      <td className="task-list-date">
+                        {task.dueDate ? (
+                          <span className={daysInfo?.isOverdue ? 'task-list-overdue' : ''}>
+                            {formatShortDate(task.dueDate)}
+                            {daysInfo?.isOverdue && <span className="task-list-overdue-badge"> (متأخر)</span>}
+                          </span>
+                        ) : '—'}
+                      </td>
+                      <td className="task-list-actions">
+                        <button className="task-action-btn" onClick={() => openEdit(task)} title="تعديل">
+                          ✏️
+                        </button>
+                        <button className="task-action-btn task-delete-btn" onClick={() => handleDelete(task.id)} title="حذف">
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       {showModal && (
         <TaskModal
           task={editingTask}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditingTask(null); }}
+        />
+      )}
+
+      {showTemplates && (
+        <TaskTemplatesModal
+          onSelect={handleTemplateSelect}
+          onClose={() => setShowTemplates(false)}
         />
       )}
     </div>

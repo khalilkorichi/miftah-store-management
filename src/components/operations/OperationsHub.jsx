@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { CheckSquareIcon, BookOpenIcon, ActivityIcon } from '../Icons';
+import { CheckSquareIcon, BookOpenIcon, ActivityIcon, CalendarIcon } from '../Icons';
 import TaskManager from './TaskManager';
 import ActivationGuidesManager from './ActivationGuidesManager';
+import RenewalReminders from './RenewalReminders';
 
 const SUB_TABS = [
   { id: 'tasks', label: 'المهام', Icon: CheckSquareIcon },
   { id: 'guides', label: 'أدلة التفعيل', Icon: BookOpenIcon },
+  { id: 'renewals', label: 'تذكيرات التجديد', Icon: CalendarIcon },
 ];
 
-export default function OperationsHub({ tasks, setTasks, activationGuides, setActivationGuides, products, durations }) {
+export default function OperationsHub({
+  tasks, setTasks,
+  activationGuides, setActivationGuides,
+  renewalReminders, setRenewalReminders,
+  products, durations, suppliers, exchangeRate,
+}) {
   const [activeSubTab, setActiveSubTab] = useState('tasks');
 
   return (
@@ -20,7 +27,7 @@ export default function OperationsHub({ tasks, setTasks, activationGuides, setAc
         </div>
         <div>
           <h1 className="ops-hub-title">قسم العمليات</h1>
-          <p className="ops-hub-subtitle">إدارة المهام اليومية وأدلة تفعيل المنتجات في مكان واحد</p>
+          <p className="ops-hub-subtitle">إدارة المهام اليومية وأدلة تفعيل المنتجات وتذكيرات التجديد</p>
         </div>
       </div>
 
@@ -49,6 +56,15 @@ export default function OperationsHub({ tasks, setTasks, activationGuides, setAc
             setGuides={setActivationGuides}
             products={products}
             durations={durations}
+          />
+        )}
+        {activeSubTab === 'renewals' && (
+          <RenewalReminders
+            renewals={renewalReminders}
+            setRenewals={setRenewalReminders}
+            products={products}
+            suppliers={suppliers}
+            exchangeRate={exchangeRate}
           />
         )}
       </div>

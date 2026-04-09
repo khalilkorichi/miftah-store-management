@@ -78,6 +78,7 @@ function migrateData(data) {
       ...data,
       tasks: Array.isArray(data.tasks) ? data.tasks : DEFAULT_TASKS,
       activationGuides: Array.isArray(data.activationGuides) ? data.activationGuides : DEFAULT_ACTIVATION_GUIDES,
+      renewalReminders: Array.isArray(data.renewalReminders) ? data.renewalReminders : [],
     };
   }
 
@@ -114,6 +115,7 @@ function migrateData(data) {
     pricingData: data.pricingData || DEFAULT_PRICING_DATA,
     tasks: Array.isArray(data.tasks) ? data.tasks : DEFAULT_TASKS,
     activationGuides: Array.isArray(data.activationGuides) ? data.activationGuides : DEFAULT_ACTIVATION_GUIDES,
+    renewalReminders: Array.isArray(data.renewalReminders) ? data.renewalReminders : [],
   };
 }
 
@@ -184,6 +186,7 @@ function App() {
   const [customLogo, setCustomLogo] = useState(savedData?.customLogo || null);
   const [tasks, setTasks] = useState(savedData?.tasks || DEFAULT_TASKS);
   const [activationGuides, setActivationGuides] = useState(savedData?.activationGuides || DEFAULT_ACTIVATION_GUIDES);
+  const [renewalReminders, setRenewalReminders] = useState(savedData?.renewalReminders || []);
   const [appSettings, setAppSettings] = useState({
     accentColor: 'purple',
     fontSize: 'medium',
@@ -212,11 +215,11 @@ function App() {
 
   // Save data whenever it changes
   useEffect(() => {
-    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides });
+    saveData({ products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides, renewalReminders });
     setSaveIndicator(true);
     const timer = setTimeout(() => setSaveIndicator(false), 1500);
     return () => clearTimeout(timer);
-  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides]);
+  }, [products, suppliers, exchangeRate, durations, activationMethods, darkMode, costs, bundles, coupons, pricingData, customLogo, appSettings, categories, finalPrices, tasks, activationGuides, renewalReminders]);
 
   // Apply dark mode class
   useEffect(() => {
@@ -1007,8 +1010,12 @@ function App() {
             setTasks={setTasks}
             activationGuides={activationGuides}
             setActivationGuides={setActivationGuides}
+            renewalReminders={renewalReminders}
+            setRenewalReminders={setRenewalReminders}
             products={products}
             durations={durations}
+            suppliers={suppliers}
+            exchangeRate={exchangeRate}
           />
           </div>
         )}
