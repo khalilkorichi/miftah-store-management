@@ -181,7 +181,7 @@ function MessageBubble({ msg, onApplyDescription, product }) {
               {copied ? <CheckCircleIcon className="icon-xs" /> : <CopyIcon className="icon-xs" />}
               {copied ? 'تم النسخ' : 'نسخ'}
             </button>
-            {onApplyDescription && product && (
+            {onApplyDescription && product && msg.action?.type === 'updateDescription' && (
               <button
                 className="ai-msg-btn ai-msg-btn-apply"
                 onClick={() => onApplyDescription(msg.displayContent || msg.content)}
@@ -276,7 +276,7 @@ function AIAssistantTab({
 
       setMessages([
         { ...userMsg, id: `u_${Date.now()}` },
-        { role: 'assistant', content: clean, displayContent: clean, id: `a_${Date.now()}` },
+        { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` },
       ]);
     } catch (e) {
       if (e.message === 'NO_KEY') {
@@ -314,7 +314,7 @@ function AIAssistantTab({
 
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: clean, displayContent: clean, id: `a_${Date.now()}` },
+        { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` },
       ]);
     } catch (e) {
       if (e.message === 'NO_KEY') {
@@ -578,6 +578,11 @@ function AIAssistantTab({
             <p>
               {pendingAction.type === 'updateDescription' && 'تحديث وصف المنتج بالنص الجديد'}
               {pendingAction.type === 'updateDetails' && 'تحديث تفاصيل المنتج'}
+              {pendingAction.type === 'updatePlanPrice' && `تعديل سعر الخطة (${pendingAction.planId}) من المورد — السعر الجديد: $${pendingAction.price}`}
+              {pendingAction.type === 'updateOfficialPrice' && `تعديل السعر الرسمي للخطة (${pendingAction.planId}) إلى $${pendingAction.price}`}
+              {pendingAction.type === 'addFeature' && `إضافة ميزة جديدة إلى الخطة (${pendingAction.planId}): "${pendingAction.text}"`}
+              {pendingAction.type === 'editFeature' && `تعديل نص ميزة في الخطة (${pendingAction.planId}): "${pendingAction.text}"`}
+              {pendingAction.type === 'removeFeature' && `حذف ميزة من الخطة (${pendingAction.planId})`}
             </p>
           </div>
           <div className="ai-action-card-btns">
