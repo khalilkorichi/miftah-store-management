@@ -14406,6 +14406,34 @@ body.dark-mode .selectable-card.selected {
   white-space: nowrap;
   flex-shrink: 0;
 }
+.warranty-days-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.warranty-preset-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+.warranty-preset-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(99, 179, 237, 0.08);
+}
+.warranty-preset-active {
+  border-color: var(--accent-blue) !important;
+  color: var(--accent-blue) !important;
+  background: rgba(99, 179, 237, 0.12) !important;
+}
 
 .warranty-type-hint {
   display: flex;

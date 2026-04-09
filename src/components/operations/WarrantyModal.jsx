@@ -364,6 +364,18 @@ export default function WarrantyModal({ warranty, products, suppliers, durations
                   />
                   <span className="warranty-days-unit">يوم</span>
                 </div>
+                <div className="warranty-days-presets">
+                  {[{ label: 'شهر', days: 30 }, { label: 'ستة أشهر', days: 180 }, { label: 'سنة', days: 365 }].map(p => (
+                    <button
+                      key={p.days}
+                      type="button"
+                      className={`warranty-preset-btn ${Number(form.warrantyDays) === p.days ? 'warranty-preset-active' : ''}`}
+                      onClick={() => { set('warrantyDays', String(p.days)); setAutoFilledWarranty(null); }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
                 {errors.warrantyDays && <span className="ops-form-error">{errors.warrantyDays}</span>}
                 {form.purchaseDate && form.warrantyDays > 0 && (() => {
                   try {
