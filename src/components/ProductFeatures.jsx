@@ -173,6 +173,7 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
   const [showIconPicker, setShowIconPicker] = useState(null);
   const [showBadgePicker, setShowBadgePicker] = useState(null);
   const [copyFromPlan, setCopyFromPlan] = useState(null);
+  const [expandedDesc, setExpandedDesc] = useState(new Set());
   const [activeSubTab, setActiveSubTab] = useState('editor');
   const featureInputRefs = useRef({});
   const iconBtnRefs = useRef({});
@@ -417,6 +418,14 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
       })
     }));
   }, [product, updateProduct]);
+
+  const toggleDesc = useCallback((featureId) => {
+    setExpandedDesc(prev => {
+      const next = new Set(prev);
+      if (next.has(featureId)) next.delete(featureId); else next.add(featureId);
+      return next;
+    });
+  }, []);
 
   const removeFeature = useCallback((planId, featureId) => {
     if (!product) return;
@@ -1167,9 +1176,11 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                       const badgeInfo = feature.badge ? getBadgeInfo(feature.badge) : null;
                       const isIconOpen = showIconPicker === feature.id;
                       const isBadgeOpen = showBadgePicker === feature.id;
+                      const isDescExpanded = expandedDesc.has(feature.id);
 
                       return (
-                        <div key={feature.id} className={`pf-feature-row ${isIconOpen || isBadgeOpen ? 'pf-feature-row--active' : ''}`}>
+                        <div key={feature.id} className="pf-feature-item">
+                        <div className={`pf-feature-row ${isIconOpen || isBadgeOpen ? 'pf-feature-row--active' : ''}`}>
                           <div className="pf-feature-icon-wrap">
                             <button
                               ref={el => iconBtnRefs.current[feature.id] = el}
@@ -1246,10 +1257,31 @@ function ProductFeatures({ products, setProducts, durations, suppliers, exchange
                             <button className="pf-move-btn" onClick={() => moveFeature(plan.id, feature.id, 'down')} disabled={idx === filteredFeatures.length - 1} title="نقل لأسفل">
                               <ArrowDownIcon className="icon-xs" />
                             </button>
+                            <button
+                              className={`pf-move-btn pf-desc-toggle-btn ${isDescExpanded ? 'active' : ''} ${feature.desc ? 'has-desc' : ''}`}
+                              onClick={() => toggleDesc(feature.id)}
+                              title={isDescExpanded ? 'إخفاء الوصف' : 'إضافة وصف للميزة'}
+                              type="button"
+                            >
+                              <AlignLeftIcon className="icon-xs" />
+                            </button>
                             <button className="pf-remove-btn" onClick={() => removeFeature(plan.id, feature.id)} title="حذف">
                               <TrashIcon className="icon-xs" />
                             </button>
                           </div>
+                        </div>
+                        {isDescExpanded && (
+                          <div className="pf-feature-desc-area">
+                            <textarea
+                              className="pf-feature-desc-input"
+                              value={feature.desc || ''}
+                              onChange={(e) => updateFeature(plan.id, feature.id, { desc: e.target.value })}
+                              placeholder="أضف وصفاً تفصيلياً لهذه الميزة..."
+                              rows={2}
+                              autoFocus
+                            />
+                          </div>
+                        )}
                         </div>
                       );
                     })}
