@@ -4,6 +4,8 @@
          Gemini 2.0 family deprecates June 1, 2026.
    ─────────────────────────────────────────────────────────────────────────── */
 export const GEMINI_MODELS = [
+  // ── 3.1 Family (Preview) ──
+  { id: 'gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite (Preview)' },
   // ── 2.5 Family (Current / Recommended) ──
   { id: 'gemini-2.5-pro',            label: 'Gemini 2.5 Pro ✦' },
   { id: 'gemini-2.5-flash',          label: 'Gemini 2.5 Flash ✦' },
