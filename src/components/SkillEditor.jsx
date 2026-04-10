@@ -103,6 +103,7 @@ export default function SkillEditor({ skill, onSave, onDelete, onCreate }) {
   return (
     <div className="skill-editor">
       <div className="skill-editor-pickers">
+        <span className="skill-editor-pickers-label">الأيقونة</span>
         <div className="skill-editor-icon-pick">
           {ICONS.map(ic => (
             <button
@@ -113,6 +114,8 @@ export default function SkillEditor({ skill, onSave, onDelete, onCreate }) {
             >{ic}</button>
           ))}
         </div>
+        <div className="skill-editor-divider" />
+        <span className="skill-editor-pickers-label">اللون</span>
         <div className="skill-editor-color-pick">
           {COLORS.map(c => (
             <button

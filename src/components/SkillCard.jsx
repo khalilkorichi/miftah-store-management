@@ -1,16 +1,22 @@
 import React from 'react';
 
 export default function SkillCard({ skill, isSelected, onSelect, onToggle }) {
+  const color = skill.color || '#5E4FDE';
+
   return (
     <div
       className={`skill-card ${isSelected ? 'skill-card-selected' : ''} ${!skill.enabled ? 'skill-card-disabled' : ''}`}
+      style={{ '--skill-accent': color }}
       onClick={() => onSelect(skill)}
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && onSelect(skill)}
     >
       <div className="skill-card-header">
-        <div className="skill-card-icon" style={{ background: (skill.color || '#5E4FDE') + '22', color: skill.color || '#5E4FDE' }}>
+        <div
+          className="skill-card-icon"
+          style={{ background: color + '22', color }}
+        >
           {skill.icon || '⚡'}
         </div>
         <div className="skill-card-meta">
@@ -21,6 +27,7 @@ export default function SkillCard({ skill, isSelected, onSelect, onToggle }) {
         </div>
         <button
           className={`skill-toggle ${skill.enabled ? 'skill-toggle-on' : 'skill-toggle-off'}`}
+          style={skill.enabled ? { background: color, boxShadow: `0 0 0 3px ${color}33` } : {}}
           onClick={e => { e.stopPropagation(); onToggle(skill.id); }}
           title={skill.enabled ? 'تعطيل المهارة' : 'تفعيل المهارة'}
           aria-label={skill.enabled ? 'تعطيل' : 'تفعيل'}
