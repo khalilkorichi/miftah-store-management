@@ -2,11 +2,55 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   SparklesIcon, SendIcon, RefreshIcon, CopyIcon, CheckCircleIcon,
   SettingsIcon, XIcon, ZapIcon, AlertTriangleIcon, KeyIcon,
-  ChevronDownIcon, PackageIcon,
+  ChevronDownIcon, PackageIcon, PlusIcon, TrashIcon, ClockIcon,
 } from './Icons';
 import { callAI } from '../utils/aiProvider';
 import MarkdownRenderer from './MarkdownRenderer';
 
+/* ─── Conversation persistence helpers ──────────────────────────────────── */
+const CHATS_KEY = 'miftah_ai_chats';
+
+function loadChats(productId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(CHATS_KEY) || '{}');
+    return Array.isArray(all[productId]) ? all[productId] : [];
+  } catch { return []; }
+}
+
+function saveChats(productId, conversations) {
+  try {
+    const all = JSON.parse(localStorage.getItem(CHATS_KEY) || '{}');
+    all[productId] = conversations;
+    localStorage.setItem(CHATS_KEY, JSON.stringify(all));
+  } catch (e) { console.error('AI chats save error:', e); }
+}
+
+function makeConvId() {
+  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function makeEmptyConv() {
+  return { id: makeConvId(), title: 'محادثة جديدة', messages: [], createdAt: Date.now(), updatedAt: Date.now() };
+}
+
+function makeConvTitle(messages) {
+  const first = messages.find(m => m.role === 'user');
+  if (!first) return 'محادثة جديدة';
+  const text = (first.content || '').trim();
+  return text.length > 38 ? text.slice(0, 38) + '…' : text;
+}
+
+function formatConvDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'الآن';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} د`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} س`;
+  return d.toLocaleDateString('ar', { month: 'short', day: 'numeric' });
+}
+
+/* ─── Default system prompt ─────────────────────────────────────────────── */
 export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خبير في التسويق الرقمي وكتابة المحتوى للمتاجر الإلكترونية في المنطقة العربية.
 
 مهمتك الأساسية: مساعدة مدير متجر رقمي (على منصة سلة) على:
@@ -63,6 +107,7 @@ export const DEFAULT_AI_PROMPT = `أنت مساعد ذكاء اصطناعي خب
 {"type":"removeFeature","planId":"plan_xxx","featureId":"feat_yyy"}
 [/MIFTAH_ACTION]`;
 
+/* ─── Product context builder ───────────────────────────────────────────── */
 function buildProductContext(product, suppliers, durations, activationMethods) {
   if (!product) return '';
   const lines = ['=== بيانات المنتج الحالي ==='];
@@ -152,6 +197,7 @@ function textToHtml(text) {
     .join('');
 }
 
+/* ─── MessageBubble ─────────────────────────────────────────────────────── */
 function MessageBubble({ msg, onApplyDescription, product }) {
   const [copied, setCopied] = useState(false);
   const isAI = msg.role === 'assistant';
@@ -210,6 +256,7 @@ function MessageBubble({ msg, onApplyDescription, product }) {
   );
 }
 
+/* ─── Main Component ────────────────────────────────────────────────────── */
 function AIAssistantTab({
   product,
   suppliers,
@@ -221,6 +268,8 @@ function AIAssistantTab({
   onNavigateToSettings,
 }) {
   const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [activeConvId, setActiveConvId] = useState(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPromptEditor, setShowPromptEditor] = useState(false);
@@ -229,15 +278,37 @@ function AIAssistantTab({
   );
   const [pendingAction, setPendingAction] = useState(null);
   const [error, setError] = useState('');
+
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const activeConvIdRef = useRef(null);
+  const productIdRef = useRef(null);
 
+  /* keep refs fresh */
+  useEffect(() => { activeConvIdRef.current = activeConvId; }, [activeConvId]);
+  useEffect(() => { productIdRef.current = product?.id; }, [product?.id]);
+
+  /* ── Load / init conversations when product changes ── */
   useEffect(() => {
-    setMessages([]);
+    if (!product?.id) return;
+    const convs = loadChats(product.id);
+    if (convs.length > 0) {
+      setConversations(convs);
+      setActiveConvId(convs[0].id);
+      setMessages(convs[0].messages);
+    } else {
+      const newConv = makeEmptyConv();
+      setConversations([newConv]);
+      setActiveConvId(newConv.id);
+      setMessages([]);
+      saveChats(product.id, [newConv]);
+    }
     setError('');
     setPendingAction(null);
+    setInput('');
   }, [product?.id]);
 
+  /* ── Auto-scroll ── */
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -245,6 +316,23 @@ function AIAssistantTab({
   useEffect(() => {
     setCustomPrompt(appSettings?.aiCustomPrompt || DEFAULT_AI_PROMPT);
   }, [appSettings?.aiCustomPrompt]);
+
+  /* ── Sync messages → conversations + localStorage ── */
+  const syncConv = (msgs) => {
+    const pid = productIdRef.current;
+    const cid = activeConvIdRef.current;
+    if (!pid || !cid) return;
+    setConversations(prevConvs => {
+      const existing = prevConvs.find(c => c.id === cid);
+      if (!existing) return prevConvs;
+      const title = msgs.length > 0 ? makeConvTitle(msgs) : existing.title;
+      const updated = prevConvs.map(c =>
+        c.id === cid ? { ...c, messages: msgs, title, updatedAt: Date.now() } : c
+      );
+      saveChats(pid, updated);
+      return updated;
+    });
+  };
 
   const hasApiKey = Boolean(
     appSettings?.aiProvider === 'openrouter' ? appSettings?.openrouterApiKey :
@@ -257,6 +345,51 @@ function AIAssistantTab({
     return `${customPrompt}\n\n${ctx}`;
   }, [product, suppliers, durations, activationMethods, customPrompt]);
 
+  /* ── Conversation management ── */
+  const startNewConversation = useCallback(() => {
+    if (!product?.id) return;
+    const newConv = makeEmptyConv();
+    const updated = [newConv, ...conversations];
+    saveChats(product.id, updated);
+    setConversations(updated);
+    setActiveConvId(newConv.id);
+    setMessages([]);
+    setPendingAction(null);
+    setError('');
+    setInput('');
+    setTimeout(() => inputRef.current?.focus(), 80);
+  }, [product?.id, conversations]);
+
+  const switchConversation = useCallback((convId) => {
+    if (convId === activeConvId || isLoading) return;
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    setActiveConvId(convId);
+    setMessages(conv.messages);
+    setPendingAction(null);
+    setError('');
+    setInput('');
+  }, [activeConvId, conversations, isLoading]);
+
+  const deleteConversation = useCallback((convId, e) => {
+    e?.stopPropagation();
+    if (!product?.id) return;
+    let updated = conversations.filter(c => c.id !== convId);
+    if (updated.length === 0) {
+      updated = [makeEmptyConv()];
+    }
+    saveChats(product.id, updated);
+    setConversations(updated);
+    if (convId === activeConvId) {
+      const first = updated[0];
+      setActiveConvId(first.id);
+      setMessages(first.messages);
+      setPendingAction(null);
+      setError('');
+    }
+  }, [product?.id, activeConvId, conversations]);
+
+  /* ── AI Handlers ── */
   const handleGenerate = async () => {
     if (!product || isLoading) return;
     setIsLoading(true);
@@ -267,7 +400,9 @@ function AIAssistantTab({
       content: `اكتب وصفاً تسويقياً احترافياً وجاهزاً للنشر في متجر سلة لمنتج "${product.name}". الوصف يجب أن يكون مقنعاً وشاملاً لجميع الخطط والمزايا المتاحة.`,
       id: `u_${Date.now()}`,
     };
-    setMessages([userMsg]);
+    const initMsgs = [userMsg];
+    setMessages(initMsgs);
+    syncConv(initMsgs);
 
     try {
       const result = await callAI({
@@ -279,10 +414,10 @@ function AIAssistantTab({
       const { clean, action } = parseActionFromText(result);
       if (action) setPendingAction(action);
 
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` },
-      ]);
+      const aiMsg = { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` };
+      const finalMsgs = [...initMsgs, aiMsg];
+      setMessages(finalMsgs);
+      syncConv(finalMsgs);
     } catch (e) {
       if (e.message === 'NO_KEY') {
         setError('لم يتم تعيين مفتاح API. يرجى إضافته من صفحة الإعدادات.');
@@ -301,6 +436,7 @@ function AIAssistantTab({
     const userMsg = { role: 'user', content: text, id: `u_${Date.now()}` };
     const nextMessages = [...messages, userMsg];
     setMessages(nextMessages);
+    syncConv(nextMessages);
     setInput('');
     setIsLoading(true);
     setError('');
@@ -317,10 +453,10 @@ function AIAssistantTab({
       const { clean, action } = parseActionFromText(result);
       if (action) setPendingAction(action);
 
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` },
-      ]);
+      const aiMsg = { role: 'assistant', content: clean, displayContent: clean, action, id: `a_${Date.now()}` };
+      const finalMsgs = [...nextMessages, aiMsg];
+      setMessages(finalMsgs);
+      syncConv(finalMsgs);
     } catch (e) {
       if (e.message === 'NO_KEY') {
         setError('لم يتم تعيين مفتاح API. يرجى إضافته من صفحة الإعدادات.');
@@ -367,10 +503,7 @@ function AIAssistantTab({
       }
       const updatedPlans = (product.plans || []).map(plan => {
         if (String(plan.id) !== String(pendingAction.planId)) return plan;
-        return {
-          ...plan,
-          prices: { ...(plan.prices || {}), [String(supplierId)]: price },
-        };
+        return { ...plan, prices: { ...(plan.prices || {}), [String(supplierId)]: price } };
       });
       updateProduct(product.id, { plans: updatedPlans });
 
@@ -437,6 +570,7 @@ function AIAssistantTab({
     setShowPromptEditor(false);
   };
 
+  /* ── Empty state ── */
   if (!product) {
     return (
       <div className="ai-tab-empty">
@@ -458,6 +592,9 @@ function AIAssistantTab({
     appSettings?.aiProvider === 'openrouter' ? (appSettings?.openrouterModel || 'anthropic/claude-sonnet-4.6') :
     appSettings?.aiProvider === 'agentrouter' ? (appSettings?.agentrouterModel || 'gpt-4o') :
     (appSettings?.geminiModel || 'gemini-2.5-flash');
+
+  const nonEmptyConvs = conversations.filter(c => c.messages.length > 0 || c.id === activeConvId);
+  const sidebarConvs = nonEmptyConvs.length > 0 ? nonEmptyConvs : conversations;
 
   return (
     <div className="ai-tab-wrap">
@@ -597,87 +734,161 @@ function AIAssistantTab({
         </div>
       )}
 
-      {/* Unified Chat Panel */}
-      <div className="ai-chat-panel">
-        <div className="ai-chat-panel-header">
-          <span>المحادثة</span>
-          {messages.length > 0 && (
+      {/* ── Chat container: sidebar + main panel ── */}
+      <div className="ai-chat-container">
+
+        {/* ── Conversations Sidebar (right in RTL) ── */}
+        <div className="ai-chat-sidebar">
+          <div className="ai-sidebar-header">
+            <span className="ai-sidebar-title">
+              <SparklesIcon className="icon-xs" />
+              المحادثات
+            </span>
             <button
-              className="ai-chat-clear-btn"
-              onClick={() => { setMessages([]); setPendingAction(null); }}
+              className="ai-sidebar-new-btn"
+              onClick={startNewConversation}
+              title="محادثة جديدة"
+              disabled={isLoading}
             >
-              <XIcon className="icon-xs" /> مسح
+              <PlusIcon className="icon-xs" />
             </button>
-          )}
-        </div>
-
-        <div className="ai-chat-thread">
-          {messages.length === 0 && (
-            <div className="ai-chat-thread-empty">
-              <SparklesIcon className="icon-sm" />
-              <p>ابدأ بتوليد وصف أو اطرح سؤالاً عن المنتج</p>
-            </div>
-          )}
-          {messages.map(msg => (
-            <MessageBubble
-              key={msg.id}
-              msg={msg}
-              onApplyDescription={msg.role === 'assistant' ? handleApplyDescription : null}
-              product={product}
-            />
-          ))}
-          {isLoading && messages.length > 0 && (
-            <div className="ai-message ai-message-ai">
-              <div className="ai-message-avatar">
-                <SparklesIcon className="icon-xs" />
-              </div>
-              <div className="ai-message-bubble ai-message-thinking">
-                <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
-              </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
-        </div>
-
-        {messages.length > 0 && (
-          <div className="ai-quick-prompts">
-            {['قصّر الوصف', 'اجعله أكثر تسويقاً', 'أضف قسم FAQ', 'أضف نقاط مزايا', 'غيّر الأسلوب إلى رسمي'].map(prompt => (
-              <button
-                key={prompt}
-                className="ai-quick-btn"
-                onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
-              >
-                {prompt}
-              </button>
-            ))}
           </div>
-        )}
 
-        <div className="ai-chat-input-bar">
-          <textarea
-            ref={inputRef}
-            className="ai-chat-input"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              messages.length === 0
-                ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
-                : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'
-            }
-            rows={2}
-            disabled={isLoading || !hasApiKey}
-            dir="rtl"
-          />
-          <button
-            className="ai-send-btn"
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading || !hasApiKey}
-            title="إرسال"
-          >
-            {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
-          </button>
+          <div className="ai-sidebar-list">
+            {sidebarConvs.map(conv => {
+              const isActive = conv.id === activeConvId;
+              const hasMessages = conv.messages.length > 0;
+              return (
+                <div
+                  key={conv.id}
+                  className={`ai-sidebar-item ${isActive ? 'active' : ''} ${!hasMessages ? 'empty' : ''}`}
+                  onClick={() => switchConversation(conv.id)}
+                  title={conv.title}
+                >
+                  <div className="ai-sidebar-item-icon">
+                    <SparklesIcon className="icon-xs" />
+                  </div>
+                  <div className="ai-sidebar-item-body">
+                    <span className="ai-sidebar-item-title">{conv.title}</span>
+                    <span className="ai-sidebar-item-meta">
+                      <ClockIcon className="icon-xs" />
+                      {formatConvDate(conv.updatedAt)}
+                      {hasMessages && (
+                        <span className="ai-sidebar-item-count">
+                          {Math.floor(conv.messages.length / 2)} رسالة
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    className="ai-sidebar-item-del"
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    title="حذف المحادثة"
+                  >
+                    <TrashIcon className="icon-xs" />
+                  </button>
+                </div>
+              );
+            })}
+
+            {sidebarConvs.length === 0 && (
+              <div className="ai-sidebar-empty">
+                <p>لا توجد محادثات</p>
+              </div>
+            )}
+          </div>
+
+          <div className="ai-sidebar-footer">
+            <span>{sidebarConvs.length} محادثة</span>
+          </div>
         </div>
+
+        {/* ── Main Chat Panel ── */}
+        <div className="ai-chat-panel">
+          <div className="ai-chat-panel-header">
+            <span className="ai-chat-panel-title">
+              {conversations.find(c => c.id === activeConvId)?.title || 'المحادثة'}
+            </span>
+            <button
+              className="ai-sidebar-new-btn"
+              onClick={startNewConversation}
+              title="محادثة جديدة"
+              disabled={isLoading}
+            >
+              <PlusIcon className="icon-xs" />
+              <span>جديدة</span>
+            </button>
+          </div>
+
+          <div className="ai-chat-thread">
+            {messages.length === 0 && (
+              <div className="ai-chat-thread-empty">
+                <SparklesIcon className="icon-sm" />
+                <p>ابدأ بتوليد وصف أو اطرح سؤالاً عن المنتج</p>
+              </div>
+            )}
+            {messages.map(msg => (
+              <MessageBubble
+                key={msg.id}
+                msg={msg}
+                onApplyDescription={msg.role === 'assistant' ? handleApplyDescription : null}
+                product={product}
+              />
+            ))}
+            {isLoading && messages.length > 0 && (
+              <div className="ai-message ai-message-ai">
+                <div className="ai-message-avatar">
+                  <SparklesIcon className="icon-xs" />
+                </div>
+                <div className="ai-message-bubble ai-message-thinking">
+                  <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {messages.length > 0 && (
+            <div className="ai-quick-prompts">
+              {['قصّر الوصف', 'اجعله أكثر تسويقاً', 'أضف قسم FAQ', 'أضف نقاط مزايا', 'غيّر الأسلوب إلى رسمي'].map(prompt => (
+                <button
+                  key={prompt}
+                  className="ai-quick-btn"
+                  onClick={() => { setInput(prompt); inputRef.current?.focus(); }}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="ai-chat-input-bar">
+            <textarea
+              ref={inputRef}
+              className="ai-chat-input"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                messages.length === 0
+                  ? 'اطرح سؤالاً عن المنتج أو اطلب تعديلاً...'
+                  : 'اطلب تعديلاً، مثل: قصّر الوصف / أضف FAQ...'
+              }
+              rows={2}
+              disabled={isLoading || !hasApiKey}
+              dir="rtl"
+            />
+            <button
+              className="ai-send-btn"
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading || !hasApiKey}
+              title="إرسال"
+            >
+              {isLoading ? <span className="ai-spinner" /> : <SendIcon className="icon-sm" />}
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
