@@ -3598,6 +3598,25 @@ body {
   gap: 10px;
 }
 
+.settings-data-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.settings-data-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+.settings-data-stat-row svg { color: var(--text-muted); flex-shrink: 0; }
+.settings-data-stat-row span { flex: 1; font-size: 13px; color: var(--text-secondary); }
+.settings-data-stat-row strong { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+
 .settings-action-btn {
   display: flex;
   align-items: center;
@@ -16821,28 +16840,29 @@ body.dark-mode .selectable-card.selected {
 /* ── Settings inner tabs ── */
 .settings-inner-tabs {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   padding: 4px;
   margin-bottom: 24px;
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
-  width: fit-content;
+  flex-wrap: wrap;
 }
 .settings-inner-tab {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 20px;
+  gap: 6px;
+  padding: 8px 16px;
   border-radius: var(--radius-md);
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
+  white-space: nowrap;
 }
 .settings-inner-tab:hover {
   background: var(--bg-hover);
