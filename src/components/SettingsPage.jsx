@@ -171,7 +171,7 @@ function SettingsPage({
             </div>
           </div>
 
-          <div className="settings-grid">
+          <div className="settings-grid settings-grid-3">
             {/* سعر الصرف */}
             <div className="settings-card">
               <div className="settings-card-icon-wrap settings-card-blue">
@@ -320,8 +320,8 @@ function SettingsPage({
           Tab: المظهر
           ══════════════════════════════════════════ */}
       {settingsTab === 'appearance' && (
-        <div className="settings-grid">
-          {/* الوضع الداكن/الفاتح */}
+        <div className="settings-grid settings-grid-3">
+          {/* المظهر - وضع داكن/فاتح */}
           <div className="settings-card">
             <div className="settings-card-icon-wrap settings-card-purple">
               <PaletteIcon className="icon-md" />
@@ -335,67 +335,6 @@ function SettingsPage({
               <div className={`settings-theme-option ${!darkMode ? 'active' : ''}`}>
                 <SunIcon className="icon-sm" /> الفاتح
               </div>
-            </div>
-          </div>
-
-          {/* شعار البرنامج */}
-          <div className="settings-card">
-            <div className="settings-card-icon-wrap settings-card-indigo">
-              <ImageIcon className="icon-md" />
-            </div>
-            <h3>شعار البرنامج</h3>
-            <p className="settings-desc">ارفع شعاراً مخصصاً يظهر في رأس الصفحة (PNG أو SVG)</p>
-            <div className="settings-logo-area">
-              <div className="settings-logo-preview">
-                {customLogo ? (
-                  <img src={customLogo} alt="الشعار" className="settings-logo-img" />
-                ) : (
-                  <div className="settings-logo-placeholder">
-                    <ImageIcon className="icon-md" />
-                    <span>لا يوجد شعار</span>
-                  </div>
-                )}
-              </div>
-              <div className="settings-logo-actions">
-                <button className="settings-logo-btn upload" onClick={() => logoInputRef.current?.click()}>
-                  <UploadIcon className="icon-sm" /> رفع شعار
-                </button>
-                {customLogo && (
-                  <button className="settings-logo-btn remove" onClick={() => onLogoChange(null)}>
-                    <XIcon className="icon-sm" /> إزالة
-                  </button>
-                )}
-              </div>
-              <input
-                type="file"
-                ref={logoInputRef}
-                onChange={handleLogoUpload}
-                accept="image/png,image/svg+xml,image/jpeg,image/webp"
-                style={{ display: 'none' }}
-              />
-              <p className="settings-logo-hint">الحد الأقصى: 500 كيلوبايت — يتكيف لونه تلقائياً مع الوضع الداكن/الفاتح</p>
-            </div>
-          </div>
-
-          {/* اللون الرئيسي */}
-          <div className="settings-card">
-            <div className="settings-card-icon-wrap settings-card-accent">
-              <PaletteIcon className="icon-md" />
-            </div>
-            <h3>اللون الرئيسي</h3>
-            <p className="settings-desc">اختر اللون الرئيسي للبرنامج</p>
-            <div className="settings-accent-grid">
-              {accentOptions.map(opt => (
-                <button
-                  key={opt.id}
-                  className={`settings-accent-btn ${appSettings.accentColor === opt.id ? 'active' : ''}`}
-                  onClick={() => updateSetting('accentColor', opt.id)}
-                  title={opt.label}
-                >
-                  <span className="accent-swatch" style={{ background: opt.color }}></span>
-                  <span className="accent-label">{opt.label}</span>
-                </button>
-              ))}
             </div>
           </div>
 
@@ -438,6 +377,67 @@ function SettingsPage({
               ))}
             </div>
           </div>
+
+          {/* شعار البرنامج */}
+          <div className="settings-card">
+            <div className="settings-card-icon-wrap settings-card-indigo">
+              <ImageIcon className="icon-md" />
+            </div>
+            <h3>شعار البرنامج</h3>
+            <p className="settings-desc">ارفع شعاراً مخصصاً يظهر في رأس الصفحة (PNG أو SVG)</p>
+            <div className="settings-logo-area">
+              <div className="settings-logo-preview">
+                {customLogo ? (
+                  <img src={customLogo} alt="الشعار" className="settings-logo-img" />
+                ) : (
+                  <div className="settings-logo-placeholder">
+                    <ImageIcon className="icon-md" />
+                    <span>لا يوجد شعار</span>
+                  </div>
+                )}
+              </div>
+              <div className="settings-logo-actions">
+                <button className="settings-logo-btn upload" onClick={() => logoInputRef.current?.click()}>
+                  <UploadIcon className="icon-sm" /> رفع شعار
+                </button>
+                {customLogo && (
+                  <button className="settings-logo-btn remove" onClick={() => onLogoChange(null)}>
+                    <XIcon className="icon-sm" /> إزالة
+                  </button>
+                )}
+              </div>
+              <input
+                type="file"
+                ref={logoInputRef}
+                onChange={handleLogoUpload}
+                accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                style={{ display: 'none' }}
+              />
+              <p className="settings-logo-hint">الحد الأقصى: 500 كيلوبايت</p>
+            </div>
+          </div>
+
+          {/* اللون الرئيسي */}
+          <div className="settings-card settings-card-span2">
+            <div className="settings-card-icon-wrap settings-card-accent">
+              <PaletteIcon className="icon-md" />
+            </div>
+            <h3>اللون الرئيسي</h3>
+            <p className="settings-desc">اختر اللون الرئيسي للبرنامج</p>
+            <div className="settings-accent-grid">
+              {accentOptions.map(opt => (
+                <button
+                  key={opt.id}
+                  className={`settings-accent-btn ${appSettings.accentColor === opt.id ? 'active' : ''}`}
+                  onClick={() => updateSetting('accentColor', opt.id)}
+                  title={opt.label}
+                >
+                  <span className="accent-swatch" style={{ background: opt.color }}></span>
+                  <span className="accent-label">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -445,8 +445,8 @@ function SettingsPage({
           Tab: الذكاء الاصطناعي
           ══════════════════════════════════════════ */}
       {settingsTab === 'ai' && (
-        <div className="settings-grid">
-          <div className="settings-card settings-card-wide">
+        <div className="settings-ai-wrapper">
+          <div className="settings-card">
             <div className="settings-card-icon-wrap settings-card-purple">
               <SparklesIcon className="icon-md" />
             </div>
@@ -628,7 +628,7 @@ function SettingsPage({
           ══════════════════════════════════════════ */}
       {settingsTab === 'data' && (
         <div className="settings-grid">
-          <div className="settings-card settings-card-wide">
+          <div className="settings-card">
             <div className="settings-card-icon-wrap settings-card-orange">
               <DatabaseIcon className="icon-md" />
             </div>
