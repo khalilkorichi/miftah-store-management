@@ -20,10 +20,15 @@ export default function SkillCard({ skill, isSelected, onSelect, onToggle }) {
           {skill.icon || '⚡'}
         </div>
         <div className="skill-card-meta">
-          <span className="skill-card-name">{skill.name}</span>
-          <span className={`skill-card-type-badge ${skill.type === 'builtin' ? 'skill-type-builtin' : 'skill-type-custom'}`}>
-            {skill.type === 'builtin' ? 'مدمجة' : 'مخصصة'}
-          </span>
+          <span className="skill-card-name" title={skill.name}>{skill.name}</span>
+          <div className="skill-card-meta-footer">
+            <span className={`skill-card-type-badge ${skill.type === 'builtin' ? 'skill-type-builtin' : 'skill-type-custom'}`}>
+              {skill.type === 'builtin' ? 'مدمجة' : 'مخصصة'}
+            </span>
+            <span className="skill-card-priority" style={{ color, background: color + '18', borderColor: color + '35' }}>
+              P{skill.priority || 5}
+            </span>
+          </div>
         </div>
         <button
           className={`skill-toggle ${skill.enabled ? 'skill-toggle-on' : 'skill-toggle-off'}`}
