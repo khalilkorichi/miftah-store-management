@@ -761,6 +761,16 @@ function App() {
     );
   }, []);
 
+  // === Global AI Assistant Actions ===
+  const handleUpdateProductById = useCallback((productId, updater) => {
+    setProducts(prev => prev.map(p => p.id === productId ? updater(p) : p));
+  }, []);
+
+  const handleCreateCouponFromGAA = useCallback((coupon) => {
+    setCoupons(prev => [...prev, coupon]);
+    toast(`تم إنشاء الكوبون "${coupon.code}" بنجاح`, 'success');
+  }, [toast]);
+
   // === Data Management ===
   const handleResetData = useCallback(() => {
     setProducts(DEFAULT_PRODUCTS);
@@ -1093,6 +1103,15 @@ function App() {
         appSettings={appSettings}
         exchangeRate={exchangeRate}
         onNavigateToSettings={() => setActiveTab('settings')}
+        onCreateProduct={(name, durationId, officialPriceUsd) => {
+          const plans = durationId
+            ? [{ id: 1, durationId, officialPriceUsd: parseFloat(officialPriceUsd) || 0, prices: {} }]
+            : [];
+          handleAddProduct(name, plans);
+        }}
+        onCreateSupplier={handleAddSupplier}
+        onUpdateProduct={handleUpdateProductById}
+        onCreateCoupon={handleCreateCouponFromGAA}
       />
     </div>
   );
