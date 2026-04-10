@@ -6,48 +6,11 @@ import {
 } from './Icons';
 import { callAI } from '../utils/aiProvider';
 import MarkdownRenderer from './MarkdownRenderer';
+import { loadSkills } from '../data/builtinSkills';
+import { matchSkill } from '../utils/skillsMatcher';
 
 /* ─── Storage keys ───────────────────────────────────────────────────────── */
 const CHATS_KEY = 'miftah_global_chats';
-
-/* ─── Skills ─────────────────────────────────────────────────────────────── */
-const SKILLS = [
-  {
-    id: 'price-analyst',
-    label: 'محلل الأسعار',
-    icon: '📊',
-    color: '#5E4FDE',
-    prompt: 'أنت الآن في وضع "محلل الأسعار". ركّز في إجاباتك على تحليل أسعار الموردين مقارنةً بالأسعار الرسمية، وحساب هوامش الربح، وتحديد الفرص التسعيرية لكل منتج في المتجر.',
-  },
-  {
-    id: 'pricing-consultant',
-    label: 'مستشار التسعير',
-    icon: '💰',
-    color: '#11BA65',
-    prompt: 'أنت الآن في وضع "مستشار التسعير الاستراتيجي". ساعد في وضع استراتيجيات تسعير مثلى تراعي المنافسة والقيمة المقدمة للعميل وهامش الربح المستهدف والموسمية.',
-  },
-  {
-    id: 'content-writer',
-    label: 'كاتب المحتوى',
-    icon: '✍️',
-    color: '#F7784A',
-    prompt: 'أنت الآن في وضع "كاتب المحتوى التسويقي". قدّم نصوصاً تسويقية مختصرة ومقنعة مناسبة للنشر في متجر سلة، واكتب بأسلوب عربي فصيح وجذّاب يعكس قيمة المنتجات الرقمية.',
-  },
-  {
-    id: 'coupon-advisor',
-    label: 'مساعد الكوبونات',
-    icon: '🏷️',
-    color: '#FFC530',
-    prompt: 'أنت الآن في وضع "مساعد الكوبونات والخصومات". ساعد في تصميم كوبونات وعروض خصم فعّالة تزيد المبيعات دون التأثير السلبي على الأرباح، مع مراعاة بيانات الكوبونات الموجودة.',
-  },
-  {
-    id: 'product-manager',
-    label: 'مدير المنتجات',
-    icon: '📦',
-    color: '#1A51F4',
-    prompt: 'أنت الآن في وضع "مدير المنتجات الرقمية". ساعد في تنظيم وتحسين وتطوير محفظة المنتجات الرقمية في المتجر: خططها وميزاتها وترتيبها وربطها بالحزم.',
-  },
-];
 
 /* ─── System prompt ──────────────────────────────────────────────────────── */
 const GLOBAL_SYSTEM_PROMPT = `أنت مساعد ذكاء اصطناعي داخلي لمتجر مفتاح، متخصص في إدارة المنتجات الرقمية على منصة سلة.
@@ -297,14 +260,20 @@ function MessageBubble({ msg }) {
 }
 
 /* ─── SkillBadge ─────────────────────────────────────────────────────────── */
-function SkillBadge({ skill, onRemove }) {
+function SkillBadge({ skill, onRemove, isAuto }) {
   return (
-    <div className="gaa-skill-badge" style={{ '--skill-color': skill.color }}>
-      <span>{skill.icon}</span>
-      <span>{skill.label}</span>
-      <button onClick={onRemove} className="gaa-skill-badge-remove" title="إلغاء المهارة">
-        <XIcon className="icon-xs" />
-      </button>
+    <div
+      className={`gaa-skill-badge ${isAuto ? 'gaa-skill-badge-auto' : ''}`}
+      style={{ '--skill-color': skill.color || '#5E4FDE' }}
+    >
+      <span>{skill.icon || '⚡'}</span>
+      <span>{skill.name || skill.label}</span>
+      {isAuto && <span className="gaa-skill-badge-auto-label">تلقائي</span>}
+      {onRemove && (
+        <button onClick={onRemove} className="gaa-skill-badge-remove" title="إلغاء المهارة">
+          <XIcon className="icon-xs" />
+        </button>
+      )}
     </div>
   );
 }
@@ -393,6 +362,8 @@ export default function GlobalAIAssistant({
   const [isOpen, setIsOpen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const [loadedSkills, setLoadedSkills] = useState(() => loadSkills());
+  const [autoSkill, setAutoSkill] = useState(null);
 
   /* ── Conversation state ── */
   const [conversations, setConversations] = useState(() => {
@@ -433,6 +404,13 @@ export default function GlobalAIAssistant({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  /* ── Refresh skills on open ── */
+  useEffect(() => {
+    if (isOpen) {
+      setLoadedSkills(loadSkills());
+    }
+  }, [isOpen]);
 
   /* ── Focus on open ── */
   useEffect(() => {
@@ -537,9 +515,11 @@ export default function GlobalAIAssistant({
   );
 
   /* ── Build system prompt ── */
-  const buildSystemPrompt = useCallback(() => {
+  const buildSystemPrompt = useCallback((skillOverride) => {
     const ctx = buildStoreContext({ products, suppliers, durations, bundles, coupons, tasks, exchangeRate });
-    const skillExtra = activeSkill ? `\n\n${activeSkill.prompt}` : '';
+    const skill = skillOverride !== undefined ? skillOverride : activeSkill;
+    const skillContent = skill?.content || skill?.prompt || '';
+    const skillExtra = skillContent ? `\n\n${skillContent}` : '';
     return `${GLOBAL_SYSTEM_PROMPT}${skillExtra}\n\n${ctx}`;
   }, [products, suppliers, durations, bundles, coupons, tasks, exchangeRate, activeSkill]);
 
@@ -656,6 +636,11 @@ export default function GlobalAIAssistant({
 
     setError('');
     setPendingAction(null);
+    setAutoSkill(null);
+
+    const matched = activeSkill ? null : matchSkill(text, loadedSkills);
+    if (matched) setAutoSkill(matched);
+
     const userMsg = { id: makeId(), role: 'user', content: text, timestamp: Date.now() };
     const nextMessages = [...messages, userMsg];
     syncConv(nextMessages);
@@ -663,10 +648,11 @@ export default function GlobalAIAssistant({
     setIsLoading(true);
 
     const apiMessages = nextMessages.map(m => ({ role: m.role, content: m.content }));
+    const effectiveSkill = activeSkill || matched;
 
     try {
       const result = await callAI({
-        systemPrompt: buildSystemPrompt(),
+        systemPrompt: buildSystemPrompt(effectiveSkill),
         messages: apiMessages,
         appSettings,
       });
@@ -736,6 +722,7 @@ export default function GlobalAIAssistant({
 
   const selectSkill = (skill) => {
     setActiveSkill(prev => prev?.id === skill.id ? null : skill);
+    setAutoSkill(null);
     setShowSkillsMenu(false);
     setTimeout(() => inputRef.current?.focus(), 80);
   };
@@ -835,9 +822,13 @@ export default function GlobalAIAssistant({
           </div>
 
           {/* Active skill badge */}
-          {activeSkill && (
+          {(activeSkill || autoSkill) && (
             <div className="gaa-skill-badge-bar">
-              <SkillBadge skill={activeSkill} onRemove={() => setActiveSkill(null)} />
+              {activeSkill ? (
+                <SkillBadge skill={activeSkill} onRemove={() => setActiveSkill(null)} isAuto={false} />
+              ) : (
+                <SkillBadge skill={autoSkill} isAuto={true} />
+              )}
             </div>
           )}
 
@@ -877,18 +868,21 @@ export default function GlobalAIAssistant({
                   {showSkillsMenu && (
                     <div className="gaa-skills-dropdown">
                       <div className="gaa-skills-header">اختر مهارة</div>
-                      {SKILLS.map(skill => (
+                      {loadedSkills.filter(s => s.enabled).map(skill => (
                         <button
                           key={skill.id}
                           className={`gaa-skill-item ${activeSkill?.id === skill.id ? 'gaa-skill-item-active' : ''}`}
                           onClick={() => selectSkill(skill)}
-                          style={activeSkill?.id === skill.id ? { '--skill-color': skill.color } : {}}
+                          style={activeSkill?.id === skill.id ? { '--skill-color': skill.color || '#5E4FDE' } : {}}
                         >
-                          <span className="gaa-skill-icon">{skill.icon}</span>
-                          <span className="gaa-skill-name">{skill.label}</span>
+                          <span className="gaa-skill-icon">{skill.icon || '⚡'}</span>
+                          <span className="gaa-skill-name">{skill.name || skill.label}</span>
                           {activeSkill?.id === skill.id && <CheckCircleIcon className="icon-xs gaa-skill-check" />}
                         </button>
                       ))}
+                      {loadedSkills.filter(s => s.enabled).length === 0 && (
+                        <div className="gaa-skills-empty">لا توجد مهارات مفعّلة</div>
+                      )}
                     </div>
                   )}
                 </div>

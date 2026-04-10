@@ -5,8 +5,10 @@ import {
   DownloadIcon, RefreshIcon, InfoIcon, XIcon, PlusIcon,
   AlertTriangleIcon, CheckCircleIcon, PackageIcon, ImageIcon,
   ExternalLinkIcon, SparklesIcon, KeyIcon, EyeIcon, ChevronDownIcon,
+  ZapIcon,
 } from './Icons';
 import { GEMINI_MODELS, OPENROUTER_MODELS, AGENTROUTER_MODELS } from '../utils/aiProvider';
+import SkillsTab from './SkillsTab';
 
 function SettingsPage({
   exchangeRate,
@@ -34,6 +36,7 @@ function SettingsPage({
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [showOpenrouterKey, setShowOpenrouterKey] = useState(false);
   const [showAgentrouterKey, setShowAgentrouterKey] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('general');
   const fileInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
@@ -137,6 +140,28 @@ function SettingsPage({
         </div>
       </div>
 
+      <div className="settings-inner-tabs">
+        <button
+          className={`settings-inner-tab ${settingsTab === 'general' ? 'settings-inner-tab-active' : ''}`}
+          onClick={() => setSettingsTab('general')}
+        >
+          <SettingsIcon className="icon-xs" /> الإعدادات العامة
+        </button>
+        <button
+          className={`settings-inner-tab ${settingsTab === 'skills' ? 'settings-inner-tab-active' : ''}`}
+          onClick={() => setSettingsTab('skills')}
+        >
+          <ZapIcon className="icon-xs" /> المهارات
+        </button>
+      </div>
+
+      {settingsTab === 'skills' && (
+        <div className="settings-skills-wrapper">
+          <SkillsTab />
+        </div>
+      )}
+
+      {settingsTab === 'general' && <>
       <div className="settings-stats-row">
         <div className="settings-stat-item">
           <PackageIcon className="icon-sm" />
@@ -638,6 +663,7 @@ function SettingsPage({
         <span className="settings-info-sep">•</span>
         <span>اللغة: العربية</span>
       </div>
+      </>}
     </div>
   );
 }
