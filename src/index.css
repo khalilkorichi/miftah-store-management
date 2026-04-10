@@ -15935,3 +15935,622 @@ body.dark-mode .selectable-card.selected {
   text-overflow: ellipsis;
   max-width: 260px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL AI ASSISTANT — Floating Assistant (gaa-*)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Root wrapper — fixed, no pointer-events itself */
+.gaa-root {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9900;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* ── FAB ── */
+.gaa-fab-wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.gaa-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(94, 79, 222, 0.45), 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+.gaa-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 32px rgba(94, 79, 222, 0.55), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.gaa-fab.gaa-fab-open {
+  transform: scale(0.95) rotate(10deg);
+  box-shadow: 0 4px 16px rgba(94, 79, 222, 0.35);
+}
+.gaa-fab .icon { color: #fff; }
+
+.gaa-fab-unread {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 11px;
+  height: 11px;
+  background: #F94B60;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+  animation: gaa-pulse 1.5s ease infinite;
+}
+
+@keyframes gaa-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.8; }
+}
+
+.gaa-fab-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  bottom: 50%;
+  transform: translateY(50%);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.gaa-fab-wrap:hover .gaa-fab-tooltip {
+  opacity: 1;
+}
+
+/* ── Panel ── */
+.gaa-panel {
+  position: fixed;
+  bottom: 92px;
+  left: 24px;
+  width: 380px;
+  height: 520px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(94, 79, 222, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  direction: rtl;
+
+  /* Hidden state */
+  opacity: 0;
+  transform: translateY(20px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.gaa-panel.gaa-panel-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+/* ── Panel Header ── */
+.gaa-panel-header {
+  background: var(--gradient-accent);
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.gaa-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gaa-header-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.gaa-header-title .icon { color: #fff; }
+
+.gaa-status-dot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.gaa-status-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.gaa-status-online .gaa-status-pulse {
+  background: #4ade80;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
+  animation: gaa-blink 2s ease infinite;
+}
+.gaa-status-offline .gaa-status-pulse {
+  background: rgba(255,255,255,0.4);
+}
+@keyframes gaa-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.gaa-status-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+.gaa-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gaa-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.gaa-icon-btn:hover {
+  background: rgba(255,255,255,0.28);
+}
+.gaa-icon-btn .icon { color: #fff; }
+
+/* ── Messages area ── */
+.gaa-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+.gaa-messages::-webkit-scrollbar { width: 4px; }
+.gaa-messages::-webkit-scrollbar-track { background: transparent; }
+.gaa-messages::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* Empty state */
+.gaa-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 20px;
+  gap: 10px;
+  color: var(--text-muted);
+  margin: auto;
+}
+.gaa-empty-state .icon { color: var(--accent-blue); opacity: 0.5; }
+.gaa-empty-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.gaa-empty-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 260px;
+}
+
+/* ── Message bubble ── */
+.gaa-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+}
+.gaa-message-ai { flex-direction: row; }
+.gaa-message-user { flex-direction: row-reverse; }
+
+.gaa-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+.gaa-msg-avatar .icon { color: #fff; }
+.gaa-msg-avatar-user {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 10.5px;
+}
+
+.gaa-msg-body {
+  max-width: 82%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gaa-message-user .gaa-msg-body { align-items: flex-end; }
+
+.gaa-msg-content {
+  padding: 9px 12px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+.gaa-message-ai .gaa-msg-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-bottom-right-radius: 4px;
+  color: var(--text-primary);
+}
+.gaa-message-user .gaa-msg-content {
+  background: var(--gradient-accent);
+  color: #fff;
+  border-bottom-left-radius: 4px;
+}
+.gaa-msg-text {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Markdown inside AI bubble */
+.gaa-msg-content .md-body {
+  font-size: 13px;
+}
+.gaa-msg-content .md-p { margin-bottom: 5px; }
+.gaa-msg-content .md-p:last-child { margin-bottom: 0; }
+.gaa-msg-content .md-ul,
+.gaa-msg-content .md-ol { padding-inline-start: 18px; margin: 4px 0; }
+.gaa-msg-content .md-h { font-size: 13px; margin-bottom: 4px; }
+.gaa-msg-content .md-code-inline {
+  font-size: 11.5px;
+  background: rgba(94, 79, 222, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.gaa-msg-content .md-code-block {
+  font-size: 11.5px;
+  background: var(--bg-input);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+.gaa-msg-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+.gaa-msg-time {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.gaa-msg-copy {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+.gaa-msg-copy:hover { opacity: 1; }
+.gaa-msg-copy .icon { color: var(--text-muted); }
+
+/* ── Typing indicator ── */
+.gaa-typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.gaa-typing-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gaa-typing-avatar .icon { color: #fff; }
+.gaa-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  border-bottom-right-radius: 4px;
+}
+.gaa-typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  opacity: 0.4;
+  animation: gaa-dot-bounce 1.2s ease infinite;
+}
+.gaa-typing-dots span:nth-child(1) { animation-delay: 0s; }
+.gaa-typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+.gaa-typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes gaa-dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Error banner ── */
+.gaa-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  background: rgba(249, 75, 96, 0.1);
+  border: 1px solid rgba(249, 75, 96, 0.25);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  color: var(--accent-red);
+}
+.gaa-error-banner .icon { color: var(--accent-red); flex-shrink: 0; }
+.gaa-error-banner span { flex: 1; }
+.gaa-error-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--accent-red);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-family);
+}
+.gaa-error-link .icon { color: #fff; }
+
+/* ── Active skill badge bar ── */
+.gaa-skill-badge-bar {
+  padding: 4px 12px;
+  flex-shrink: 0;
+}
+.gaa-skill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--skill-color, var(--accent-blue)) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--skill-color, var(--accent-blue)) 35%, transparent);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--skill-color, var(--accent-blue));
+}
+.gaa-skill-badge-remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--skill-color, var(--accent-blue));
+  display: flex;
+  align-items: center;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.gaa-skill-badge-remove:hover { opacity: 1; }
+.gaa-skill-badge-remove .icon { color: currentColor; }
+
+/* ── Input bar ── */
+.gaa-input-bar {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+.gaa-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 6px 8px 6px 10px;
+  transition: border-color 0.18s ease;
+}
+.gaa-input-wrap:focus-within {
+  border-color: var(--accent-blue);
+}
+.gaa-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-family);
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  max-height: 88px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  direction: rtl;
+  min-height: 20px;
+}
+.gaa-textarea::placeholder { color: var(--text-muted); }
+.gaa-textarea:disabled { opacity: 0.5; }
+
+.gaa-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Skills button */
+.gaa-skills-wrap { position: relative; }
+.gaa-skills-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.gaa-skills-btn:hover {
+  background: var(--bg-hover);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+.gaa-skills-btn-active {
+  background: color-mix(in srgb, var(--accent-blue) 15%, transparent);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+.gaa-skills-btn-has-skill {
+  border-color: currentColor;
+}
+.gaa-skills-btn .icon { color: currentColor; }
+
+/* Send button */
+.gaa-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--gradient-accent);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.gaa-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gaa-send-btn:not(:disabled):hover { opacity: 0.88; transform: scale(1.05); }
+.gaa-send-btn .icon { color: #fff; }
+
+/* ── Skills dropdown ── */
+.gaa-skills-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 190px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 10;
+  animation: gaa-dropdown-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes gaa-dropdown-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.gaa-skills-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.gaa-skill-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background 0.12s ease;
+  text-align: right;
+  direction: rtl;
+}
+.gaa-skill-item:hover {
+  background: var(--bg-hover);
+}
+.gaa-skill-item-active {
+  background: color-mix(in srgb, var(--skill-color, var(--accent-blue)) 12%, transparent);
+  color: var(--skill-color, var(--accent-blue));
+  font-weight: 600;
+}
+.gaa-skill-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.gaa-skill-name { flex: 1; }
+.gaa-skill-check { flex-shrink: 0; }
+.gaa-skill-check.icon { color: var(--skill-color, var(--accent-blue)); }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .gaa-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 80px;
+    border-radius: var(--radius-lg);
+  }
+  .gaa-root {
+    left: 12px;
+  }
+}

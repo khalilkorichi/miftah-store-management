@@ -30,6 +30,7 @@ import {
   SunIcon, MoonIcon, CheckCircleIcon, HomeIcon, FileTextIcon, ExternalLinkIcon,
   CheckSquareIcon,
 } from './components/Icons';
+import GlobalAIAssistant from './components/GlobalAIAssistant';
 
 const STORAGE_KEY = 'miftah_store_data';
 const DATA_VERSION = 2;
@@ -1081,6 +1082,18 @@ function App() {
           ↑
         </button>
       )}
+
+      <GlobalAIAssistant
+        products={products}
+        suppliers={suppliers}
+        durations={durations}
+        bundles={bundles}
+        coupons={coupons}
+        tasks={tasks}
+        appSettings={appSettings}
+        exchangeRate={exchangeRate}
+        onNavigateToSettings={() => setActiveTab('settings')}
+      />
     </div>
   );
 }
