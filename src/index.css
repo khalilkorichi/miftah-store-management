@@ -16979,36 +16979,25 @@ body.dark-mode .selectable-card.selected {
 .skill-card {
   background: var(--bg-secondary);
   border: 1.5px solid var(--border-color);
+  border-right: 3px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 11px 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s, background 0.2s;
   outline: none;
-  position: relative;
-  overflow: hidden;
-}
-.skill-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 3px;
-  height: 100%;
-  background: var(--border-color);
-  transition: background 0.2s;
 }
 .skill-card:hover {
   border-color: color-mix(in srgb, var(--skill-accent, var(--accent-blue)) 45%, var(--border-color));
+  border-right-color: var(--skill-accent, var(--accent-blue));
   box-shadow: 0 3px 12px color-mix(in srgb, var(--skill-accent, var(--accent-blue)) 15%, transparent);
   transform: translateX(-1px);
 }
-.skill-card:hover::before { background: var(--skill-accent, var(--accent-blue)); }
 .skill-card-selected {
-  border-color: var(--skill-accent, var(--accent-blue));
+  border-color: color-mix(in srgb, var(--skill-accent, var(--accent-blue)) 50%, var(--border-color));
+  border-right-color: var(--skill-accent, var(--accent-blue));
   background: color-mix(in srgb, var(--skill-accent, var(--accent-blue)) 8%, var(--bg-secondary));
   box-shadow: 0 3px 14px color-mix(in srgb, var(--skill-accent, var(--accent-blue)) 18%, transparent);
 }
-.skill-card-selected::before { background: var(--skill-accent, var(--accent-blue)); }
 .skill-card-disabled { opacity: 0.45; }
 .skill-card-disabled .skill-toggle-on { background: var(--border-color); }
 
